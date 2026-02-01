@@ -21,10 +21,13 @@ class GenerateController
         $addonName = $data['name'] ?? '';
         $image = $data['image'] ?? '';
         $description = $data['description'] ?? 'Converted HA Add-on';
-        $icon = $data['icon'] ?? '';
+        $iconFile = $data['icon_file'] ?? ''; // Base64 encoded icon file data
         $version = $data['version'] ?? '1.0.0';
         $ingress = $data['ingress'] ?? false;
         $ingressPort = $data['ingress_port'] ?? 80;
+        $ingressStream = $data['ingress_stream'] ?? false;
+        $webuiPort = $data['webui_port'] ?? null;
+        $panelIcon = $data['panel_icon'] ?? 'mdi:link-variant';
         $backup = $data['backup'] ?? false;
         $ports = $data['ports'] ?? [];
         $envVars = $data['env_vars'] ?? [];
@@ -35,11 +38,11 @@ class GenerateController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
         
-        $slug = strtolower(preg_replace('/[^a-z0-9]/', '_', str_replace('-', '_', $addonName)));
+        $slug = strtolower($addonName);
+        $slug = str_replace([' ', '-', '.'], '_', $slug);
+        $slug = preg_replace('/[^a-z0-9_]/', '', $slug);
+        $slug = preg_replace('/_+/', '_', $slug);
         $slug = trim($slug, '_');
-        while (strpos($slug, '__') !== false) {
-            $slug = str_replace('__', '_', $slug);
-        }
         
         // Fix für HAOS Add-on Converter Slug (manchmal wird er zu dd_on_onverter)
         if ($isSelfConvert) {
@@ -67,14 +70,15 @@ class GenerateController
             // 'image' => $image // Removed because it's built locally from Dockerfile
         ];
 
-        if (!empty($icon)) {
-            $config['icon'] = $icon;
-        }
-
         if ($ingress) {
             $config['ingress'] = true;
             $config['ingress_port'] = $ingressPort;
-            $config['panel_icon'] = 'mdi:link-variant';
+            if ($ingressStream) {
+                $config['ingress_stream'] = true;
+            }
+            $config['panel_icon'] = $panelIcon;
+        } elseif ($webuiPort) {
+            $config['webui'] = "http://[HOST]:[PORT:$webuiPort]/";
         }
 
         if ($backup) {
@@ -125,6 +129,18 @@ class GenerateController
         }
         
         file_put_contents($addonPath . '/config.yaml', Yaml::dump($config, 4, 2));
+        
+        // Icon Datei speichern, falls vorhanden
+        if (!empty($iconFile)) {
+            // Wir erwarten ein Format wie "data:image/png;base64,..."
+            if (preg_match('/^data:image\/(\w+);base64,/', $iconFile, $type)) {
+                $iconData = substr($iconFile, strpos($iconFile, ',') + 1);
+                $iconData = base64_decode($iconData);
+                if ($iconData !== false) {
+                    file_put_contents($addonPath . '/icon.png', $iconData);
+                }
+            }
+        }
         
         // Dockerfile erstellen
         $dockerfileContent = "FROM $image\n";

@@ -22,6 +22,18 @@ $app->get('/addons', [AddonController::class, 'list']);
 // Details eines Add-ons
 $app->get('/addons/{slug}', [AddonController::class, 'get']);
 
+// Icon eines Add-ons ausliefern
+$app->get('/addons/{slug}/icon.png', function ($request, $response, $args) {
+    $slug = $args['slug'];
+    $dataDir = getenv('CONVERTER_DATA_DIR') ?: __DIR__ . '/../data';
+    $iconFile = $dataDir . '/' . $slug . '/icon.png';
+    if (file_exists($iconFile)) {
+        $response->getBody()->write(file_get_contents($iconFile));
+        return $response->withHeader('Content-Type', 'image/png');
+    }
+    return $response->withStatus(404);
+});
+
 // Add-on löschen
 $app->delete('/addons/{slug}', [AddonController::class, 'delete']);
 

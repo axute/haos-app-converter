@@ -25,11 +25,12 @@ class AddonController
                 $configFile = $dir . '/config.yaml';
                 if (file_exists($configFile)) {
                     $config = Yaml::parseFile($configFile);
+                    $hasLocalIcon = file_exists($dir . '/icon.png');
                     $addons[] = [
                         'slug' => $slug,
                         'name' => $config['name'] ?? $slug,
                         'version' => $config['version'] ?? 'unknown',
-                        'icon' => $config['icon'] ?? ''
+                        'has_local_icon' => $hasLocalIcon
                     ];
                 }
             }
@@ -57,6 +58,14 @@ class AddonController
 
         $config = Yaml::parseFile($configFile);
         
+        $hasLocalIcon = file_exists($dataDir . '/' . $slug . '/icon.png');
+        $iconFileContent = '';
+        if ($hasLocalIcon) {
+            $type = pathinfo($dataDir . '/' . $slug . '/icon.png', PATHINFO_EXTENSION);
+            $data = file_get_contents($dataDir . '/' . $slug . '/icon.png');
+            $iconFileContent = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        }
+
         $image = '';
         $dockerfile = $dataDir . '/' . $slug . '/Dockerfile';
         if (file_exists($dockerfile)) {
@@ -94,12 +103,16 @@ class AddonController
         $data = [
             'name' => $config['name'] ?? '',
             'description' => $config['description'] ?? '',
-            'icon' => $config['icon'] ?? '',
             'image' => $image ?: ($config['image'] ?? ''),
             'version' => $config['version'] ?? '',
             'ingress' => $config['ingress'] ?? false,
             'ingress_port' => $config['ingress_port'] ?? 80,
+            'ingress_stream' => $config['ingress_stream'] ?? false,
+            'panel_icon' => $config['panel_icon'] ?? 'mdi:link-variant',
+            'webui' => $config['webui'] ?? '',
             'backup' => (isset($config['backup']) && $config['backup'] !== false),
+            'has_local_icon' => $hasLocalIcon,
+            'icon_file' => $iconFileContent,
             'ports' => $ports,
             'env_vars' => $envVars
         ];

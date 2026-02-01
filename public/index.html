@@ -50,9 +50,12 @@
                     <textarea class="form-control" id="description" rows="3"></textarea>
                 </div>
                 <div class="mb-3">
-                    <label for="icon" class="form-label">Icon (MDI)</label>
-                    <input type="text" class="form-control" id="icon" placeholder="z.B. mdi:docker">
-                    <div class="form-text">Home Assistant Material Design Icon Name.</div>
+                    <label for="icon_file" class="form-label">Icon Datei (PNG)</label>
+                    <input type="file" class="form-control" id="icon_file" accept="image/png">
+                    <div id="icon_preview" class="mt-2" style="display:none;">
+                        <img src="" alt="Preview" style="max-width: 64px; max-height: 64px;">
+                    </div>
+                    <div class="form-text">Wird als icon.png im Add-on Verzeichnis gespeichert (empfohlen für lokale Add-ons).</div>
                 </div>
                 <button type="button" class="btn btn-primary next-step">Weiter</button>
             </div>
@@ -76,10 +79,29 @@
                     </label>
                     <div class="form-text">Ermöglicht den Zugriff auf die Web-UI direkt über Home Assistant.</div>
                 </div>
-                <div id="ingressPortContainer" class="mb-3" style="display:none;">
-                    <label for="ingress_port" class="form-label">Interner Web-Port</label>
-                    <input type="number" class="form-control" id="ingress_port" value="80">
-                    <div class="form-text">Der Port, auf dem die Anwendung im Docker-Container lauscht.</div>
+                <div id="ingressOptions" style="display:none;">
+                    <div class="mb-3">
+                        <label for="ingress_port" class="form-label">Interner Web-Port (Ingress)</label>
+                        <input type="number" class="form-control" id="ingress_port" value="80">
+                        <div class="form-text">Der Port, auf dem die Anwendung im Docker-Container lauscht.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="panel_icon" class="form-label">Panel Icon (MDI)</label>
+                        <input type="text" class="form-control" id="panel_icon" placeholder="mdi:link-variant">
+                        <div class="form-text">Das Icon für die Seitenleiste (z.B. <code>mdi:docker</code>).</div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="ingress_stream">
+                        <label class="form-check-label" for="ingress_stream">
+                            Ingress Stream aktivieren
+                        </label>
+                        <div class="form-text">Ermöglicht das Streaming über Ingress (z.B. für WebSockets/VNC).</div>
+                    </div>
+                </div>
+                <div id="webUiPortContainer" class="mb-3">
+                    <label for="web_ui_port" class="form-label">Web-UI Port (ohne Ingress)</label>
+                    <input type="number" class="form-control" id="web_ui_port" placeholder="z.B. 8080">
+                    <div class="form-text">Wird verwendet um die <code>webui</code> URL zu generieren: <code>http://[HOST]:[PORT:xxxx]/</code></div>
                 </div>
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="backup">
@@ -155,6 +177,20 @@
 <script>
     const steps = document.querySelectorAll('.step');
     let currentStep = 0;
+    let iconBase64 = '';
+
+    document.getElementById('icon_file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                iconBase64 = event.target.result;
+                document.getElementById('icon_preview').style.display = 'block';
+                document.getElementById('icon_preview').querySelector('img').src = iconBase64;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
     function addEnvVar(key = '', value = '', userEditable = false) {
         const container = document.getElementById('envVarsContainer');
@@ -213,7 +249,8 @@
     }
 
     document.getElementById('ingress').addEventListener('change', (e) => {
-        document.getElementById('ingressPortContainer').style.display = e.target.checked ? 'block' : 'none';
+        document.getElementById('ingressOptions').style.display = e.target.checked ? 'block' : 'none';
+        document.getElementById('webUiPortContainer').style.display = e.target.checked ? 'none' : 'block';
     });
 
     document.querySelectorAll('.next-step').forEach(btn => {
@@ -231,15 +268,26 @@
                     envSummary += '</ul>';
                 }
 
+                const ports = getPortMappings();
+                let portsSummary = '';
+                if (ports.length > 0) {
+                    portsSummary = '<h6>Port-Mappings:</h6><ul>';
+                    ports.forEach(p => {
+                        portsSummary += `<li>Container ${p.container} → Host ${p.host}</li>`;
+                    });
+                    portsSummary += '</ul>';
+                }
+
                 const summary = `
                     <p><strong>Name:</strong> ${document.getElementById('name').value}</p>
                     <p><strong>Beschreibung:</strong> ${document.getElementById('description').value}</p>
-                    <p><strong>Icon:</strong> ${document.getElementById('icon').value || 'Keines'}</p>
                     <p><strong>Image:</strong> ${document.getElementById('image').value}</p>
                     <p><strong>Version:</strong> ${document.getElementById('version').value}</p>
-                    <p><strong>Ingress:</strong> ${ingress ? 'Aktiviert (Port ' + document.getElementById('ingress_port').value + ')' : 'Deaktiviert'}</p>
+                    <p><strong>Ingress:</strong> ${ingress ? 'Aktiviert (Port ' + document.getElementById('ingress_port').value + ', Icon ' + (document.getElementById('panel_icon').value || 'mdi:link-variant') + ', Stream: ' + (document.getElementById('ingress_stream').checked ? 'Ja' : 'Nein') + ')' : 'Deaktiviert'}</p>
+                    ${!ingress && document.getElementById('web_ui_port').value ? `<p><strong>Web-UI (webui):</strong> http://[HOST]:[PORT:${document.getElementById('web_ui_port').value}]/</p>` : ''}
                     <p><strong>Backup:</strong> ${backup ? 'Aktiviert' : 'Deaktiviert'}</p>
                     ${envSummary}
+                    ${portsSummary}
                 `;
                 document.getElementById('summary').innerHTML = summary;
             }
@@ -262,11 +310,14 @@
         const data = {
             name: document.getElementById('name').value,
             description: document.getElementById('description').value,
-            icon: document.getElementById('icon').value,
+            icon_file: iconBase64,
             image: document.getElementById('image').value,
             version: document.getElementById('version').value,
             ingress: document.getElementById('ingress').checked,
             ingress_port: parseInt(document.getElementById('ingress_port').value),
+            ingress_stream: document.getElementById('ingress_stream').checked,
+            panel_icon: document.getElementById('panel_icon').value || 'mdi:link-variant',
+            webui_port: document.getElementById('web_ui_port').value ? parseInt(document.getElementById('web_ui_port').value) : null,
             backup: document.getElementById('backup').checked,
             ports: getPortMappings(),
             env_vars: getEnvVars()
@@ -299,16 +350,20 @@
         }
         list.innerHTML = addons.map(addon => {
             const isSelf = addon.slug === 'haos_addon_converter';
-            const iconHtml = addon.icon ? `<span class="me-2" title="${addon.icon}">🏷️</span>` : '';
+            const iconHtml = addon.has_local_icon 
+                ? `<img src="/addons/${addon.slug}/icon.png" style="width: 24px; height: 24px;" class="me-2">` 
+                : '';
             return `
             <div class="list-group-item d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
                     <div class="me-3 text-center" style="width: 40px; font-size: 24px;">
-                        ${addon.icon ? '📦' : '📦'} 
+                        ${addon.has_local_icon 
+                            ? `<img src="/addons/${addon.slug}/icon.png" style="width: 32px; height: 32px;">` 
+                            : '📦'} 
                     </div>
                     <div>
                         <strong>${addon.name}</strong><br>
-                        <small class="text-muted">Version: ${addon.version}${addon.icon ? ' | Icon: ' + addon.icon : ''}</small>
+                        <small class="text-muted">Version: ${addon.version}</small>
                     </div>
                 </div>
                 ${isSelf ? 
@@ -327,7 +382,13 @@
         document.getElementById('wizardForm').style.display = 'block';
         document.getElementById('cancelBtn').style.display = 'block';
         document.getElementById('wizardForm').reset();
-        document.getElementById('ingressPortContainer').style.display = 'none';
+        iconBase64 = '';
+        document.getElementById('icon_preview').style.display = 'none';
+        document.getElementById('icon_preview').querySelector('img').src = '';
+        document.getElementById('ingressOptions').style.display = 'none';
+        document.getElementById('webUiPortContainer').style.display = 'block';
+        document.getElementById('web_ui_port').value = '';
+        document.getElementById('panel_icon').value = 'mdi:link-variant';
         document.getElementById('envVarsContainer').innerHTML = '';
         
         // Reset steps
@@ -351,14 +412,33 @@
         
         document.getElementById('name').value = addon.name;
         document.getElementById('description').value = addon.description;
-        document.getElementById('icon').value = addon.icon || '';
+        
+        iconBase64 = addon.icon_file || '';
+        if (iconBase64) {
+            document.getElementById('icon_preview').style.display = 'block';
+            document.getElementById('icon_preview').querySelector('img').src = iconBase64;
+        } else {
+            document.getElementById('icon_preview').style.display = 'none';
+        }
+
         document.getElementById('image').value = addon.image;
         document.getElementById('version').value = addon.version;
         document.getElementById('ingress').checked = addon.ingress;
         document.getElementById('ingress_port').value = addon.ingress_port;
+        document.getElementById('ingress_stream').checked = addon.ingress_stream || false;
+        document.getElementById('panel_icon').value = addon.panel_icon || 'mdi:link-variant';
+        
+        let webuiPort = '';
+        if (addon.webui) {
+            const match = addon.webui.match(/\[PORT:(\d+)\]/);
+            if (match) webuiPort = match[1];
+        }
+        document.getElementById('web_ui_port').value = webuiPort;
+        
         document.getElementById('backup').checked = addon.backup;
         
-        document.getElementById('ingressPortContainer').style.display = addon.ingress ? 'block' : 'none';
+        document.getElementById('ingressOptions').style.display = addon.ingress ? 'block' : 'none';
+        document.getElementById('webUiPortContainer').style.display = addon.ingress ? 'none' : 'block';
         
         // Ports laden
         document.getElementById('portsContainer').innerHTML = '';
