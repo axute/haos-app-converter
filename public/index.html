@@ -97,6 +97,15 @@
                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addEnvVar()">+ Variable hinzufügen</button>
                 </div>
 
+                <div class="mb-3">
+                    <h5>Port-Mappings</h5>
+                    <div id="portsContainer">
+                        <!-- Dynamische Port-Mappings -->
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPortMapping()">+ Port-Mapping hinzufügen</button>
+                    <div class="form-text">Mappt Container-Ports auf Host-Ports (z.B. 80 auf 8080).</div>
+                </div>
+
                 <button type="button" class="btn btn-secondary prev-step">Zurück</button>
                 <button type="button" class="btn btn-primary next-step">Weiter</button>
             </div>
@@ -177,6 +186,32 @@
         return vars;
     }
 
+    function addPortMapping(containerPort = '', hostPort = '') {
+        const container = document.getElementById('portsContainer');
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2 port-mapping-row';
+        div.innerHTML = `
+            <input type="number" class="form-control port-container" placeholder="Container Port" value="${containerPort}">
+            <span class="input-group-text">→</span>
+            <input type="number" class="form-control port-host" placeholder="Host Port" value="${hostPort}">
+            <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">×</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function getPortMappings() {
+        const rows = document.querySelectorAll('.port-mapping-row');
+        const ports = [];
+        rows.forEach(row => {
+            const container = row.querySelector('.port-container').value;
+            const host = row.querySelector('.port-host').value;
+            if (container && host) {
+                ports.push({ container: parseInt(container), host: parseInt(host) });
+            }
+        });
+        return ports;
+    }
+
     document.getElementById('ingress').addEventListener('change', (e) => {
         document.getElementById('ingressPortContainer').style.display = e.target.checked ? 'block' : 'none';
     });
@@ -233,6 +268,7 @@
             ingress: document.getElementById('ingress').checked,
             ingress_port: parseInt(document.getElementById('ingress_port').value),
             backup: document.getElementById('backup').checked,
+            ports: getPortMappings(),
             env_vars: getEnvVars()
         };
 
@@ -324,6 +360,14 @@
         
         document.getElementById('ingressPortContainer').style.display = addon.ingress ? 'block' : 'none';
         
+        // Ports laden
+        document.getElementById('portsContainer').innerHTML = '';
+        if (addon.ports && addon.ports.length > 0) {
+            addon.ports.forEach(p => {
+                addPortMapping(p.container, p.host);
+            });
+        }
+
         // Env vars laden
         document.getElementById('envVarsContainer').innerHTML = '';
         if (addon.env_vars && addon.env_vars.length > 0) {

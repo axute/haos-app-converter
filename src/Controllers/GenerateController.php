@@ -26,6 +26,7 @@ class GenerateController
         $ingress = $data['ingress'] ?? false;
         $ingressPort = $data['ingress_port'] ?? 80;
         $backup = $data['backup'] ?? false;
+        $ports = $data['ports'] ?? [];
         $envVars = $data['env_vars'] ?? [];
         $isSelfConvert = $data['self_convert'] ?? false;
         
@@ -63,7 +64,7 @@ class GenerateController
             'boot' => 'auto',
             'options' => (object)[],
             'schema' => (object)[],
-            'image' => $image
+            // 'image' => $image // Removed because it's built locally from Dockerfile
         ];
 
         if (!empty($icon)) {
@@ -77,7 +78,20 @@ class GenerateController
         }
 
         if ($backup) {
-            $config['backup'] = true;
+            $config['backup'] = 'hot';
+        }
+
+        // Ports verarbeiten
+        if (!empty($ports)) {
+            $configPorts = [];
+            foreach ($ports as $p) {
+                if (!empty($p['container']) && !empty($p['host'])) {
+                    $configPorts[$p['container'] . '/tcp'] = (int)$p['host'];
+                }
+            }
+            if (!empty($configPorts)) {
+                $config['ports'] = $configPorts;
+            }
         }
 
         // Umgebungsvariablen verarbeiten

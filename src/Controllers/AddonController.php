@@ -57,6 +57,15 @@ class AddonController
 
         $config = Yaml::parseFile($configFile);
         
+        $image = '';
+        $dockerfile = $dataDir . '/' . $slug . '/Dockerfile';
+        if (file_exists($dockerfile)) {
+            $content = file_get_contents($dockerfile);
+            if (preg_match('/^FROM\s+(.+)$/m', $content, $matches)) {
+                $image = trim($matches[1]);
+            }
+        }
+
         $envVars = [];
         // Fixierte Variablen aus 'environment'
         if (isset($config['environment']) && is_array($config['environment'])) {
@@ -72,16 +81,26 @@ class AddonController
             }
         }
 
+        $ports = [];
+        if (isset($config['ports']) && is_array($config['ports'])) {
+            foreach ($config['ports'] as $containerPort => $hostPort) {
+                // Wir nehmen an, dass es immer /tcp ist oder schneiden es einfach ab
+                $container = (int)str_replace('/tcp', '', $containerPort);
+                $ports[] = ['container' => $container, 'host' => (int)$hostPort];
+            }
+        }
+
         // Versuchen wir auch den Ingress Port zu finden, falls er nicht in der config steht (obwohl er dort stehen sollte)
         $data = [
             'name' => $config['name'] ?? '',
             'description' => $config['description'] ?? '',
             'icon' => $config['icon'] ?? '',
-            'image' => $config['image'] ?? '',
+            'image' => $image ?: ($config['image'] ?? ''),
             'version' => $config['version'] ?? '',
             'ingress' => $config['ingress'] ?? false,
             'ingress_port' => $config['ingress_port'] ?? 80,
-            'backup' => $config['backup'] ?? false,
+            'backup' => (isset($config['backup']) && $config['backup'] !== false),
+            'ports' => $ports,
             'env_vars' => $envVars
         ];
 
