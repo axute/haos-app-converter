@@ -1,0 +1,10 @@
+services:
+  haos-converter:
+    build: .
+    container_name: haos-addon-converter
+    ports:
+      - "8985:80"
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+    restart: unless-stopped

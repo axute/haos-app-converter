@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HA Add-on Converter Wizard (PHP)</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪄</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .wizard-container { max-width: 600px; margin: 50px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .step { display: none; }
+        .step.active { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="wizard-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">HA Add-on Wizard</h2>
+            <button type="button" id="cancelBtn" class="btn btn-sm btn-outline-danger" style="display:none;" onclick="cancelWizard()">Abbrechen</button>
+        </div>
+        
+        <div id="addonSelection" class="mb-4">
+            <h4>Existierende Add-ons</h4>
+            <div id="addonList" class="list-group mb-3">
+                <!-- Wird dynamisch gefüllt -->
+            </div>
+            <div class="d-flex justify-content-between">
+                <div>
+                    <button type="button" class="btn btn-outline-primary" onclick="startNew()">Neues Add-on erstellen</button>
+                    <button type="button" class="btn btn-outline-success" onclick="selfConvert()">Converter als Add-on erstellen</button>
+                </div>
+                <button type="button" class="btn btn-outline-secondary" onclick="openSettings()">⚙️ Settings</button>
+            </div>
+            <hr>
+        </div>
+
+        <form id="wizardForm" style="display:none;">
+            <!-- Step 1: Basic Info -->
+            <div class="step active" id="step1">
+                <h4>Schritt 1: Basis-Informationen</h4>
+                <div class="mb-3">
+                    <label for="name" class="form-label">Add-on Name</label>
+                    <input type="text" class="form-control" id="name" required placeholder="z.B. My Awesome Tool">
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Beschreibung</label>
+                    <textarea class="form-control" id="description" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="icon" class="form-label">Icon (MDI)</label>
+                    <input type="text" class="form-control" id="icon" placeholder="z.B. mdi:docker">
+                    <div class="form-text">Home Assistant Material Design Icon Name.</div>
+                </div>
+                <button type="button" class="btn btn-primary next-step">Weiter</button>
+            </div>
+
+            <!-- Step 2: Docker Info -->
+            <div class="step" id="step2">
+                <h4>Schritt 2: Docker Image</h4>
+                <div class="mb-3">
+                    <label for="image" class="form-label">Docker Image Name</label>
+                    <input type="text" class="form-control" id="image" required placeholder="z.B. nginx:latest oder alpine:3.14">
+                    <div class="form-text">Das Image, das als Basis für das Add-on dienen soll.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="version" class="form-label">Version</label>
+                    <input type="text" class="form-control" id="version" value="1.0.0">
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="ingress">
+                    <label class="form-check-label" for="ingress">
+                        Home Assistant Ingress aktivieren
+                    </label>
+                    <div class="form-text">Ermöglicht den Zugriff auf die Web-UI direkt über Home Assistant.</div>
+                </div>
+                <div id="ingressPortContainer" class="mb-3" style="display:none;">
+                    <label for="ingress_port" class="form-label">Interner Web-Port</label>
+                    <input type="number" class="form-control" id="ingress_port" value="80">
+                    <div class="form-text">Der Port, auf dem die Anwendung im Docker-Container lauscht.</div>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="backup">
+                    <label class="form-check-label" for="backup">
+                        Backup-Unterstützung aktivieren
+                    </label>
+                    <div class="form-text">Markiert das Add-on als Backup-fähig.</div>
+                </div>
+
+                <div class="mb-3">
+                    <h5>Umgebungsvariablen</h5>
+                    <div id="envVarsContainer">
+                        <!-- Dynamische Env-Variablen -->
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addEnvVar()">+ Variable hinzufügen</button>
+                </div>
+
+                <button type="button" class="btn btn-secondary prev-step">Zurück</button>
+                <button type="button" class="btn btn-primary next-step">Weiter</button>
+            </div>
+
+            <!-- Step 3: Review & Generate -->
+            <div class="step" id="step3">
+                <h4>Schritt 3: Zusammenfassung</h4>
+                <div id="summary"></div>
+                <hr>
+                <button type="button" class="btn btn-secondary prev-step">Zurück</button>
+                <button type="submit" class="btn btn-success">Add-on Erstellen</button>
+            </div>
+        </form>
+
+        <div id="result" class="mt-4" style="display:none;">
+            <div class="alert alert-success">
+                Add-on erfolgreich erstellt in: <br><code id="resultPath"></code>
+            </div>
+        </div>
+
+        <!-- Global Settings View -->
+        <div id="settingsView" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4>Globale Repository-Einstellungen</h4>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeSettings()">Zurück</button>
+            </div>
+            <form id="settingsForm">
+                <div class="mb-3">
+                    <label for="repo_name" class="form-label">Repository Name</label>
+                    <input type="text" class="form-control" id="repo_name" required>
+                    <div class="form-text">Der Name deines Home Assistant Add-on Repositories.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="repo_maintainer" class="form-label">Maintainer</label>
+                    <input type="text" class="form-control" id="repo_maintainer" required>
+                    <div class="form-text">Dein Name oder Pseudonym als Maintainer.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Einstellungen speichern</button>
+            </form>
+            <div id="settingsResult" class="mt-3" style="display:none;">
+                <div class="alert alert-success">Einstellungen gespeichert!</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const steps = document.querySelectorAll('.step');
+    let currentStep = 0;
+
+    function addEnvVar(key = '', value = '', userEditable = false) {
+        const container = document.getElementById('envVarsContainer');
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2 env-var-row';
+        div.innerHTML = `
+            <input type="text" class="form-control env-key" placeholder="KEY" value="${key}">
+            <input type="text" class="form-control env-value" placeholder="VALUE" value="${value}">
+            <div class="input-group-text">
+                <input class="form-check-input mt-0 env-user-editable" type="checkbox" title="Vom HA-Benutzer änderbar" ${userEditable ? 'checked' : ''}>
+                <span class="ms-1 small">HA-Edit</span>
+            </div>
+            <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">×</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function getEnvVars() {
+        const rows = document.querySelectorAll('.env-var-row');
+        const vars = [];
+        rows.forEach(row => {
+            const key = row.querySelector('.env-key').value.trim();
+            const value = row.querySelector('.env-value').value;
+            const userEditable = row.querySelector('.env-user-editable').checked;
+            if (key) {
+                vars.push({ key, value, userEditable });
+            }
+        });
+        return vars;
+    }
+
+    document.getElementById('ingress').addEventListener('change', (e) => {
+        document.getElementById('ingressPortContainer').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    document.querySelectorAll('.next-step').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (currentStep === 1) { // Summary update after step 2
+                const ingress = document.getElementById('ingress').checked;
+                const backup = document.getElementById('backup').checked;
+                const envVars = getEnvVars();
+                let envSummary = '';
+                if (envVars.length > 0) {
+                    envSummary = '<h6>Umgebungsvariablen:</h6><ul>';
+                    envVars.forEach(v => {
+                        envSummary += `<li>${v.key}=${v.value} ${v.userEditable ? '(HA-Edit)' : '(Fix)'}</li>`;
+                    });
+                    envSummary += '</ul>';
+                }
+
+                const summary = `
+                    <p><strong>Name:</strong> ${document.getElementById('name').value}</p>
+                    <p><strong>Beschreibung:</strong> ${document.getElementById('description').value}</p>
+                    <p><strong>Icon:</strong> ${document.getElementById('icon').value || 'Keines'}</p>
+                    <p><strong>Image:</strong> ${document.getElementById('image').value}</p>
+                    <p><strong>Version:</strong> ${document.getElementById('version').value}</p>
+                    <p><strong>Ingress:</strong> ${ingress ? 'Aktiviert (Port ' + document.getElementById('ingress_port').value + ')' : 'Deaktiviert'}</p>
+                    <p><strong>Backup:</strong> ${backup ? 'Aktiviert' : 'Deaktiviert'}</p>
+                    ${envSummary}
+                `;
+                document.getElementById('summary').innerHTML = summary;
+            }
+            steps[currentStep].classList.remove('active');
+            currentStep++;
+            steps[currentStep].classList.add('active');
+        });
+    });
+
+    document.querySelectorAll('.prev-step').forEach(btn => {
+        btn.addEventListener('click', () => {
+            steps[currentStep].classList.remove('active');
+            currentStep--;
+            steps[currentStep].classList.add('active');
+        });
+    });
+
+    document.getElementById('wizardForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            name: document.getElementById('name').value,
+            description: document.getElementById('description').value,
+            icon: document.getElementById('icon').value,
+            image: document.getElementById('image').value,
+            version: document.getElementById('version').value,
+            ingress: document.getElementById('ingress').checked,
+            ingress_port: parseInt(document.getElementById('ingress_port').value),
+            backup: document.getElementById('backup').checked,
+            env_vars: getEnvVars()
+        };
+
+        const response = await fetch('/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.status === 'success') {
+            document.getElementById('resultPath').innerText = result.path;
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('wizardForm').style.display = 'none';
+            document.getElementById('addonSelection').style.display = 'none';
+            document.getElementById('cancelBtn').style.display = 'none';
+            setTimeout(() => location.reload(), 3000); // Reload nach 3 Sekunden um Liste zu aktualisieren
+        }
+    });
+
+    async function loadAddons() {
+        const response = await fetch('/addons');
+        const addons = await response.json();
+        const list = document.getElementById('addonList');
+        if (addons.length === 0) {
+            list.innerHTML = '<div class="list-group-item">Keine Add-ons gefunden</div>';
+            return;
+        }
+        list.innerHTML = addons.map(addon => {
+            const isSelf = addon.slug === 'haos_addon_converter';
+            const iconHtml = addon.icon ? `<span class="me-2" title="${addon.icon}">🏷️</span>` : '';
+            return `
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <div class="me-3 text-center" style="width: 40px; font-size: 24px;">
+                        ${addon.icon ? '📦' : '📦'} 
+                    </div>
+                    <div>
+                        <strong>${addon.name}</strong><br>
+                        <small class="text-muted">Version: ${addon.version}${addon.icon ? ' | Icon: ' + addon.icon : ''}</small>
+                    </div>
+                </div>
+                ${isSelf ? 
+                    '<span class="badge bg-secondary rounded-pill">System</span>' : 
+                    `<div>
+                        <button type="button" class="btn btn-sm btn-primary rounded-pill" onclick="editAddon('${addon.slug}')">Edit</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteAddon('${addon.slug}')">Löschen</button>
+                    </div>`
+                }
+            </div>
+        `}).join('');
+    }
+
+    function startNew() {
+        document.getElementById('addonSelection').style.display = 'none';
+        document.getElementById('wizardForm').style.display = 'block';
+        document.getElementById('cancelBtn').style.display = 'block';
+        document.getElementById('wizardForm').reset();
+        document.getElementById('ingressPortContainer').style.display = 'none';
+        document.getElementById('envVarsContainer').innerHTML = '';
+        
+        // Reset steps
+        steps.forEach(s => s.classList.remove('active'));
+        currentStep = 0;
+        steps[0].classList.add('active');
+    }
+
+    function cancelWizard() {
+        if (confirm('Möchtest du den Wizard wirklich abbrechen? Alle nicht gespeicherten Änderungen gehen verloren.')) {
+            document.getElementById('addonSelection').style.display = 'block';
+            document.getElementById('wizardForm').style.display = 'none';
+            document.getElementById('cancelBtn').style.display = 'none';
+            loadAddons();
+        }
+    }
+
+    async function editAddon(slug) {
+        const response = await fetch(`/addons/${slug}`);
+        const addon = await response.json();
+        
+        document.getElementById('name').value = addon.name;
+        document.getElementById('description').value = addon.description;
+        document.getElementById('icon').value = addon.icon || '';
+        document.getElementById('image').value = addon.image;
+        document.getElementById('version').value = addon.version;
+        document.getElementById('ingress').checked = addon.ingress;
+        document.getElementById('ingress_port').value = addon.ingress_port;
+        document.getElementById('backup').checked = addon.backup;
+        
+        document.getElementById('ingressPortContainer').style.display = addon.ingress ? 'block' : 'none';
+        
+        // Env vars laden
+        document.getElementById('envVarsContainer').innerHTML = '';
+        if (addon.env_vars && addon.env_vars.length > 0) {
+            addon.env_vars.forEach(v => {
+                addEnvVar(v.key, v.value, v.userEditable);
+            });
+        }
+        
+        document.getElementById('addonSelection').style.display = 'none';
+        document.getElementById('wizardForm').style.display = 'block';
+        document.getElementById('cancelBtn').style.display = 'block';
+
+        // Reset steps
+        steps.forEach(s => s.classList.remove('active'));
+        currentStep = 0;
+        steps[0].classList.add('active');
+    }
+
+    async function deleteAddon(slug) {
+        if (confirm(`Möchtest du das Add-on "${slug}" wirklich löschen? Dieser Vorgang kann nicht rückgängig gemacht werden.`)) {
+            try {
+                const response = await fetch(`/addons/${slug}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    loadAddons();
+                } else {
+                    alert('Fehler beim Löschen: ' + result.message);
+                }
+            } catch (error) {
+                alert('Ein Fehler ist aufgetreten: ' + error.message);
+            }
+        }
+    }
+
+    async function openSettings() {
+        document.getElementById('addonSelection').style.display = 'none';
+        document.getElementById('wizardForm').style.display = 'none';
+        document.getElementById('settingsView').style.display = 'block';
+        document.getElementById('cancelBtn').style.display = 'none';
+        
+        const response = await fetch('/settings');
+        const settings = await response.json();
+        document.getElementById('repo_name').value = settings.name;
+        document.getElementById('repo_maintainer').value = settings.maintainer;
+    }
+
+    function closeSettings() {
+        document.getElementById('settingsView').style.display = 'none';
+        document.getElementById('addonSelection').style.display = 'block';
+    }
+
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+            name: document.getElementById('repo_name').value,
+            maintainer: document.getElementById('repo_maintainer').value
+        };
+        const response = await fetch('/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.status === 'success') {
+            document.getElementById('settingsResult').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('settingsResult').style.display = 'none';
+                closeSettings();
+            }, 1500);
+        }
+    });
+
+    async function selfConvert() {
+        if (!confirm('Möchtest du den HAOS Add-on Converter als Add-on für Home Assistant exportieren? Die Version wird automatisch hochgezählt.')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch('/self-convert', {
+                method: 'POST'
+            });
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                alert('Add-on erfolgreich erstellt in: ' + result.path);
+                loadAddons();
+            } else {
+                alert('Fehler: ' + result.message);
+            }
+        } catch (e) {
+            alert('Ein Fehler ist aufgetreten: ' + e.message);
+        }
+    }
+
+    loadAddons();
+</script>
+
+</body>
+</html>
