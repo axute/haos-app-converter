@@ -153,6 +153,7 @@ class GenerateController
         // Wenn es sich um eine Selbst-Konvertierung handelt, müssen wir die Dateien kopieren
         if ($isSelfConvert) {
             $dockerfileContent = "FROM $image\n\n";
+            $dockerfileContent .= "RUN apt-get update && apt-get install -y unzip git && rm -rf /var/lib/apt/lists/*\n";
             $dockerfileContent .= "WORKDIR /var/www/html\n";
             $dockerfileContent .= "COPY . .\n";
             $dockerfileContent .= "RUN composer install --no-interaction --optimize-autoloader\n";

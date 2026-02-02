@@ -3,9 +3,11 @@ FROM php:8.3-apache
 # Apache mod_rewrite aktivieren für Slim Framework
 RUN a2enmod rewrite
 
-# Benötigte PHP-Extensions installieren (falls nötig, z.B. für YAML wenn nicht per Composer gelöst)
-# Da Symfony Yaml verwendet wird, reichen die Standard-Extensions meist aus.
-# RUN apt-get update && apt-get install -y libyaml-dev && pecl install yaml && docker-php-ext-enable yaml
+# Benötigte System-Abhängigkeiten installieren
+RUN apt-get update && apt-get install -y \
+    unzip \
+    git \
+    && rm -rf /var/www/html/var/lib/apt/lists/*
 
 # Arbeitsverzeichnis setzen
 WORKDIR /var/www/html
@@ -23,7 +25,7 @@ RUN composer install --no-interaction --optimize-autoloader
 RUN mkdir -p data && chown -R www-data:www-data data
 
 # Apache DocumentRoot auf /public setzen und AllowOverride aktivieren
-ENV APACHE_DOCUMENT_ROOT /var/www/html/public
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
