@@ -66,8 +66,6 @@ class GenerateController
             'arch' => ['aarch64', 'amd64', 'armhf', 'armv7', 'i386'],
             'startup' => 'application',
             'boot' => 'auto',
-            'options' => (object)[],
-            'schema' => (object)[],
             // 'image' => $image // Removed because it's built locally from Dockerfile
         ];
 
@@ -106,30 +104,14 @@ class GenerateController
         // Umgebungsvariablen verarbeiten
         if (!empty($envVars)) {
             $environment = [];
-            $options = [];
-            $schema = [];
-
             foreach ($envVars as $var) {
-                $key = $var['key'];
-                $value = $var['value'];
-                $userEditable = $var['userEditable'] ?? false;
-
-                if ($userEditable) {
-                    $options[$key] = $value;
-                    $schema[$key] = 'str?'; // Standardmäßig als optionaler String
-                } else {
-                    $environment[$key] = $value;
+                if (!empty($var['key'])) {
+                    $environment[$var['key']] = $var['value'] ?? '';
                 }
             }
 
             if (!empty($environment)) {
                 $config['environment'] = $environment;
-            }
-            if (!empty($options)) {
-                $config['options'] = $options;
-            }
-            if (!empty($schema)) {
-                $config['schema'] = $schema;
             }
         }
         
@@ -158,6 +140,7 @@ class GenerateController
             $dockerfileContent .= "COPY . .\n";
             $dockerfileContent .= "RUN composer install --no-interaction --optimize-autoloader\n";
             $dockerfileContent .= "RUN mkdir -p data && chown -R www-data:www-data data\n";
+            $dockerfileContent .= "ENTRYPOINT [\"entrypoint.sh\"]\n";
         }
         
         file_put_contents($addonPath . '/Dockerfile', $dockerfileContent);

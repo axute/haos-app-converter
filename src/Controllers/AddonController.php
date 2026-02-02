@@ -79,14 +79,7 @@ class AddonController
         // Fixierte Variablen aus 'environment'
         if (isset($config['environment']) && is_array($config['environment'])) {
             foreach ($config['environment'] as $key => $value) {
-                $envVars[] = ['key' => $key, 'value' => $value, 'userEditable' => false];
-            }
-        }
-        // Änderbare Variablen aus 'options'
-        if (isset($config['options']) && is_array($config['options'])) {
-            foreach ($config['options'] as $key => $value) {
-                // Wir prüfen nicht extra schema, da wir davon ausgehen dass es zusammengehört
-                $envVars[] = ['key' => $key, 'value' => $value, 'userEditable' => true];
+                $envVars[] = ['key' => $key, 'value' => $value];
             }
         }
 

@@ -115,6 +115,9 @@
 
                 <div class="mb-3">
                     <h5>Umgebungsvariablen</h5>
+                    <div class="alert alert-info py-2 small">
+                        <strong>Hinweis:</strong> Variablen sind fest im Add-on hinterlegt und können später nicht über die Home Assistant Benutzeroberfläche geändert werden.
+                    </div>
                     <div id="envVarsContainer">
                         <!-- Dynamische Env-Variablen -->
                     </div>
@@ -209,17 +212,13 @@
         }
     });
 
-    function addEnvVar(key = '', value = '', userEditable = false) {
+    function addEnvVar(key = '', value = '') {
         const container = document.getElementById('envVarsContainer');
         const div = document.createElement('div');
         div.className = 'input-group mb-2 env-var-row';
         div.innerHTML = `
             <input type="text" class="form-control env-key" placeholder="KEY" value="${key}">
             <input type="text" class="form-control env-value" placeholder="VALUE" value="${value}">
-            <div class="input-group-text">
-                <input class="form-check-input mt-0 env-user-editable" type="checkbox" title="Vom HA-Benutzer änderbar" ${userEditable ? 'checked' : ''}>
-                <span class="ms-1 small">HA-Edit</span>
-            </div>
             <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">×</button>
         `;
         container.appendChild(div);
@@ -231,9 +230,8 @@
         rows.forEach(row => {
             const key = row.querySelector('.env-key').value.trim();
             const value = row.querySelector('.env-value').value;
-            const userEditable = row.querySelector('.env-user-editable').checked;
             if (key) {
-                vars.push({ key, value, userEditable });
+                vars.push({ key, value });
             }
         });
         return vars;
@@ -507,7 +505,7 @@
         document.getElementById('envVarsContainer').innerHTML = '';
         if (addon.env_vars && addon.env_vars.length > 0) {
             addon.env_vars.forEach(v => {
-                addEnvVar(v.key, v.value, v.userEditable);
+                addEnvVar(v.key, v.value);
             });
         }
         

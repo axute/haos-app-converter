@@ -15,7 +15,10 @@ This tool is a web-based converter that transforms any Docker image into a Home 
 - **Web UI Configuration**: Automatic generation of the `webui` URL (e.g., `http://[HOST]:[PORT:xxxx]/`) if Ingress is disabled.
 - **Port Mappings**: Definition of mappings between container ports and host ports.
 - **Backup Integration**: Mark add-ons as backup-compatible (supports `hot` backup mode).
-- **Environment Variables**: Definition of fixed or HA-user editable variables.
+- **Environment Variables**: Definition of fixed environment variables.
+  - **Note**: Environment variables are fixed within the add-on configuration and cannot be changed via the Home Assistant GUI after installation. This ensures maximum compatibility with existing Docker images without requiring internal modifications.
+- **Clean Dockerfiles**: The generated `Dockerfile` is kept minimal. It uses the specified base image and does not override the default `CMD` or `ENTRYPOINT` (unless during self-conversion), preserving the original image's behavior.
+- **Simplified Config**: The `config.yaml` is kept clean by omitting unused optional fields like `options` and `schema`.
 - **Self-Conversion**: The converter can export itself as a Home Assistant add-on with one click (including a special icon and `mdi:toy-brick` panel icon).
 - **Global Settings**: Configuration of repository name and maintainer in a separate view.
 - **Add-on Management**: List, edit, and delete created add-ons.
