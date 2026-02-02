@@ -28,6 +28,11 @@ This tool is a web-based converter that transforms any Docker image into a Home 
 ## Installation & Usage
 
 ### Option 1: With Docker (Recommended)
+You can use the pre-built image from GHCR:
+```bash
+docker run -d -p 8985:80 -v $(pwd)/data:/var/www/html/data ghcr.io/axute/haos-addon-converter:latest
+```
+Or use docker-compose:
 1. Start the container:
    ```bash
    docker-compose up -d --build
