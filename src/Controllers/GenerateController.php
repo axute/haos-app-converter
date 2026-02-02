@@ -30,6 +30,7 @@ class GenerateController
         $panelIcon = $data['panel_icon'] ?? 'mdi:link-variant';
         $backup = $data['backup'] ?? false;
         $ports = $data['ports'] ?? [];
+        $map = $data['map'] ?? [];
         $envVars = $data['env_vars'] ?? [];
         $isSelfConvert = $data['self_convert'] ?? false;
         
@@ -83,6 +84,10 @@ class GenerateController
 
         if ($backup) {
             $config['backup'] = 'hot';
+        }
+
+        if (!empty($map)) {
+            $config['map'] = $map;
         }
 
         // Ports verarbeiten

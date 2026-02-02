@@ -1,12 +1,13 @@
 {
     "name": "micro/haos-addon-converter",
-    "description": "Wizard to convert docker images to Home Assistant addons",
+    "description": "Converter to convert docker images to Home Assistant addons",
     "type": "project",
     "require": {
         "slim/slim": "^4.0",
         "slim/psr7": "^1.0",
         "symfony/yaml": "^6.0",
-        "php-di/php-di": "^7.0"
+        "php-di/php-di": "^7.0",
+      "ext-json": "*"
     },
     "autoload": {
         "psr-4": {

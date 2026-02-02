@@ -13,7 +13,7 @@ $app = AppFactory::create();
 $app->addRoutingMiddleware();
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
-// Hauptseite - Wizard Interface
+// Hauptseite - Converter Interface
 $app->get('/', [IndexController::class, 'index']);
 
 // Liste der Add-ons

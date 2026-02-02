@@ -1,60 +1,61 @@
 # HAOS Add-on Converter
 
-This tool is a web-based wizard that converts any Docker image into a Home Assistant Add-on.
+This tool is a web-based converter that transforms any Docker image into a Home Assistant add-on.
 
 ## Features
 
-- **Step-by-Step Wizard**: Easily create Home Assistant Add-ons from Docker images.
-- **Icon Support**: Upload a custom PNG icon that will be stored as `icon.png` in the add-on directory.
+- **One-Step Form**: The former multi-step wizard has been reduced to a clear one-step form for faster editing.
+- **Version Management**: Dedicated buttons for **Major**, **Minor**, and **Fix updates** are available when editing add-ons, handling versioning automatically.
+- **Storage Mappings (Map)**: Support for Home Assistant storage mappings (`config`, `ssl`, `share`, `media`, `addons`, `backup`) with configurable access modes (`RW`/`RO`).
+- **Icon Support**: Upload a custom PNG icon or use the default icon.
 - **Ingress Support**: 
-  - Configure Home Assistant Ingress for seamless web interface access.
-  - Custom **Panel Icon** (MDI) for the sidebar.
+  - Configuration of Home Assistant Ingress for seamless access to the web interface.
+  - Customizable **Panel Icon** (MDI) for the sidebar.
   - **Ingress Stream** support for WebSockets/VNC.
-- **Web-UI Configuration**: Automatically generates the `webui` URL (e.g., `http://[HOST]:[PORT:xxxx]/`) when Ingress is disabled.
-- **Port-Mappings**: Define mappings between container ports and host ports.
-- **Backup Integration**: Mark your add-ons as backup-compatible (supports `hot` backup mode).
-- **Environment Variables**: Define fixed or user-editable environment variables.
-- **Self-Conversion**: The converter can export itself as a Home Assistant Add-on with a single click.
-- **Global Settings**: Configure your repository name and maintainer globally in a separate settings view.
-- **Add-on Management**: List, edit, and delete your created add-ons.
+- **Web UI Configuration**: Automatic generation of the `webui` URL (e.g., `http://[HOST]:[PORT:xxxx]/`) if Ingress is disabled.
+- **Port Mappings**: Definition of mappings between container ports and host ports.
+- **Backup Integration**: Mark add-ons as backup-compatible (supports `hot` backup mode).
+- **Environment Variables**: Definition of fixed or HA-user editable variables.
+- **Self-Conversion**: The converter can export itself as a Home Assistant add-on with one click (including a special icon and `mdi:toy-brick` panel icon).
+- **Global Settings**: Configuration of repository name and maintainer in a separate view.
+- **Add-on Management**: List, edit, and delete created add-ons.
 
 ## Prerequisites
 
-- PHP 8.0 or higher (or Docker)
-- Composer (if not running via Docker)
+- PHP 8.3 or higher (or Docker)
+- Composer (if not run via Docker)
 
 ## Installation & Usage
 
-### Option 1: Using Docker (Recommended)
+### Option 1: With Docker (Recommended)
 1. Start the container:
    ```bash
    docker-compose up -d --build
    ```
-2. Open the wizard in your browser: [http://localhost:8080](http://localhost:8080)
-   *(Note: The default port in `docker-compose.yaml` is 8985, so use [http://localhost:8985](http://localhost:8985) if not changed)*
+2. Open the converter in your browser: [http://localhost:8985](http://localhost:8985)
 
 ### Option 2: Local with PHP
 1. Install dependencies:
    ```bash
    composer install
    ```
-2. Start PHP web server:
+2. Start the PHP web server:
    ```bash
    php -S localhost:8000 -t public
    ```
-3. Open the wizard in your browser: [http://localhost:8000](http://localhost:8000)
+3. Open the converter in your browser: [http://localhost:8000](http://localhost:8000)
 
 ## Project Structure
 
-Generated add-ons are created in the `/data/{addon-slug}` directory, as described in the [Home Assistant Documentation](https://developers.home-assistant.io/docs/apps/tutorial).
+Generated add-ons are created in the `/data/{addon-slug}` directory, as described in the [Home Assistant documentation](https://developers.home-assistant.io/docs/apps/tutorial).
 
 Each add-on directory contains:
 - `config.yaml`: Home Assistant configuration
 - `Dockerfile`: Based on the selected Docker image
-- `icon.png`: (Optional) The add-on icon
+- `icon.png`: The add-on icon (automatically created during self-conversion or manual upload)
 
-A global `repository.yaml` is maintained in the root of the data directory.
+A global `repository.yaml` is maintained in the main data directory.
 
 ## Environment Variables
 
-- `CONVERTER_DATA_DIR`: (Optional) Path to the data directory. Defaults to `./data`. When running as an HA Add-on, set this to `/data`.
+- `CONVERTER_DATA_DIR`: (Optional) Path to the data directory. Default is `./data`. When the converter runs as an HA add-on, this is automatically set to `/addons`.

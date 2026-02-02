@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HA Add-on Converter Wizard (PHP)</title>
+    <title>HA Add-on Converter (PHP)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪄</text></svg>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f8f9fa; }
-        .wizard-container { max-width: 600px; margin: 50px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .converter-container { max-width: 600px; margin: 50px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .step { display: none; }
         .step.active { display: block; }
     </style>
@@ -16,10 +16,10 @@
 <body>
 
 <div class="container">
-    <div class="wizard-container">
+    <div class="converter-container">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0">HA Add-on Wizard</h2>
-            <button type="button" id="cancelBtn" class="btn btn-sm btn-outline-danger" style="display:none;" onclick="cancelWizard()">Abbrechen</button>
+            <h2 class="mb-0">HA Add-on Converter</h2>
+            <button type="button" id="cancelBtn" class="btn btn-sm btn-outline-danger" style="display:none;" onclick="cancelConverter()">Abbrechen</button>
         </div>
         
         <div id="addonSelection" class="mb-4">
@@ -37,79 +37,81 @@
             <hr>
         </div>
 
-        <form id="wizardForm" style="display:none;">
-            <!-- Step 1: Basic Info -->
-            <div class="step active" id="step1">
-                <h4>Schritt 1: Basis-Informationen</h4>
-                <div class="mb-3">
-                    <label for="name" class="form-label">Add-on Name</label>
-                    <input type="text" class="form-control" id="name" required placeholder="z.B. My Awesome Tool">
+        <form id="converterForm" style="display:none;">
+            <!-- Einziger Schritt: Alle Informationen -->
+            <div id="converterContent">
+                <h4>Add-on Informationen</h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">Add-on Name</label>
+                        <input type="text" class="form-control" id="name" required placeholder="z.B. My Awesome Tool">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="version" class="form-label">Version</label>
+                        <input type="text" class="form-control" id="version" value="1.0.0">
+                    </div>
                 </div>
+                
                 <div class="mb-3">
                     <label for="description" class="form-label">Beschreibung</label>
-                    <textarea class="form-control" id="description" rows="3"></textarea>
+                    <textarea class="form-control" id="description" rows="2"></textarea>
                 </div>
+
+                <div class="mb-3">
+                    <label for="image" class="form-label">Docker Image Name</label>
+                    <input type="text" class="form-control" id="image" required placeholder="z.B. nginx:latest oder alpine:3.14">
+                    <div class="form-text">Das Image, das als Basis für das Add-on dienen soll.</div>
+                </div>
+
                 <div class="mb-3">
                     <label for="icon_file" class="form-label">Icon Datei (PNG)</label>
                     <input type="file" class="form-control" id="icon_file" accept="image/png">
                     <div id="icon_preview" class="mt-2" style="display:none;">
                         <img src="" alt="Preview" style="max-width: 64px; max-height: 64px;">
                     </div>
-                    <div class="form-text">Wird als icon.png im Add-on Verzeichnis gespeichert (empfohlen für lokale Add-ons).</div>
                 </div>
-                <button type="button" class="btn btn-primary next-step">Weiter</button>
-            </div>
 
-            <!-- Step 2: Docker Info -->
-            <div class="step" id="step2">
-                <h4>Schritt 2: Docker Image</h4>
-                <div class="mb-3">
-                    <label for="image" class="form-label">Docker Image Name</label>
-                    <input type="text" class="form-control" id="image" required placeholder="z.B. nginx:latest oder alpine:3.14">
-                    <div class="form-text">Das Image, das als Basis für das Add-on dienen soll.</div>
-                </div>
-                <div class="mb-3">
-                    <label for="version" class="form-label">Version</label>
-                    <input type="text" class="form-control" id="version" value="1.0.0">
-                </div>
+                <hr>
+
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="ingress">
                     <label class="form-check-label" for="ingress">
                         Home Assistant Ingress aktivieren
                     </label>
-                    <div class="form-text">Ermöglicht den Zugriff auf die Web-UI direkt über Home Assistant.</div>
                 </div>
-                <div id="ingressOptions" style="display:none;">
-                    <div class="mb-3">
-                        <label for="ingress_port" class="form-label">Interner Web-Port (Ingress)</label>
-                        <input type="number" class="form-control" id="ingress_port" value="80">
-                        <div class="form-text">Der Port, auf dem die Anwendung im Docker-Container lauscht.</div>
+
+                <div id="ingressOptions" style="display:none;" class="p-3 border rounded mb-3 bg-light">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="ingress_port" class="form-label">Interner Web-Port (Ingress)</label>
+                            <input type="number" class="form-control" id="ingress_port" value="80">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="panel_icon" class="form-label">Panel Icon (MDI)</label>
+                            <input type="text" class="form-control" id="panel_icon" placeholder="mdi:link-variant">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="panel_icon" class="form-label">Panel Icon (MDI)</label>
-                        <input type="text" class="form-control" id="panel_icon" placeholder="mdi:link-variant">
-                        <div class="form-text">Das Icon für die Seitenleiste (z.B. <code>mdi:docker</code>).</div>
-                    </div>
-                    <div class="form-check mb-3">
+                    <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="ingress_stream">
                         <label class="form-check-label" for="ingress_stream">
                             Ingress Stream aktivieren
                         </label>
-                        <div class="form-text">Ermöglicht das Streaming über Ingress (z.B. für WebSockets/VNC).</div>
                     </div>
                 </div>
+
                 <div id="webUiPortContainer" class="mb-3">
                     <label for="web_ui_port" class="form-label">Web-UI Port (ohne Ingress)</label>
                     <input type="number" class="form-control" id="web_ui_port" placeholder="z.B. 8080">
-                    <div class="form-text">Wird verwendet um die <code>webui</code> URL zu generieren: <code>http://[HOST]:[PORT:xxxx]/</code></div>
                 </div>
+
                 <div class="form-check mb-3">
                     <input class="form-check-input" type="checkbox" id="backup">
                     <label class="form-check-label" for="backup">
                         Backup-Unterstützung aktivieren
                     </label>
-                    <div class="form-text">Markiert das Add-on als Backup-fähig.</div>
                 </div>
+
+                <hr>
 
                 <div class="mb-3">
                     <h5>Umgebungsvariablen</h5>
@@ -125,27 +127,42 @@
                         <!-- Dynamische Port-Mappings -->
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPortMapping()">+ Port-Mapping hinzufügen</button>
-                    <div class="form-text">Mappt Container-Ports auf Host-Ports (z.B. 80 auf 8080).</div>
                 </div>
 
-                <button type="button" class="btn btn-secondary prev-step">Zurück</button>
-                <button type="button" class="btn btn-primary next-step">Weiter</button>
-            </div>
+                <div class="mb-3">
+                    <h5>Speicher-Mappings (Map)</h5>
+                    <div id="mapContainer">
+                        <!-- Dynamische Map-Mappings -->
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addMapMapping()">+ Mapping hinzufügen</button>
+                    <div class="form-text">Erlaubt den Zugriff auf HA-Ordner (z.B. config, ssl, share, media).</div>
+                </div>
 
-            <!-- Step 3: Review & Generate -->
-            <div class="step" id="step3">
-                <h4>Schritt 3: Zusammenfassung</h4>
-                <div id="summary"></div>
                 <hr>
-                <button type="button" class="btn btn-secondary prev-step">Zurück</button>
-                <button type="submit" class="btn btn-success">Add-on Erstellen</button>
+                
+                <div id="submitSection" class="d-grid gap-2">
+                    <button type="submit" id="saveBtn" class="btn btn-success btn-lg">Add-on Erstellen / Speichern</button>
+                </div>
+
+                <div id="updateSection" style="display:none;">
+                    <label class="form-label d-block mb-2">Add-on aktualisieren (Version-Update)</label>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-primary w-100" onclick="submitUpdate('major')">Major-Update</button>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-info w-100" onclick="submitUpdate('minor')">Minor-Update</button>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-success w-100" onclick="submitUpdate('fix')">Fix-Update</button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
 
         <div id="result" class="mt-4" style="display:none;">
-            <div class="alert alert-success">
-                Add-on erfolgreich erstellt in: <br><code id="resultPath"></code>
-            </div>
+            <!-- Wird dynamisch befüllt -->
         </div>
 
         <!-- Global Settings View -->
@@ -175,9 +192,9 @@
 </div>
 
 <script>
-    const steps = document.querySelectorAll('.step');
-    let currentStep = 0;
     let iconBase64 = '';
+    let isEditing = false;
+    let originalVersion = '1.0.0';
 
     document.getElementById('icon_file').addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -248,64 +265,67 @@
         return ports;
     }
 
+    function addMapMapping(folder = 'config', mode = 'rw') {
+        const container = document.getElementById('mapContainer');
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2 map-row';
+        div.innerHTML = `
+            <select class="form-select map-folder">
+                <option value="config" ${folder === 'config' ? 'selected' : ''}>config</option>
+                <option value="ssl" ${folder === 'ssl' ? 'selected' : ''}>ssl</option>
+                <option value="share" ${folder === 'share' ? 'selected' : ''}>share</option>
+                <option value="media" ${folder === 'media' ? 'selected' : ''}>media</option>
+                <option value="addons" ${folder === 'addons' ? 'selected' : ''}>addons</option>
+                <option value="backup" ${folder === 'backup' ? 'selected' : ''}>backup</option>
+            </select>
+            <select class="form-select map-mode" style="max-width: 100px;">
+                <option value="rw" ${mode === 'rw' ? 'selected' : ''}>RW</option>
+                <option value="ro" ${mode === 'ro' ? 'selected' : ''}>RO</option>
+            </select>
+            <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">×</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function getMapMappings() {
+        const rows = document.querySelectorAll('.map-row');
+        const maps = [];
+        rows.forEach(row => {
+            const folder = row.querySelector('.map-folder').value;
+            const mode = row.querySelector('.map-mode').value;
+            maps.push(`${folder}:${mode}`);
+        });
+        return maps;
+    }
+
     document.getElementById('ingress').addEventListener('change', (e) => {
         document.getElementById('ingressOptions').style.display = e.target.checked ? 'block' : 'none';
         document.getElementById('webUiPortContainer').style.display = e.target.checked ? 'none' : 'block';
     });
 
-    document.querySelectorAll('.next-step').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (currentStep === 1) { // Summary update after step 2
-                const ingress = document.getElementById('ingress').checked;
-                const backup = document.getElementById('backup').checked;
-                const envVars = getEnvVars();
-                let envSummary = '';
-                if (envVars.length > 0) {
-                    envSummary = '<h6>Umgebungsvariablen:</h6><ul>';
-                    envVars.forEach(v => {
-                        envSummary += `<li>${v.key}=${v.value} ${v.userEditable ? '(HA-Edit)' : '(Fix)'}</li>`;
-                    });
-                    envSummary += '</ul>';
-                }
+    async function submitUpdate(type) {
+        let parts = originalVersion.split('.').map(x => parseInt(x) || 0);
+        while (parts.length < 3) parts.push(0);
 
-                const ports = getPortMappings();
-                let portsSummary = '';
-                if (ports.length > 0) {
-                    portsSummary = '<h6>Port-Mappings:</h6><ul>';
-                    ports.forEach(p => {
-                        portsSummary += `<li>Container ${p.container} → Host ${p.host}</li>`;
-                    });
-                    portsSummary += '</ul>';
-                }
+        if (type === 'major') {
+            parts[0]++;
+            parts[1] = 0;
+            parts[2] = 0;
+        } else if (type === 'minor') {
+            parts[1]++;
+            parts[2] = 0;
+        } else if (type === 'fix') {
+            parts[2]++;
+        }
 
-                const summary = `
-                    <p><strong>Name:</strong> ${document.getElementById('name').value}</p>
-                    <p><strong>Beschreibung:</strong> ${document.getElementById('description').value}</p>
-                    <p><strong>Image:</strong> ${document.getElementById('image').value}</p>
-                    <p><strong>Version:</strong> ${document.getElementById('version').value}</p>
-                    <p><strong>Ingress:</strong> ${ingress ? 'Aktiviert (Port ' + document.getElementById('ingress_port').value + ', Icon ' + (document.getElementById('panel_icon').value || 'mdi:link-variant') + ', Stream: ' + (document.getElementById('ingress_stream').checked ? 'Ja' : 'Nein') + ')' : 'Deaktiviert'}</p>
-                    ${!ingress && document.getElementById('web_ui_port').value ? `<p><strong>Web-UI (webui):</strong> http://[HOST]:[PORT:${document.getElementById('web_ui_port').value}]/</p>` : ''}
-                    <p><strong>Backup:</strong> ${backup ? 'Aktiviert' : 'Deaktiviert'}</p>
-                    ${envSummary}
-                    ${portsSummary}
-                `;
-                document.getElementById('summary').innerHTML = summary;
-            }
-            steps[currentStep].classList.remove('active');
-            currentStep++;
-            steps[currentStep].classList.add('active');
-        });
-    });
+        const newVersion = parts.join('.');
+        document.getElementById('version').value = newVersion;
+        
+        // Formular absenden
+        document.getElementById('converterForm').dispatchEvent(new Event('submit'));
+    }
 
-    document.querySelectorAll('.prev-step').forEach(btn => {
-        btn.addEventListener('click', () => {
-            steps[currentStep].classList.remove('active');
-            currentStep--;
-            steps[currentStep].classList.add('active');
-        });
-    });
-
-    document.getElementById('wizardForm').addEventListener('submit', async (e) => {
+    document.getElementById('converterForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = {
             name: document.getElementById('name').value,
@@ -320,6 +340,7 @@
             webui_port: document.getElementById('web_ui_port').value ? parseInt(document.getElementById('web_ui_port').value) : null,
             backup: document.getElementById('backup').checked,
             ports: getPortMappings(),
+            map: getMapMappings(),
             env_vars: getEnvVars()
         };
 
@@ -331,12 +352,24 @@
 
         const result = await response.json();
         if (result.status === 'success') {
-            document.getElementById('resultPath').innerText = result.path;
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('wizardForm').style.display = 'none';
+            const summary = `
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-success">Erfolg!</h5>
+                        <p class="card-text">Add-on wurde erstellt/aktualisiert.</p>
+                        <p class="mb-0"><strong>Pfad:</strong> <code id="resultPath">${result.path}</code></p>
+                    </div>
+                </div>
+            `;
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = summary;
+            resultDiv.style.display = 'block';
+            document.getElementById('converterForm').style.display = 'none';
             document.getElementById('addonSelection').style.display = 'none';
             document.getElementById('cancelBtn').style.display = 'none';
             setTimeout(() => location.reload(), 3000); // Reload nach 3 Sekunden um Liste zu aktualisieren
+        } else {
+            alert('Fehler: ' + result.message);
         }
     });
 
@@ -378,10 +411,16 @@
     }
 
     function startNew() {
+        isEditing = false;
         document.getElementById('addonSelection').style.display = 'none';
-        document.getElementById('wizardForm').style.display = 'block';
+        document.getElementById('converterForm').style.display = 'block';
         document.getElementById('cancelBtn').style.display = 'block';
-        document.getElementById('wizardForm').reset();
+        
+        document.getElementById('submitSection').style.display = 'grid';
+        document.getElementById('updateSection').style.display = 'none';
+        document.getElementById('version').readOnly = false;
+
+        document.getElementById('converterForm').reset();
         iconBase64 = '';
         document.getElementById('icon_preview').style.display = 'none';
         document.getElementById('icon_preview').querySelector('img').src = '';
@@ -390,23 +429,21 @@
         document.getElementById('web_ui_port').value = '';
         document.getElementById('panel_icon').value = 'mdi:link-variant';
         document.getElementById('envVarsContainer').innerHTML = '';
-        
-        // Reset steps
-        steps.forEach(s => s.classList.remove('active'));
-        currentStep = 0;
-        steps[0].classList.add('active');
+        document.getElementById('portsContainer').innerHTML = '';
+        document.getElementById('mapContainer').innerHTML = '';
     }
 
-    function cancelWizard() {
-        if (confirm('Möchtest du den Wizard wirklich abbrechen? Alle nicht gespeicherten Änderungen gehen verloren.')) {
+    function cancelConverter() {
+        if (confirm('Möchtest du den Vorgang wirklich abbrechen? Alle nicht gespeicherten Änderungen gehen verloren.')) {
             document.getElementById('addonSelection').style.display = 'block';
-            document.getElementById('wizardForm').style.display = 'none';
+            document.getElementById('converterForm').style.display = 'none';
             document.getElementById('cancelBtn').style.display = 'none';
             loadAddons();
         }
     }
 
     async function editAddon(slug) {
+        isEditing = true;
         const response = await fetch(`/addons/${slug}`);
         const addon = await response.json();
         
@@ -423,6 +460,11 @@
 
         document.getElementById('image').value = addon.image;
         document.getElementById('version').value = addon.version;
+        originalVersion = addon.version || '1.0.0';
+        document.getElementById('version').readOnly = true;
+
+        document.getElementById('submitSection').style.display = 'none';
+        document.getElementById('updateSection').style.display = 'block';
         document.getElementById('ingress').checked = addon.ingress;
         document.getElementById('ingress_port').value = addon.ingress_port;
         document.getElementById('ingress_stream').checked = addon.ingress_stream || false;
@@ -448,6 +490,19 @@
             });
         }
 
+        // Map laden
+        document.getElementById('mapContainer').innerHTML = '';
+        if (addon.map && addon.map.length > 0) {
+            addon.map.forEach(m => {
+                const parts = m.split(':');
+                if (parts.length === 2) {
+                    addMapMapping(parts[0], parts[1]);
+                } else {
+                    addMapMapping(parts[0], 'rw');
+                }
+            });
+        }
+
         // Env vars laden
         document.getElementById('envVarsContainer').innerHTML = '';
         if (addon.env_vars && addon.env_vars.length > 0) {
@@ -457,13 +512,8 @@
         }
         
         document.getElementById('addonSelection').style.display = 'none';
-        document.getElementById('wizardForm').style.display = 'block';
+        document.getElementById('converterForm').style.display = 'block';
         document.getElementById('cancelBtn').style.display = 'block';
-
-        // Reset steps
-        steps.forEach(s => s.classList.remove('active'));
-        currentStep = 0;
-        steps[0].classList.add('active');
     }
 
     async function deleteAddon(slug) {
@@ -486,7 +536,7 @@
 
     async function openSettings() {
         document.getElementById('addonSelection').style.display = 'none';
-        document.getElementById('wizardForm').style.display = 'none';
+        document.getElementById('converterForm').style.display = 'none';
         document.getElementById('settingsView').style.display = 'block';
         document.getElementById('cancelBtn').style.display = 'none';
         

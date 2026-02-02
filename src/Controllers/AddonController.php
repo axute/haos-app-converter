@@ -114,6 +114,7 @@ class AddonController
             'has_local_icon' => $hasLocalIcon,
             'icon_file' => $iconFileContent,
             'ports' => $ports,
+            'map' => $config['map'] ?? [],
             'env_vars' => $envVars
         ];
 
@@ -145,20 +146,29 @@ class AddonController
         $data = [
             'name' => 'HAOS Add-on Converter',
             'image' => 'php:8.3-apache',
-            'description' => 'Web-Wizard zum Konvertieren von Docker-Images in Home Assistant Add-ons.',
+            'description' => 'Web-Converter zum Konvertieren von Docker-Images in Home Assistant Add-ons.',
             'version' => $newVersion,
             'ingress' => true,
             'ingress_port' => 80,
+            'panel_icon' => 'mdi:toy-brick',
             'backup' => true,
             'self_convert' => true,
+            'map' => ['addons:rw'],
             'env_vars' => [
                 [
                     'key' => 'CONVERTER_DATA_DIR',
-                    'value' => '/data',
+                    'value' => '/addons',
                     'userEditable' => false
                 ]
             ]
         ];
+
+        // Icon hinzufügen falls vorhanden
+        $iconPath = __DIR__ . '/../../icon.png';
+        if (file_exists($iconPath)) {
+            $iconData = file_get_contents($iconPath);
+            $data['icon_file'] = 'data:image/png;base64,' . base64_encode($iconData);
+        }
 
         // Wir rufen intern die Generate-Logik auf (oder duplizieren sie hier, aber ein interner Request wäre sauberer)
         // Da wir in Slim sind, können wir den GenerateController direkt instanziieren.
