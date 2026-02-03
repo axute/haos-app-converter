@@ -4,32 +4,37 @@ This tool is a web-based converter that transforms any Docker image into a Home 
 
 ## Features
 
-- **One-Step Form**: The former multi-step wizard has been reduced to a clear one-step form for faster editing.
-- **Add-on Documentation (Markdown)**: 
-  - Integration of **EasyMDE**, a user-friendly Markdown editor for detailed add-on descriptions.
-  - Automatic generation of a `README.md` file within the add-on directory, which Home Assistant uses for the detailed description page in the Add-on Store.
-  - Supports syntax highlighting, toolbar, and live preview.
-- **Version Management**: Dedicated buttons for **Major**, **Minor**, and **Fix updates** are available when editing add-ons, handling versioning automatically.
-- **Storage Mappings (Map)**: Support for Home Assistant storage mappings (`config`, `ssl`, `share`, `media`, `addons`, `backup`) with configurable access modes (`RW`/`RO`).
-- **Icon Support**: Upload a custom PNG icon or use the default icon.
+### 🚀 Core Converter Features
+- **Smart Entrypoint Preservation**: Uses `crane` to automatically detect and preserve the original `ENTRYPOINT` and `CMD` of any Docker image.
+- **Environment Variables**:
+  - **Static Variables**: Fixed within the add-on configuration.
+  - **Editable Variables**: Can be changed via the Home Assistant GUI after installation using a universal wrapper script.
+  - **Risk Note**: Uses a wrapper script that replaces the entrypoint; includes warning for complex images.
+- **Universal Shell Support**: POSIX-compliant `/bin/sh` wrapper script, ensuring compatibility with minimalist images (e.g., Alpine) without `jq` or `bash` dependencies.
+- **Clean Dockerfiles**: Minimal generated `Dockerfile`. Standard add-ons use `FROM`, while advanced ones integrate the wrapper logic automatically.
+- **Simplified Config**: Clean `config.yaml` that only includes `options` and `schema` when necessary.
+
+### 🔌 Home Assistant Integration
 - **Ingress Support**: 
-  - Configuration of Home Assistant Ingress for seamless access to the web interface.
+  - Seamless access to the web interface via Home Assistant Ingress.
   - Customizable **Panel Icon** (MDI) for the sidebar.
   - **Ingress Stream** support for WebSockets/VNC.
-- **Web UI Configuration**: Automatic generation of the `webui` URL (e.g., `http://[HOST]:[PORT:xxxx]/`) if Ingress is disabled.
-- **Port Mappings**: Definition of mappings between container ports and host ports.
-- **Backup Integration**: Mark add-ons as backup-compatible (supports `hot` backup mode).
-- **Environment Variables**: Flexible definition of environment variables.
-  - **Static Variables**: Fixed within the add-on configuration.
-  - **Editable Variables**: Can be changed via the Home Assistant GUI after installation. This is achieved using a universal wrapper script.
-  - **Risk Note**: Enabling editable variables uses a wrapper script that replaces the container's entrypoint. While it attempts to preserve original behavior, it might cause issues with highly complex Docker images.
-- **Smart Entrypoint Preservation**: Uses `crane` to automatically detect and preserve the original `ENTRYPOINT` and `CMD` of any Docker image, even when using the environment variable wrapper.
-- **Universal Shell Support**: The wrapper script is written in POSIX-compliant `/bin/sh` and works without heavy dependencies like `jq` or `bash`, ensuring compatibility with minimalist images (e.g., Alpine).
-- **Clean Dockerfiles**: The generated `Dockerfile` is kept minimal. For standard add-ons, it uses a simple `FROM` instruction. For add-ons with editable variables, it automatically integrates the wrapper logic.
-- **Simplified Config**: The `config.yaml` is kept clean by only including `options` and `schema` when editable variables are actually used.
-- **Self-Conversion**: The converter can export itself as a Home Assistant add-on with one click. It uses the official Docker image from GHCR and allows choosing a specific version (tag). It also includes a special icon and `mdi:toy-brick` panel icon.
-- **Global Settings**: Configuration of repository name and maintainer in a separate view.
-- **Add-on Management**: List, edit, and delete created add-ons.
+- **Web UI Configuration**: Automatic `webui` URL generation (e.g., `http://[HOST]:[PORT:xxxx]/`) if Ingress is disabled.
+- **Storage Mappings (Map)**: Full support for HA storage folders (`config`, `ssl`, `share`, etc.) with `RW`/`RO` modes.
+- **Port Mappings**: Easy definition of container-to-host port mappings.
+- **Backup Integration**: Automatic `hot` backup mode support.
+
+### 🎨 User Experience & UI
+- **One-Step Form**: Streamlined editing process with all information on a single page.
+- **Add-on Documentation (Markdown)**: 
+  - Integrated **EasyMDE** editor with syntax highlighting and live preview.
+  - Automatic `README.md` generation for the HA Add-on Store.
+- **Version Management**: Dedicated buttons for **Major**, **Minor**, and **Fix updates** with automatic version incrementing.
+- **Icon Support**: Custom PNG upload support or use of default icons.
+- **Self-Conversion**: Export the converter itself as an HA add-on with one click (includes version selection from GHCR).
+- **Management Tools**: 
+  - List, edit, and delete created add-ons.
+  - Global repository settings (Name, Maintainer).
 
 ## Prerequisites
 
