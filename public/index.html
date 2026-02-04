@@ -5,60 +5,154 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HA Add-on Converter (PHP)</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪄</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
     <style>
-        body { background-color: #f8f9fa; }
-        .converter-container { max-width: 1000px; margin: 30px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        :root {
+            --ha-primary-color: #03a9f4;
+            --ha-accent-color: #ff9800;
+            --ha-card-background: #ffffff;
+            --ha-background-color: #f5f5f5;
+            --ha-sidebar-background: #1c1c1c;
+            --ha-header-background: #101e24;
+            --ha-text-color: #212121;
+            --ha-secondary-text-color: #727272;
+            --border-radius: 12px;
+        }
+        body { 
+            background-color: var(--ha-background-color); 
+            font-family: 'Roboto', sans-serif;
+            color: var(--ha-text-color);
+        }
+        .header-bar {
+            background-color: var(--ha-header-background);
+            color: white;
+            padding: 16px 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .converter-container { 
+            max-width: 1000px; 
+            margin: 0 auto 30px auto; 
+            background: transparent; 
+            padding: 0;
+        }
+        .ha-card {
+            background: var(--ha-card-background);
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2);
+            padding: 24px;
+            margin-bottom: 24px;
+            border: none;
+        }
+        .ha-card-header {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 16px;
+            color: var(--ha-text-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-ha-primary {
+            background-color: var(--ha-primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-ha-primary:hover {
+            background-color: #039be5;
+            color: white;
+        }
+        .btn-ha-outline {
+            background-color: transparent;
+            color: var(--ha-primary-color);
+            border: 1px solid var(--ha-primary-color);
+            border-radius: 4px;
+            padding: 7px 15px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        .btn-ha-outline:hover {
+            background-color: rgba(3, 169, 244, 0.1);
+            color: var(--ha-primary-color);
+        }
         .step { display: none; }
         .step.active { display: block; }
         /* EasyMDE dark mode / bootstrap consistency */
-        .editor-toolbar { background: #f8f9fa; border-color: #dee2e6; }
-        .CodeMirror { border-color: #dee2e6; }
-        .accordion-button:not(.collapsed) { background-color: #e7f1ff; color: #0c63e4; }
-        .accordion-item { border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid #dee2e6; }
-        .accordion-button { font-weight: 600; }
+        .editor-toolbar { background: #f8f9fa; border-color: #dee2e6; border-radius: 4px 4px 0 0; }
+        .CodeMirror { border-color: #dee2e6; border-radius: 0 0 4px 4px; }
+        .accordion-button:not(.collapsed) { background-color: rgba(3, 169, 244, 0.1); color: var(--ha-primary-color); box-shadow: none; }
+        .accordion-button:focus { border-color: var(--ha-primary-color); box-shadow: 0 0 0 0.25rem rgba(3, 169, 244, 0.25); }
+        .accordion-item { border-radius: var(--border-radius) !important; overflow: hidden; margin-bottom: 16px; border: 1px solid #e0e0e0; box-shadow: 0 2px 2px rgba(0,0,0,0.05); }
+        .accordion-button { font-weight: 500; font-size: 1.1rem; }
+        .form-label { font-weight: 500; color: var(--ha-secondary-text-color); font-size: 0.9rem; }
+        .form-control:focus, .form-select:focus { border-color: var(--ha-primary-color); box-shadow: 0 0 0 0.25rem rgba(3, 169, 244, 0.25); }
+        .badge.bg-info { background-color: var(--ha-primary-color) !important; color: white !important; }
+        .list-group-item { border-left: none; border-right: none; padding: 16px; border-color: #eeeeee; }
+        .list-group-item:first-child { border-top: none; }
+        .list-group-item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
 
+<div class="header-bar">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <span class="mdi mdi-auto-fix me-2" style="font-size: 24px;"></span>
+            <h2 class="mb-0" style="font-weight: 400;">HA Add-on Converter</h2>
+        </div>
+        <button type="button" id="cancelBtn" class="btn btn-outline-light btn-sm" style="display:none;" onclick="cancelConverter()">Cancel</button>
+    </div>
+</div>
+
 <div class="container">
     <div class="converter-container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0">HA Add-on Converter</h2>
-            <button type="button" id="cancelBtn" class="btn btn-sm btn-outline-danger" style="display:none;" onclick="cancelConverter()">Cancel</button>
-        </div>
         
         <div id="addonSelection" class="mb-4">
-            <h4>Existing Add-ons</h4>
-            <div id="addonList" class="list-group mb-3">
-                <!-- Will be filled dynamically -->
-            </div>
-            <div class="d-flex justify-content-between">
-                <div>
-                    <button type="button" class="btn btn-outline-primary" onclick="startNew()">Create New Add-on</button>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-outline-success" onclick="selfConvert()">Export Converter as Add-on</button>
-                        <button type="button" class="btn btn-outline-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" onmouseenter="loadTags(this)">
-                            <span class="visually-hidden">Toggle Dropdown</span>
-                        </button>
-                        <ul class="dropdown-menu" id="tagList">
-                            <li><h6 class="dropdown-header">Choose Version</h6></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" onclick="selfConvert('latest')">latest (default)</a></li>
-                        </ul>
-                    </div>
+            <div class="ha-card">
+                <div class="ha-card-header">
+                    <span>Existing Add-ons</span>
                 </div>
-                <button type="button" class="btn btn-outline-secondary" onclick="openSettings()">⚙️ Settings</button>
+                <div id="addonList" class="list-group list-group-flush mb-3">
+                    <!-- Will be filled dynamically -->
+                </div>
+                <div class="d-flex justify-content-between mt-3">
+                    <div>
+                        <button type="button" class="btn btn-ha-primary me-2" onclick="startNew()">
+                            <span class="mdi mdi-plus me-1"></span>Create New Add-on
+                        </button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-ha-outline" onclick="selfConvert()">
+                                <span class="mdi mdi-export me-1"></span>Export Converter
+                            </button>
+                            <button type="button" class="btn btn-ha-outline dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" onmouseenter="loadTags(this)">
+                                <span class="visually-hidden">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu" id="tagList">
+                                <li><h6 class="dropdown-header">Choose Version</h6></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="selfConvert('latest')">latest (default)</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-ha-outline" onclick="openSettings()">
+                        <span class="mdi mdi-cog me-1"></span>Settings
+                    </button>
+                </div>
             </div>
-            <hr>
         </div>
 
         <form id="converterForm" style="display:none;">
-            <!-- Single Step: All Information -->
-            <div id="converterContent">
+            <div id="converterContent" class="ha-card">
                 <div class="accordion" id="formAccordion">
                     
                     <!-- Section 1: Basic Information -->
@@ -106,7 +200,7 @@
                                                 <input type="text" class="form-control" id="image_tag" list="imageTagOptions" placeholder="latest" onchange="detectPM()">
                                                 <button class="btn btn-outline-secondary" type="button" id="btnFetchTags" onclick="fetchImageTags()">
                                                     <span id="tagLoader" class="spinner-border spinner-border-sm" role="status" style="display:none;"></span>
-                                                    <span>🔍</span>
+                                                    <span class="mdi mdi-magnify"></span>
                                                 </button>
                                             </div>
                                             <datalist id="imageTagOptions"></datalist>
@@ -118,7 +212,7 @@
                                             <label class="form-label">Detected Package Manager</label>
                                             <div class="input-group">
                                                 <input type="text" class="form-control" id="detected_pm" readonly placeholder="unknown">
-                                                <button class="btn btn-outline-secondary" type="button" onclick="detectPM()">🔄</button>
+                                                <button class="btn btn-outline-secondary" type="button" onclick="detectPM()"><span class="mdi mdi-refresh"></span></button>
                                             </div>
                                             <div class="form-text">Detected via crane.</div>
                                         </div>
@@ -211,7 +305,7 @@
                                         <div id="envWarning" class="alert alert-warning py-2 small mt-2" style="display:none;">
                                             <strong>⚠️ Risk:</strong> Enabling editable variables uses a wrapper script. This may cause issues with complex entrypoints.
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addEnvVar()">+ Add Variable</button>
+                                        <button type="button" class="btn btn-sm btn-ha-outline" onclick="addEnvVar()"><span class="mdi mdi-plus me-1"></span>Add Variable</button>
                                     </div>
 
                                     <div class="col-md-6 mb-3">
@@ -219,7 +313,7 @@
                                         <div id="portsContainer">
                                             <!-- Dynamic Port Mappings -->
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPortMapping()">+ Add Port Mapping</button>
+                                        <button type="button" class="btn btn-sm btn-ha-outline" onclick="addPortMapping()"><span class="mdi mdi-plus me-1"></span>Add Port</button>
                                     </div>
                                 </div>
 
@@ -228,7 +322,7 @@
                                     <div id="mapContainer">
                                         <!-- Dynamic Map Mappings -->
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addMapMapping()">+ Add Mapping</button>
+                                    <button type="button" class="btn btn-sm btn-ha-outline" onclick="addMapMapping()"><span class="mdi mdi-plus me-1"></span>Add Mapping</button>
                                     <div class="form-text">Allows access to HA folders (e.g. config, ssl, share, media).</div>
                                 </div>
                             </div>
@@ -239,20 +333,20 @@
                 <hr>
                 
                 <div id="submitSection" class="d-grid gap-2">
-                    <button type="submit" id="saveBtn" class="btn btn-success btn-lg">Create / Save Add-on</button>
+                    <button type="submit" id="saveBtn" class="btn btn-ha-primary btn-lg"><span class="mdi mdi-content-save me-1"></span>Create / Save Add-on</button>
                 </div>
 
                 <div id="updateSection" style="display:none;">
                     <label class="form-label d-block mb-2">Update Add-on (Version Update)</label>
                     <div class="row g-2">
                         <div class="col-md-4">
-                            <button type="button" class="btn btn-primary w-100" onclick="submitUpdate('major')">Major Update</button>
+                            <button type="button" class="btn btn-ha-outline w-100" onclick="submitUpdate('major')">Major Update</button>
                         </div>
                         <div class="col-md-4">
-                            <button type="button" class="btn btn-info w-100" onclick="submitUpdate('minor')">Minor Update</button>
+                            <button type="button" class="btn btn-ha-outline w-100" onclick="submitUpdate('minor')">Minor Update</button>
                         </div>
                         <div class="col-md-4">
-                            <button type="button" class="btn btn-success w-100" onclick="submitUpdate('fix')">Fix Update</button>
+                            <button type="button" class="btn btn-ha-primary w-100" onclick="submitUpdate('fix')">Fix Update</button>
                         </div>
                     </div>
                 </div>
@@ -263,27 +357,47 @@
             <!-- Will be filled dynamically -->
         </div>
 
-        <!-- Global Settings View -->
         <div id="settingsView" style="display:none;">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4>Global Repository Settings</h4>
-                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeSettings()">Back</button>
+            <div class="ha-card">
+                <div class="ha-card-header">
+                    <span>Global Repository Settings</span>
+                    <button type="button" class="btn btn-ha-outline btn-sm" onclick="closeSettings()">Back</button>
+                </div>
+                <form id="settingsForm">
+                    <div class="mb-3">
+                        <label for="repo_name" class="form-label">Repository Name</label>
+                        <input type="text" class="form-control" id="repo_name" required>
+                        <div class="form-text">The name of your Home Assistant add-on repository.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="repo_maintainer" class="form-label">Maintainer</label>
+                        <input type="text" class="form-control" id="repo_maintainer" required>
+                        <div class="form-text">Your name or pseudonym as maintainer.</div>
+                    </div>
+                    <button type="submit" class="btn btn-ha-primary">Save Settings</button>
+                </form>
+                <div id="settingsResult" class="mt-3" style="display:none;">
+                    <div class="alert alert-success">Settings saved!</div>
+                </div>
             </div>
-            <form id="settingsForm">
-                <div class="mb-3">
-                    <label for="repo_name" class="form-label">Repository Name</label>
-                    <input type="text" class="form-control" id="repo_name" required>
-                    <div class="form-text">The name of your Home Assistant add-on repository.</div>
-                </div>
-                <div class="mb-3">
-                    <label for="repo_maintainer" class="form-label">Maintainer</label>
-                    <input type="text" class="form-control" id="repo_maintainer" required>
-                    <div class="form-text">Your name or pseudonym as maintainer.</div>
-                </div>
-                <button type="submit" class="btn btn-primary">Save Settings</button>
-            </form>
-            <div id="settingsResult" class="mt-3" style="display:none;">
-                <div class="alert alert-success">Settings saved!</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Confirmations -->
+<div class="modal fade" id="haConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: var(--border-radius);">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="haConfirmTitle">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4" id="haConfirmMessage">
+                Are you sure?
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-ha-outline btn-sm px-3" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-ha-primary btn-sm px-4" id="haConfirmBtn">Confirm</button>
             </div>
         </div>
     </div>
@@ -299,6 +413,23 @@
         : currentPath;
 
     console.log('Detected basePath:', basePath);
+
+    // HA Confirm Modal Helper
+    const haConfirmModal = new bootstrap.Modal(document.getElementById('haConfirmModal'));
+    let confirmCallback = null;
+    function haConfirm(message, callback, title = 'Confirm Action', btnText = 'Confirm', btnClass = 'btn-ha-primary') {
+        document.getElementById('haConfirmMessage').innerText = message;
+        document.getElementById('haConfirmTitle').innerText = title;
+        const confirmBtn = document.getElementById('haConfirmBtn');
+        confirmBtn.innerText = btnText;
+        confirmBtn.className = 'btn btn-sm px-4 ' + btnClass;
+        confirmCallback = callback;
+        haConfirmModal.show();
+    }
+    document.getElementById('haConfirmBtn').addEventListener('click', () => {
+        if (confirmCallback) confirmCallback();
+        haConfirmModal.hide();
+    });
 
     let iconBase64 = '';
     let isEditing = false;
@@ -589,8 +720,12 @@
                 ${isSelf ? 
                     '<span class="badge bg-secondary rounded-pill">System</span>' : 
                     `<div>
-                        <button type="button" class="btn btn-sm btn-primary rounded-pill" onclick="editAddon('${addon.slug}')">Edit</button>
-                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteAddon('${addon.slug}')">Delete</button>
+                        <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" onclick="editAddon('${addon.slug}')">
+                            <span class="mdi mdi-pencil"></span>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-ha-outline rounded-pill text-danger border-danger" onclick="deleteAddon('${addon.slug}')">
+                            <span class="mdi mdi-delete"></span>
+                        </button>
                     </div>`
                 }
             </div>
@@ -635,12 +770,12 @@
     }
 
     function cancelConverter() {
-        if (confirm('Do you really want to cancel the process? All unsaved changes will be lost.')) {
+        haConfirm('Do you really want to cancel the process? All unsaved changes will be lost.', () => {
             document.getElementById('addonSelection').style.display = 'block';
             document.getElementById('converterForm').style.display = 'none';
             document.getElementById('cancelBtn').style.display = 'none';
             loadAddons();
-        }
+        }, 'Cancel Process', 'Yes, Cancel');
     }
 
     async function editAddon(slug) {
@@ -722,7 +857,7 @@
     }
 
     async function deleteAddon(slug) {
-        if (confirm(`Do you really want to delete the add-on "${slug}"? This action cannot be undone.`)) {
+        haConfirm(`Do you really want to delete the add-on "${slug}"? This action cannot be undone.`, async () => {
             try {
                 const response = await fetch(`${basePath}/addons/${slug}`, {
                     method: 'DELETE'
@@ -736,7 +871,7 @@
             } catch (error) {
                 alert('An error occurred: ' + error.message);
             }
-        }
+        }, 'Delete Add-on', 'Delete', 'btn-danger');
     }
 
     async function openSettings() {
@@ -778,27 +913,25 @@
     });
 
     async function selfConvert(tag = 'latest') {
-        if (!confirm(`Do you want to export the HAOS Add-on Converter (Version: ${tag}) as a Home Assistant add-on? The internal version will be incremented automatically.`)) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`${basePath}/self-convert`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tag: tag })
-            });
-            const result = await response.json();
-            
-            if (result.status === 'success') {
-                alert('Add-on successfully created in: ' + result.path);
-                loadAddons();
-            } else {
-                alert('Error: ' + result.message);
+        haConfirm(`Do you want to export the HAOS Add-on Converter (Version: ${tag}) as a Home Assistant add-on? The internal version will be incremented automatically.`, async () => {
+            try {
+                const response = await fetch(`${basePath}/self-convert`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tag: tag })
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('Add-on successfully created in: ' + result.path);
+                    loadAddons();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (e) {
+                alert('An error occurred: ' + e.message);
             }
-        } catch (e) {
-            alert('An error occurred: ' + e.message);
-        }
+        }, 'Export Converter', 'Export');
     }
 
     async function loadTags(btn) {
