@@ -17,6 +17,9 @@
         /* EasyMDE dark mode / bootstrap consistency */
         .editor-toolbar { background: #f8f9fa; border-color: #dee2e6; }
         .CodeMirror { border-color: #dee2e6; }
+        .accordion-button:not(.collapsed) { background-color: #e7f1ff; color: #0c63e4; }
+        .accordion-item { border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 1px solid #dee2e6; }
+        .accordion-button { font-weight: 600; }
     </style>
 </head>
 <body>
@@ -56,120 +59,168 @@
         <form id="converterForm" style="display:none;">
             <!-- Single Step: All Information -->
             <div id="converterContent">
-                <h4>Add-on Information</h4>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="name" class="form-label">Add-on Name</label>
-                        <input type="text" class="form-control" id="name" required placeholder="e.g. My Awesome Tool">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="version" class="form-label">Version</label>
-                        <input type="text" class="form-control" id="version" value="1.0.0">
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="description" class="form-label">Description (Short)</label>
-                    <input type="text" class="form-control" id="description" placeholder="Short summary for the list">
-                </div>
+                <div class="accordion" id="formAccordion">
+                    
+                    <!-- Section 1: Basic Information -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBasic">
+                                1. Basic Information
+                            </button>
+                        </h2>
+                        <div id="collapseBasic" class="accordion-collapse collapse show" data-bs-parent="#formAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="name" class="form-label">Add-on Name</label>
+                                        <input type="text" class="form-control" id="name" required placeholder="e.g. My Awesome Tool">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="version" class="form-label">Version</label>
+                                        <input type="text" class="form-control" id="version" value="1.0.0">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description (Short)</label>
+                                    <input type="text" class="form-control" id="description" placeholder="Short summary for the list">
+                                </div>
 
-                <div class="mb-3">
-                    <label for="long_description" class="form-label">Long Description (Markdown / README.md)</label>
-                    <textarea class="form-control" id="long_description" rows="10" placeholder="Detailed description, installation instructions, etc. Supports Markdown."></textarea>
-                </div>
+                                <div class="mb-3">
+                                    <label for="long_description" class="form-label">Long Description (Markdown / README.md)</label>
+                                    <textarea class="form-control" id="long_description" rows="10" placeholder="Detailed description, installation instructions, etc. Supports Markdown."></textarea>
+                                </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="image" class="form-label">Docker Image Name</label>
-                            <input type="text" class="form-control" id="image" required placeholder="e.g. nginx:latest or alpine:3.14">
-                            <div class="form-text">The image to serve as the base for the add-on.</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="icon_file" class="form-label">Icon File (PNG)</label>
-                            <input type="file" class="form-control" id="icon_file" accept="image/png">
-                            <div id="icon_preview" class="mt-2" style="display:none;">
-                                <img src="" alt="Preview" style="max-width: 64px; max-height: 64px;">
+                                <div class="row">
+                                    <div class="col-md-5">
+                                        <div class="mb-3">
+                                            <label for="image" class="form-label">Docker Image Name</label>
+                                            <input type="text" class="form-control" id="image" required placeholder="e.g. nginx or alpine">
+                                            <div class="form-text">The image name (without tag).</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="image_tag" class="form-label">Tag</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="image_tag" list="imageTagOptions" placeholder="latest">
+                                                <button class="btn btn-outline-secondary" type="button" id="btnFetchTags" onclick="fetchImageTags()">
+                                                    <span id="tagLoader" class="spinner-border spinner-border-sm" role="status" style="display:none;"></span>
+                                                    <span>🔍</span>
+                                                </button>
+                                            </div>
+                                            <datalist id="imageTagOptions"></datalist>
+                                            <div class="form-text">e.g. latest, 3.14</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="icon_file" class="form-label">Icon File (PNG)</label>
+                                            <input type="file" class="form-control" id="icon_file" accept="image/png">
+                                            <div id="icon_preview" class="mt-2" style="display:none;">
+                                                <img src="" alt="Preview" style="max-width: 64px; max-height: 64px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <hr>
+                    <!-- Section 2: Ingress & UI -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIngress">
+                                2. Ingress & Web UI
+                            </button>
+                        </h2>
+                        <div id="collapseIngress" class="accordion-collapse collapse" data-bs-parent="#formAccordion">
+                            <div class="accordion-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="ingress">
+                                    <label class="form-check-label" for="ingress">
+                                        Enable Home Assistant Ingress
+                                    </label>
+                                </div>
 
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="ingress">
-                    <label class="form-check-label" for="ingress">
-                        Enable Home Assistant Ingress
-                    </label>
-                </div>
+                                <div id="ingressOptions" style="display:none;" class="p-3 border rounded mb-3 bg-light">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="ingress_port" class="form-label">Internal Web Port (Ingress)</label>
+                                            <input type="number" class="form-control" id="ingress_port" value="80">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="panel_icon" class="form-label">Panel Icon (MDI)</label>
+                                            <input type="text" class="form-control" id="panel_icon" placeholder="mdi:link-variant">
+                                        </div>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="ingress_stream">
+                                        <label class="form-check-label" for="ingress_stream">
+                                            Enable Ingress Stream
+                                        </label>
+                                    </div>
+                                </div>
 
-                <div id="ingressOptions" style="display:none;" class="p-3 border rounded mb-3 bg-light">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="ingress_port" class="form-label">Internal Web Port (Ingress)</label>
-                            <input type="number" class="form-control" id="ingress_port" value="80">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="panel_icon" class="form-label">Panel Icon (MDI)</label>
-                            <input type="text" class="form-control" id="panel_icon" placeholder="mdi:link-variant">
+                                <div id="webUiPortContainer" class="mb-3">
+                                    <label for="web_ui_port" class="form-label">Web UI Port (without Ingress)</label>
+                                    <input type="number" class="form-control" id="web_ui_port" placeholder="e.g. 8080">
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="backup">
+                                    <label class="form-check-label" for="backup">
+                                        Enable Backup Support
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="ingress_stream">
-                        <label class="form-check-label" for="ingress_stream">
-                            Enable Ingress Stream
-                        </label>
-                    </div>
-                </div>
 
-                <div id="webUiPortContainer" class="mb-3">
-                    <label for="web_ui_port" class="form-label">Web UI Port (without Ingress)</label>
-                    <input type="number" class="form-control" id="web_ui_port" placeholder="e.g. 8080">
-                </div>
+                    <!-- Section 3: Advanced Configuration -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvanced">
+                                3. Environment, Ports & Storage
+                            </button>
+                        </h2>
+                        <div id="collapseAdvanced" class="accordion-collapse collapse" data-bs-parent="#formAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <h5>Environment Variables</h5>
+                                        <div class="alert alert-info py-2 small">
+                                            <strong>Note:</strong> Checkbox enables HA GUI editing.
+                                        </div>
+                                        <div id="envVarsContainer">
+                                            <!-- Dynamic Env Variables -->
+                                        </div>
+                                        <div id="envWarning" class="alert alert-warning py-2 small mt-2" style="display:none;">
+                                            <strong>⚠️ Risk:</strong> Enabling editable variables uses a wrapper script. This may cause issues with complex entrypoints.
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addEnvVar()">+ Add Variable</button>
+                                    </div>
 
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="backup">
-                    <label class="form-check-label" for="backup">
-                        Enable Backup Support
-                    </label>
-                </div>
+                                    <div class="col-md-6 mb-3">
+                                        <h5>Port Mappings</h5>
+                                        <div id="portsContainer">
+                                            <!-- Dynamic Port Mappings -->
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPortMapping()">+ Add Port Mapping</button>
+                                    </div>
+                                </div>
 
-                <hr>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <h5>Environment Variables</h5>
-                        <div class="alert alert-info py-2 small">
-                            <strong>Note:</strong> Checkbox enables HA GUI editing.
+                                <div class="mb-3">
+                                    <h5>Storage Mappings (Map)</h5>
+                                    <div id="mapContainer">
+                                        <!-- Dynamic Map Mappings -->
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addMapMapping()">+ Add Mapping</button>
+                                    <div class="form-text">Allows access to HA folders (e.g. config, ssl, share, media).</div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="envVarsContainer">
-                            <!-- Dynamic Env Variables -->
-                        </div>
-                        <div id="envWarning" class="alert alert-warning py-2 small mt-2" style="display:none;">
-                            <strong>⚠️ Risiko:</strong> Durch das Aktivieren von editierbaren Variablen wird ein Wrapper-Script genutzt. Dies kann bei manchen Images zu Problemen führen, wenn der Entrypoint komplex ist.
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addEnvVar()">+ Add Variable</button>
                     </div>
-
-                    <div class="col-md-6 mb-3">
-                        <h5>Port Mappings</h5>
-                        <div id="portsContainer">
-                            <!-- Dynamic Port Mappings -->
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addPortMapping()">+ Add Port Mapping</button>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <h5>Storage Mappings (Map)</h5>
-                    <div id="mapContainer">
-                        <!-- Dynamic Map Mappings -->
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addMapMapping()">+ Add Mapping</button>
-                    <div class="form-text">Allows access to HA folders (e.g. config, ssl, share, media).</div>
                 </div>
 
                 <hr>
@@ -386,6 +437,42 @@
         document.getElementById('converterForm').dispatchEvent(new Event('submit'));
     }
 
+    async function fetchImageTags() {
+        const image = document.getElementById('image').value.trim();
+        if (!image) return;
+        
+        const btn = document.getElementById('btnFetchTags');
+        const loader = document.getElementById('tagLoader');
+        const datalist = document.getElementById('imageTagOptions');
+        
+        btn.disabled = true;
+        loader.style.display = 'inline-block';
+        datalist.innerHTML = '<option value="loading...">';
+        
+        try {
+            const response = await fetch(`${basePath}/image-tags?image=${encodeURIComponent(image)}`);
+            const tags = await response.json();
+            datalist.innerHTML = '';
+            tags.forEach(tag => {
+                const option = document.createElement('option');
+                option.value = tag;
+                // Tags with .sig or sha256- are usually not what a human wants to pick, but we keep them
+                if (tag.endsWith('.sig') || tag.startsWith('sha256-')) {
+                    option.textContent = tag + ' (Signature/Hash)';
+                }
+                datalist.appendChild(option);
+            });
+            datalist.dataset.image = image;
+        } catch (e) {
+            console.error('Error fetching tags', e);
+            datalist.innerHTML = '';
+            alert('Failed to fetch tags for image: ' + image);
+        } finally {
+            btn.disabled = false;
+            loader.style.display = 'none';
+        }
+    }
+
     document.getElementById('converterForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = {
@@ -394,6 +481,7 @@
             long_description: easyMDE.value(),
             icon_file: iconBase64,
             image: document.getElementById('image').value,
+            image_tag: document.getElementById('image_tag').value,
             version: document.getElementById('version').value,
             ingress: document.getElementById('ingress').checked,
             ingress_port: parseInt(document.getElementById('ingress_port').value),
@@ -483,7 +571,20 @@
         document.getElementById('updateSection').style.display = 'none';
         document.getElementById('version').readOnly = false;
 
+        const accordion = document.getElementById('formAccordion');
+        const firstItem = accordion.querySelector('.accordion-collapse');
+        const bootstrapCollapse = new bootstrap.Collapse(firstItem, { show: true });
+        const otherItems = accordion.querySelectorAll('.accordion-collapse:not(.show)');
+        otherItems.forEach(item => {
+            const collapse = bootstrap.Collapse.getInstance(item);
+            if (collapse) collapse.hide();
+            else item.classList.remove('show');
+        });
+
         document.getElementById('converterForm').reset();
+        document.getElementById('image').value = '';
+        document.getElementById('image_tag').value = '';
+        document.getElementById('imageTagOptions').innerHTML = '';
         easyMDE.value('');
         iconBase64 = '';
         document.getElementById('icon_preview').style.display = 'none';
@@ -524,6 +625,7 @@
         }
 
         document.getElementById('image').value = addon.image;
+        document.getElementById('image_tag').value = addon.image_tag || 'latest';
         document.getElementById('version').value = addon.version;
         originalVersion = addon.version || '1.0.0';
         document.getElementById('version').readOnly = true;

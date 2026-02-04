@@ -25,15 +25,20 @@ This tool is a web-based converter that transforms any Docker image into a Home 
 - **Backup Integration**: Automatic `hot` backup mode support.
 
 ### 🎨 User Experience & UI
-- **One-Step Form**: Streamlined editing process with all information on a single page.
+- **Accordion-Based One-Step Form**: Streamlined editing process organized into collapsible sections (Basic Info, Ingress & UI, Advanced Config).
+- **Intelligent Docker Image Selection**: 
+  - Separate inputs for Image Name and Tag.
+  - **Manual Tag Fetcher**: Dedicated button (🔍) to fetch available tags directly from the registry using `crane`.
+  - **Smart Sorting**: Tags are sorted by version, with `latest` at the top and technical tags (signatures/hashes) at the bottom.
 - **Add-on Documentation (Markdown)**: 
   - Integrated **EasyMDE** editor with syntax highlighting and live preview.
   - Automatic `README.md` generation for the HA Add-on Store.
 - **Version Management**: Dedicated buttons for **Major**, **Minor**, and **Fix updates** with automatic version incrementing.
-- **Icon Support**: Custom PNG upload support or use of default icons.
+- **Icon Support**: Custom PNG upload support with preview or use of default icons.
 - **Self-Conversion**: Export the converter itself as an HA add-on with one click (includes version selection from GHCR).
 - **Management Tools**: 
-  - List, edit, and delete created add-ons.
+  - List view showing add-on name, description, version, and base image.
+  - Edit and delete created add-ons.
   - Global repository settings (Name, Maintainer).
 
 ## Prerequisites

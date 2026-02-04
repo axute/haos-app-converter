@@ -20,6 +20,11 @@ class GenerateController
         
         $addonName = $data['name'] ?? '';
         $image = $data['image'] ?? '';
+        $image_tag = $data['image_tag'] ?? '';
+        if (!empty($image_tag) && strpos($image, ':') === false) {
+            $image .= ':' . $image_tag;
+        }
+
         $description = $data['description'] ?? 'Converted HA Add-on';
         $longDescription = $data['long_description'] ?? '';
         $iconFile = $data['icon_file'] ?? ''; // Base64 encoded icon file data
@@ -214,7 +219,7 @@ class GenerateController
         return $data;
     }
 
-    private function ensureRepositoryYaml($dataDir): void
+    private function ensureRepositoryYaml($dataDir)
     {
         $repoFile = $dataDir . '/repository.yaml';
         if (!file_exists($repoFile)) {
@@ -226,7 +231,7 @@ class GenerateController
         }
     }
 
-    private function recursiveCopy($src, $dst): void
+    private function recursiveCopy($src, $dst)
     {
         $src = str_replace('\\', '/', $src);
         $dst = str_replace('\\', '/', $dst);
@@ -244,7 +249,7 @@ class GenerateController
                 if (is_dir($srcFile)) {
                     // Wir überspringen das data Verzeichnis und vendor (wird im Dockerfile installiert)
                     // Wichtig: Wir müssen den relativen Pfad prüfen oder den absoluten Pfad des data-Verzeichnisses
-                    if ($file === 'data' || $file === 'vendor' || $file === '.git' || str_contains($srcFile, 'data_self_test')) {
+                    if ($file === 'data' || $file === 'vendor' || $file === '.git' || strpos($srcFile, 'data_self_test') !== false) {
                         continue;
                     }
                     $this->recursiveCopy($srcFile, $dstFile);

@@ -85,11 +85,18 @@ class AddonController
         }
 
         $image = '';
+        $image_tag = '';
         $dockerfile = $dataDir . '/' . $slug . '/Dockerfile';
         if (file_exists($dockerfile)) {
             $content = file_get_contents($dockerfile);
             if (preg_match('/^FROM\s+(.+)$/m', $content, $matches)) {
-                $image = trim($matches[1]);
+                $fullImage = trim($matches[1]);
+                if (strpos($fullImage, ':') !== false) {
+                    list($image, $image_tag) = explode(':', $fullImage, 2);
+                } else {
+                    $image = $fullImage;
+                    $image_tag = 'latest';
+                }
             }
         }
 
@@ -130,8 +137,8 @@ class AddonController
         $data = [
             'name' => $config['name'] ?? '',
             'description' => $config['description'] ?? '',
-            'long_description' => $longDescription,
             'image' => $image ?: ($config['image'] ?? ''),
+            'image_tag' => $image_tag,
             'version' => $config['version'] ?? '',
             'ingress' => $config['ingress'] ?? false,
             'ingress_port' => $config['ingress_port'] ?? 80,
@@ -195,6 +202,55 @@ class AddonController
         }
 
         $response->getBody()->write(json_encode($tags));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function getImageTags(Request $request, Response $response): Response
+    {
+        $queryParams = $request->getQueryParams();
+        $image = $queryParams['image'] ?? '';
+
+        if (empty($image)) {
+            $response->getBody()->write(json_encode([]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        // crane ls verwenden
+        $command = "crane ls " . escapeshellarg($image) . " 2>&1";
+        $output = shell_exec($command);
+        $tags = explode("\n", trim($output));
+        $tags = array_filter($tags, function($tag) {
+            return !empty($tag) && strpos($tag, "error") === false && strpos($tag, "standard_init_linux") === false;
+        });
+
+        if (empty($tags)) {
+            $response->getBody()->write(json_encode(['latest']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        // Tags nach Version sortieren (neueste oben)
+        usort($tags, function($a, $b) {
+            if ($a === 'latest') return -1;
+            if ($b === 'latest') return 1;
+            
+            // Handle versions like "1.2.3" vs "1.2"
+            $a_v = preg_replace('/[^0-9.]/', '', $a);
+            $b_v = preg_replace('/[^0-9.]/', '', $b);
+            
+            if ($a_v && $b_v && $a_v !== $b_v) {
+                return version_compare($b_v, $a_v);
+            }
+            
+            // Fallback: SHA-Tags ans Ende sortieren
+            $a_is_sha = (strpos($a, 'sha256-') === 0);
+            $b_is_sha = (strpos($b, 'sha256-') === 0);
+            if ($a_is_sha && !$b_is_sha) return 1;
+            if (!$a_is_sha && $b_is_sha) return -1;
+
+            return strcasecmp($b, $a);
+        });
+
+        $response->getBody()->write(json_encode(array_values($tags)));
         return $response->withHeader('Content-Type', 'application/json');
     }
 
