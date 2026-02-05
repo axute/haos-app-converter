@@ -80,6 +80,8 @@ class GenerateController
 
         if ($detectedPm) {
             $this->saveMetadata($addonPath, ['detected_pm' => $detectedPm]);
+            // Paketmanager als feste Umgebungsvariable hinzufügen
+            $config['environment']['HAOS_CONVERTER_PM'] = $detectedPm;
         }
 
         // Image Informationen via crane abrufen

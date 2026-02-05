@@ -222,7 +222,7 @@
                                                 <input type="text" class="form-control" id="detected_pm" readonly placeholder="unknown">
                                                 <button class="btn btn-outline-secondary" type="button" id="btnDetectPM" onclick="detectPM(true)"><span class="mdi mdi-refresh"></span></button>
                                             </div>
-                                            <div class="form-text">Detected via crane.</div>
+                                            <div class="form-text">Detected via crane. <span id="pmSupportInline" class="ms-2"></span></div>
                                         </div>
                                     </div>
                                 </div>
@@ -670,6 +670,11 @@
             const data = await response.json();
             const pm = data.pm || 'unknown';
             pmInput.value = pm;
+
+            const hint = document.getElementById('pmSupportInline');
+            if (hint) {
+                hint.innerHTML = pmSupportsBashJqCurl(pm) ? '<span class="text-success"><span class="mdi mdi-check-circle"></span> bash, jq + curl installable</span>' : '';
+            }
             
             // Wenn erfolgreich (nicht unknown), Button deaktivieren
             if (pm !== 'unknown' && pm !== 'error') {
@@ -822,6 +827,7 @@
                     <div>
                         <strong>${addon.name}</strong>
                         ${addon.detected_pm ? `<span class="badge bg-info text-dark rounded-pill ms-1" style="font-size: 0.7rem;">${addon.detected_pm}</span>` : ''}
+                        ${addon.detected_pm && pmSupportsBashJqCurl(addon.detected_pm) ? `<span class="text-success ms-1" title="bash, jq + curl installable"><span class="mdi mdi-check-circle"></span></span>` : ''}
                         ${addon.quirks ? `<span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 0.7rem;">quirks</span>` : ''}
                         <br>
                         <small class="text-muted d-block">${addon.description}</small>
@@ -884,6 +890,8 @@
         if (btnDetectPM) {
             btnDetectPM.disabled = false;
         }
+        const pmHint = document.getElementById('pmSupportInline');
+        if (pmHint) { pmHint.innerHTML = ''; }
         // Quirks default off
         const quirks = document.getElementById('quirks_mode');
         if (quirks) {
@@ -955,6 +963,11 @@
             } else {
                 btnDetectPM.disabled = false;
             }
+        }
+        const hint = document.getElementById('pmSupportInline');
+        if (hint) {
+            const pm = addon.detected_pm || 'unknown';
+            hint.innerHTML = pmSupportsBashJqCurl(pm) ? '<span class="text-success"><span class="mdi mdi-check-circle"></span> bash, jq + curl installable</span>' : '';
         }
 
         document.getElementById('ingressOptions').style.display = addon.ingress ? 'block' : 'none';
@@ -1123,6 +1136,14 @@
             if (!quirksEnabled) cb.checked = false;
         });
         checkEnvWarnings();
+    }
+
+    // Helper: does detected PM support installing bash, jq and curl?
+    function pmSupportsBashJqCurl(pm) {
+        if (!pm) return false;
+        pm = ('' + pm).toLowerCase();
+        // Common package managers capable of installing bash, jq and curl
+        return ['apk', 'apt', 'apt-get', 'yum', 'dnf', 'microdnf', 'zypper', 'pacman'].includes(pm);
     }
 
     // Quirks Mode UI Kopplung

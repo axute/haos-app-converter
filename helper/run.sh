@@ -1,6 +1,57 @@
 #!/bin/sh
 set -e
 
+# Auto-install bash and jq if PM is known
+if [ -n "$HAOS_CONVERTER_PM" ]; then
+    echo "Detected package manager: $HAOS_CONVERTER_PM. Attempting to install bash and jq..."
+    case "$HAOS_CONVERTER_PM" in
+        apk)
+            apk add --no-cache bash jq curl ca-certificates || echo "Failed to install tools via apk"
+            ;;
+        apt|apt-get)
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update || echo "apt-get update failed"
+            apt-get install -y bash jq curl ca-certificates || echo "Failed to install tools via apt-get"
+            ;;
+        yum|dnf)
+            $HAOS_CONVERTER_PM install -y bash jq curl ca-certificates || echo "Failed to install tools via $HAOS_CONVERTER_PM"
+            ;;
+        microdnf)
+            microdnf install -y bash jq curl ca-certificates || echo "Failed to install tools via microdnf"
+            ;;
+        zypper)
+            zypper install -y bash jq curl ca-certificates || echo "Failed to install tools via zypper"
+            ;;
+        pacman)
+            pacman -Sy --noconfirm bash jq curl ca-certificates || echo "Failed to install tools via pacman"
+            ;;
+        *)
+            echo "Auto-install not supported for $HAOS_CONVERTER_PM"
+            ;;
+    esac
+fi
+
+# Install bashio if bash, jq and curl are available but bashio is missing
+if command -v bash >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && command -v curl >/dev/null 2>&1; then
+    if ! command -v bashio >/dev/null 2>&1; then
+        BASHIO_VERSION=$(curl -s https://api.github.com/repos/hassio-addons/bashio/releases/latest | grep '"tag_name":' | sed -E 's/.*"v?([^"]+)".*/\1/')
+        if [ -z "$BASHIO_VERSION" ]; then
+            BASHIO_VERSION="0.16.3"
+        fi
+        echo "bash, jq and curl found, but bashio is missing. Attempting to install bashio v${BASHIO_VERSION}..."
+        mkdir -p /tmp/bashio
+        curl -L -f -s "https://github.com/hassio-addons/bashio/archive/v${BASHIO_VERSION}.tar.gz" | tar -xzf - --strip 1 -C /tmp/bashio || echo "Failed to download bashio"
+        if [ -d /tmp/bashio/lib ]; then
+            mkdir -p /usr/lib/bashio
+            cp -r /tmp/bashio/lib/* /usr/lib/bashio/
+            ln -s /usr/lib/bashio/bashio /usr/bin/bashio
+            chmod +x /usr/bin/bashio
+            echo "bashio v${BASHIO_VERSION} installed successfully"
+        fi
+        rm -rf /tmp/bashio
+    fi
+fi
+
 # ENV aus options.json exportieren (einfacher Parser ohne jq)
 if [ -f /data/options.json ]; then
     # Wir extrahieren die Keys und Values mit sed. 

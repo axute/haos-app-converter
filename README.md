@@ -14,9 +14,18 @@ This tool is a web-based converter that transforms any Docker image into a Home 
 - **Environment Variables**:
   - **Static Variables**: Fixed within the add-on configuration.
   - **Editable Variables**: Can be changed via the Home Assistant GUI after installation using a universal wrapper script.
-  - **Quirks Mode**: An optional mode that activates the `run.sh` wrapper to enable features like editable variables and custom startup scripts.
-  - **Custom Startup Script**: Inject custom shell commands that run before the main application starts (syntax-highlighted editor included).
-  - **Risk Note**: Quirks mode uses a wrapper script that replaces the entrypoint; includes warnings for complex images.
+
+### 🛠️ Quirks Mode (Advanced Features)
+
+An optional mode that activates the `run.sh` wrapper to enable advanced features:
+- **Editable Variables**: Enables the "Editable in HA GUI" option for environment variables.
+- **Auto-Tool Installation**: Automatically attempts to install `bash`, `jq`, and `curl` if a package manager is detected.
+- **Bashio Integration**: Automatically installs [bashio](https://github.com/hassio-addons/bashio) if `bash`, `jq`, and `curl` are available, providing powerful helper functions for your scripts.
+- **Custom Startup Script**: Inject custom shell commands that run before the main application starts (via a syntax-highlighted editor).
+- **⚠️ Risk Note**: Quirks mode replaces the original entrypoint with a wrapper script. While it attempts to preserve the original behavior, complex images might require manual adjustments.
+
+### 🧩 Other Features
+
 - **Universal Shell Support**: POSIX-compliant `/bin/sh` wrapper script, ensuring compatibility with minimalist images (e.g., Alpine) without `jq` or `bash` dependencies.
 - **Clean Dockerfiles**: Minimal generated `Dockerfile`. Standard add-ons use `FROM`, while advanced ones integrate the wrapper logic automatically.
 - **Simplified Config**: Clean `config.yaml` that only includes `options` and `schema` when necessary.
