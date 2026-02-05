@@ -4,6 +4,7 @@ use App\Controllers\AddonController;
 use App\Controllers\GenerateController;
 use App\Controllers\IndexController;
 use App\Controllers\SettingsController;
+use App\Controllers\FragmentController;
 use Slim\Factory\AppFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -15,6 +16,12 @@ $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
 // Hauptseite - Converter Interface
 $app->get('/', [IndexController::class, 'index']);
+
+// htmx Fragmente
+$app->group('/fragments', function ($group) {
+    $group->get('/addon-list', [FragmentController::class, 'addonList']);
+    $group->get('/addon-details/{slug}', [FragmentController::class, 'addonDetails']);
+});
 
 // Liste der Add-ons
 $app->get('/addons', [AddonController::class, 'list']);

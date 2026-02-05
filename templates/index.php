@@ -1,0 +1,39 @@
+<div id="addonSelection" class="mb-4">
+    <div class="ha-card">
+        <div class="ha-card-header">
+            <span>Existing Add-ons</span>
+        </div>
+        <div id="addonContainer" hx-get="<?= $basePath ?? '' ?>/fragments/addon-list" hx-trigger="load, reload from:body" hx-swap="innerHTML">
+            <div class="list-group-item d-flex justify-content-center p-4">
+                <div class="spinner-border text-primary" role="status"></div>
+                <span class="ms-2">Loading add-ons...</span>
+            </div>
+        </div>
+        <div class="d-flex justify-content-between mt-3">
+            <div>
+                <button type="button" class="btn btn-ha-primary me-2" onclick="startNew()">
+                    <span class="mdi mdi-plus me-1"></span>Create New Add-on
+                </button>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-ha-outline" onclick="selfConvert()">
+                        <span class="mdi mdi-export me-1"></span>Export Converter
+                    </button>
+                    <button type="button" class="btn btn-ha-outline dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" onmouseenter="loadTags(this)">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu" id="tagList">
+                        <li><h6 class="dropdown-header">Choose Version</h6></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="selfConvert('latest')">latest (default)</a></li>
+                    </ul>
+                </div>
+            </div>
+            <button type="button" class="btn btn-ha-outline" onclick="openSettings()">
+                <span class="mdi mdi-cog me-1"></span>Settings
+            </button>
+        </div>
+    </div>
+</div>
+
+<?php include __DIR__ . '/fragments/converter-form.php'; ?>
+<?php include __DIR__ . '/fragments/settings-view.php'; ?>
