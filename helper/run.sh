@@ -35,6 +35,12 @@ if [ -f /data/options.json ]; then
     rm -f "$EXPORT_FILE"
 fi
 
+# Source start.sh if exists
+if [ -f /start.sh ]; then
+    echo "Sourcing /start.sh..."
+    . /start.sh
+fi
+
 # Originalwerte laden
 orig_entrypoint=$(cat /run/original_entrypoint 2>/dev/null || echo "")
 orig_cmd=$(cat /run/original_cmd 2>/dev/null || echo "")

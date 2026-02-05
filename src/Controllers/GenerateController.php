@@ -40,6 +40,8 @@ class GenerateController
         $envVars = $data['env_vars'] ?? [];
         $detectedPm = $data['detected_pm'] ?? null;
         $isSelfConvert = $data['self_convert'] ?? false;
+        $quirks = $data['quirks'] ?? false;
+        $startupScript = $data['startup_script'] ?? '';
         
         if (empty($addonName) || empty($image)) {
             $response->getBody()->write(json_encode(['status' => 'error', 'message' => 'Name and image are required']));
@@ -85,6 +87,11 @@ class GenerateController
         $origEntrypoint = $imageConfig['config']['Entrypoint'] ?? null;
         $origCmd = $imageConfig['config']['Cmd'] ?? null;
 
+        $this->saveMetadata($addonPath, [
+            'original_entrypoint' => $origEntrypoint,
+            'original_cmd' => $origCmd
+        ]);
+
         // Prüfen, ob editierbare Umgebungsvariablen vorhanden sind
         $hasEditableEnv = false;
         foreach ($envVars as $var) {
@@ -105,8 +112,8 @@ class GenerateController
             $config['webui'] = "http://[HOST]:[PORT:$webuiPort]/";
         }
 
-        if ($backup) {
-            $config['backup'] = 'hot';
+        if ($backup === 'hot' || $backup === 'cold') {
+            $config['backup'] = $backup;
         }
 
         if (!empty($map)) {
@@ -138,7 +145,7 @@ class GenerateController
                     $value = $var['value'] ?? '';
                     $editable = $var['editable'] ?? false;
 
-                    if ($editable) {
+                    if ($quirks && $editable) {
                         $options[$key] = $value;
                         $schema[$key] = 'str?';
                     } else {
@@ -150,18 +157,13 @@ class GenerateController
             if (!empty($environment)) {
                 $config['environment'] = $environment;
             }
-            if (!empty($options)) {
+            if ($quirks && !empty($options)) {
                 $config['options'] = $options;
                 $config['schema'] = $schema;
             }
         }
         
         file_put_contents($addonPath . '/config.yaml', Yaml::dump($config, 10, 2, Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE));
-        
-        // README.md (long description) speichern
-        if (!empty($longDescription)) {
-            file_put_contents($addonPath . '/README.md', $longDescription);
-        }
         
         // Icon Datei speichern, falls vorhanden
         if (!empty($iconFile)) {
@@ -175,23 +177,51 @@ class GenerateController
             }
         }
 
+        // README.md (long description) speichern
+        if (!empty($longDescription)) {
+            $readmeContent = $longDescription;
+            if (file_exists($addonPath . '/icon.png')) {
+                $readmeContent = "![Logo](icon.png)\n\n" . $readmeContent;
+            }
+            file_put_contents($addonPath . '/README.md', $readmeContent);
+        } elseif (file_exists($addonPath . '/icon.png')) {
+            file_put_contents($addonPath . '/README.md', "![Logo](icon.png)\n\n# $addonName\n\n$description");
+        }
+
         // Hilfsdateien kopieren/erstellen
-        if ($hasEditableEnv) {
-            copy(__DIR__ . '/../../helper/run.sh', $addonPath . '/run.sh');
-            chmod($addonPath . '/run.sh', 0755);
+        $this->saveMetadata($addonPath, [
+            'quirks' => $quirks,
+            'has_startup_script' => !empty($startupScript)
+        ]);
 
-            file_put_contents($addonPath . '/original_entrypoint', (is_array($origEntrypoint) && !empty($origEntrypoint)) ? implode(' ', $origEntrypoint) : ($origEntrypoint ?? ''));
-            file_put_contents($addonPath . '/original_cmd', (is_array($origCmd) && !empty($origCmd)) ? implode(' ', $origCmd) : ($origCmd ?? ''));
+        if ($quirks) {
+            // Wrapper run.sh wird kopiert, wenn Quirks aktiv sind (für Startup Script ODER editable Env)
+            if ($hasEditableEnv || !empty($startupScript)) {
+                copy(__DIR__ . '/../../helper/run.sh', $addonPath . '/run.sh');
+                chmod($addonPath . '/run.sh', 0755);
 
-            // Dockerfile erstellen
-            $dockerfileTemplate = file_get_contents(__DIR__ . '/../../helper/template.Dockerfile');
-            $dockerfileContent = str_replace('$image', $image, $dockerfileTemplate);
-            
-            // Entrypoint und Command ins Dockerfile schreiben, da config.yaml ignoriert wird
-            $dockerfileContent .= "\nENTRYPOINT [\"/run.sh\"]\n";
-            $dockerfileContent .= "CMD []\n";
-            
-            file_put_contents($addonPath . '/Dockerfile', $dockerfileContent);
+                file_put_contents($addonPath . '/original_entrypoint', (is_array($origEntrypoint) && !empty($origEntrypoint)) ? implode(' ', $origEntrypoint) : ($origEntrypoint ?? ''));
+                file_put_contents($addonPath . '/original_cmd', (is_array($origCmd) && !empty($origCmd)) ? implode(' ', $origCmd) : ($origCmd ?? ''));
+
+                // Dockerfile erstellen
+                $dockerfileTemplate = file_get_contents(__DIR__ . '/../../helper/template.Dockerfile');
+                $dockerfileContent = str_replace('$image', $image, $dockerfileTemplate);
+
+                if (!empty($startupScript)) {
+                    file_put_contents($addonPath . '/start.sh', $startupScript);
+                    chmod($addonPath . '/start.sh', 0755);
+                    $dockerfileContent .= "\n# Add startup script\nCOPY start.sh /start.sh\nRUN chmod +x /start.sh\n";
+                }
+
+                // Entrypoint und Command ins Dockerfile schreiben, da config.yaml ignoriert wird
+                $dockerfileContent .= "\nENTRYPOINT [\"/run.sh\"]\n";
+                $dockerfileContent .= "CMD []\n";
+
+                file_put_contents($addonPath . '/Dockerfile', $dockerfileContent);
+            } else {
+                // Quirks an, aber keine Features genutzt -> Standard Dockerfile
+                file_put_contents($addonPath . '/Dockerfile', "FROM $image\n");
+            }
         } else {
             // "Legacy" Modus: Wir brauchen kein spezielles Dockerfile oder Wrapper-Script
             // Falls Dateien von vorherigen Versuchen existieren, löschen wir sie lieber nicht (Cleanup könnte riskant sein)

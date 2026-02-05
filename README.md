@@ -1,5 +1,7 @@
 # HAOS Add-on Converter
 
+![Logo](icon.png)
+
 This tool is a web-based converter that transforms any Docker image into a Home Assistant add-on.
 
 ## Features
@@ -12,7 +14,9 @@ This tool is a web-based converter that transforms any Docker image into a Home 
 - **Environment Variables**:
   - **Static Variables**: Fixed within the add-on configuration.
   - **Editable Variables**: Can be changed via the Home Assistant GUI after installation using a universal wrapper script.
-  - **Risk Note**: Uses a wrapper script that replaces the entrypoint; includes warning for complex images.
+  - **Quirks Mode**: An optional mode that activates the `run.sh` wrapper to enable features like editable variables and custom startup scripts.
+  - **Custom Startup Script**: Inject custom shell commands that run before the main application starts (syntax-highlighted editor included).
+  - **Risk Note**: Quirks mode uses a wrapper script that replaces the entrypoint; includes warnings for complex images.
 - **Universal Shell Support**: POSIX-compliant `/bin/sh` wrapper script, ensuring compatibility with minimalist images (e.g., Alpine) without `jq` or `bash` dependencies.
 - **Clean Dockerfiles**: Minimal generated `Dockerfile`. Standard add-ons use `FROM`, while advanced ones integrate the wrapper logic automatically.
 - **Simplified Config**: Clean `config.yaml` that only includes `options` and `schema` when necessary.
@@ -25,10 +29,14 @@ This tool is a web-based converter that transforms any Docker image into a Home 
 - **Web UI Configuration**: Automatic `webui` URL generation (e.g., `http://[HOST]:[PORT:xxxx]/`) if Ingress is disabled.
 - **Storage Mappings (Map)**: Full support for HA storage folders (`config`, `ssl`, `share`, etc.) with `RW`/`RO` modes.
 - **Port Mappings**: Easy definition of container-to-host port mappings.
-- **Backup Integration**: Automatic `hot` backup mode support.
+- **Backup Integration**: Full support for `disabled`, `hot` (online), and `cold` (offline) backup modes with detailed descriptions.
 
 ### 🎨 User Experience & UI
-- **Accordion-Based One-Step Form**: Streamlined editing process organized into collapsible sections (Basic Info, Ingress & UI, Advanced Config).
+- **Accordion-Based Form**: Streamlined editing process organized into four clear sections:
+  1. **Basic Information**: Name, version, image, and long description (Markdown).
+  2. **Ingress & Web UI**: Access settings and backup modes.
+  3. **Ports & Storage**: Port mappings and HA folder access.
+  4. **Environment Variables**: Static/editable variables, Quirks mode, and Startup scripts.
 - **Intelligent Docker Image Selection**: 
   - Separate inputs for Image Name and Tag.
   - **Manual Tag Fetcher**: Dedicated button (🔍) to fetch available tags directly from the registry using `crane`.
@@ -57,14 +65,12 @@ You can use the pre-built image from GHCR:
 ```bash
 docker run -d -p 8985:80 -v $(pwd)/data:/var/www/html/data ghcr.io/axute/haos-addon-converter:latest
 ```
-Or use docker-compose:
-1. Start the container:
-   ```bash
-   docker-compose up -d --build
-   ```
-2. Open the converter in your browser: [http://localhost:8985](http://localhost:8985)
 
-### Option 2: Local with PHP
+### Option 2: Home Assistant Add-on
+You can also use this converter as a Home Assistant add-on by adding the following repository to your Home Assistant instance:
+[https://github.com/axute/hassio-addons-converted](https://github.com/axute/hassio-addons-converted)
+
+### Option 3: Local with PHP
 1. Install dependencies:
    ```bash
    composer install
@@ -85,7 +91,8 @@ Each add-on directory contains:
 - `Dockerfile`: Based on the selected Docker image
 - `README.md`: Detailed add-on description (Markdown)
 - `icon.png`: The add-on icon (automatically created during self-conversion or manual upload)
-- `run.sh`: (Optional) Wrapper script for environment variable support
+- `start.sh`: (Optional) User-defined startup script executed before the main app
+- `run.sh`: (Optional) Wrapper script for environment variable and startup script support
 - `original_entrypoint` / `original_cmd`: (Optional) Stored metadata for entrypoint preservation
 
 A global `repository.yaml` is maintained in the main data directory.

@@ -38,11 +38,18 @@ class AddonController
 
                     $metadataFile = $dir . '/metadata.json';
                     $detectedPm = $config['init_pm'] ?? null;
+                    $quirks = false;
                     if (file_exists($metadataFile)) {
                         $metadata = json_decode(file_get_contents($metadataFile), true);
                         if (isset($metadata['detected_pm'])) {
                             $detectedPm = $metadata['detected_pm'];
                         }
+                        if (isset($metadata['quirks'])) {
+                            $quirks = (bool)$metadata['quirks'];
+                        }
+                    }
+                    if (!$quirks) {
+                        $quirks = file_exists($dir . '/run.sh');
                     }
 
                     $addons[] = [
@@ -52,6 +59,7 @@ class AddonController
                         'description' => $config['description'] ?? '',
                         'image' => $image ?: ($config['image'] ?? ''),
                         'detected_pm' => $detectedPm,
+                        'quirks' => $quirks,
                         'has_local_icon' => $hasLocalIcon
                     ];
                 }
@@ -63,7 +71,20 @@ class AddonController
             return strcasecmp($a['name'], $b['name']);
         });
 
-        $response->getBody()->write(json_encode($addons));
+        $repository = null;
+        $repoFile = $dataDir . '/repository.yaml';
+        if (file_exists($repoFile)) {
+            $repoConfig = Yaml::parseFile($repoFile);
+            $repository = [
+                'name' => $repoConfig['name'] ?? 'Unknown Repository',
+                'description' => $repoConfig['description'] ?? ''
+            ];
+        }
+
+        $response->getBody()->write(json_encode([
+            'addons' => $addons,
+            'repository' => $repository
+        ]));
         return $response->withHeader('Content-Type', 'application/json');
     }
 
@@ -153,6 +174,23 @@ class AddonController
             }
         }
 
+        // Quirks erkennen (aus metadata.json oder anhand run.sh)
+        $quirks = false;
+        if (file_exists($metadataFile)) {
+            $metadata = json_decode(file_get_contents($metadataFile), true) ?: [];
+            if (isset($metadata['quirks'])) {
+                $quirks = (bool)$metadata['quirks'];
+            }
+        }
+        if (!$quirks) {
+            $quirks = file_exists($dataDir . '/' . $slug . '/run.sh');
+        }
+
+        $startupScript = '';
+        if (file_exists($dataDir . '/' . $slug . '/start.sh')) {
+            $startupScript = file_get_contents($dataDir . '/' . $slug . '/start.sh');
+        }
+
         $data = [
             'name' => $config['name'] ?? '',
             'description' => $config['description'] ?? '',
@@ -164,13 +202,15 @@ class AddonController
             'ingress_stream' => $config['ingress_stream'] ?? false,
             'panel_icon' => $config['panel_icon'] ?? 'mdi:link-variant',
             'webui' => $config['webui'] ?? '',
-            'backup' => (isset($config['backup']) && $config['backup'] !== false),
+            'backup' => $config['backup'] ?? 'disabled',
             'detected_pm' => $detectedPm,
             'has_local_icon' => $hasLocalIcon,
             'icon_file' => $iconFileContent,
             'ports' => $ports,
             'map' => $config['map'] ?? [],
-            'env_vars' => $envVars
+            'env_vars' => $envVars,
+            'quirks' => $quirks,
+            'startup_script' => $startupScript
         ];
 
         $response->getBody()->write(json_encode($data));
@@ -318,7 +358,7 @@ class AddonController
 
         // Cache speichern
         $cache[$fullImage] = $pm;
-        file_put_contents($cacheFile, json_encode($cache));
+        file_put_contents($cacheFile, json_encode($cache, JSON_PRETTY_PRINT));
 
         $response->getBody()->write(json_encode(['pm' => $pm]));
         return $response->withHeader('Content-Type', 'application/json');
@@ -357,7 +397,7 @@ class AddonController
             'ingress' => true,
             'ingress_port' => 80,
             'panel_icon' => 'mdi:toy-brick',
-            'backup' => true,
+            'backup' => 'hot',
             'self_convert' => true,
             'map' => ['addons:rw'],
             'env_vars' => [
