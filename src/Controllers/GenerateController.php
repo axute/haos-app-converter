@@ -227,7 +227,7 @@ class GenerateController
                 $dockerfileContent = str_replace('$image', $image, $dockerfileTemplate);
 
                 if ($allowUserEnv) {
-                    $dockerfileContent = "COPY --from=hairyhenderson/gomplate:stable /gomplate /bin/gomplate\n" . $dockerfileContent;
+                    $dockerfileContent = str_replace("FROM $image", "FROM $image\nCOPY --from=hairyhenderson/gomplate:stable /gomplate /bin/gomplate", $dockerfileContent);
                 }
 
                 if (!empty($startupScript)) {
@@ -256,7 +256,7 @@ class GenerateController
             $dockerfileTemplate = file_get_contents(__DIR__ . '/../../helper/template.Dockerfile');
             $dockerfileContent = str_replace('$image', $image, $dockerfileTemplate);
             
-            $dockerfileContent = "COPY --from=hairyhenderson/gomplate:stable /gomplate /bin/gomplate\n" . $dockerfileContent;
+            $dockerfileContent = str_replace("FROM $image", "FROM $image\nCOPY --from=hairyhenderson/gomplate:stable /gomplate /bin/gomplate", $dockerfileContent);
             
             $dockerfileContent .= "\nENTRYPOINT [\"/run.sh\"]\n";
             $dockerfileContent .= "CMD []\n";
