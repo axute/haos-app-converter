@@ -21,6 +21,7 @@ $app->get('/', [IndexController::class, 'index']);
 $app->group('/fragments', function ($group) {
     $group->get('/addon-list', [FragmentController::class, 'addonList']);
     $group->get('/addon-details/{slug}', [FragmentController::class, 'addonDetails']);
+    $group->get('/check-update/{slug}', [FragmentController::class, 'checkUpdate']);
 });
 
 // Liste der Add-ons

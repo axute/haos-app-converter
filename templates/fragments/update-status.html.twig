@@ -1,0 +1,49 @@
+{% if update.status == 'success' %}
+    {% set has_any_update = false %}
+    {% if update.major %}
+        {% set has_any_update = true %}
+        <span class="badge bg-danger text-white rounded-pill ms-1" style="font-size: 0.7rem; cursor: pointer;" 
+              title="Major update available: {{ update.major }} (Current: {{ update.current_tag }})"
+              onclick="selfConvert('{{ update.major }}')">
+            <span class="mdi mdi-chevron-double-up"></span> Major: {{ update.major }}
+        </span>
+    {% endif %}
+    {% if update.minor %}
+        {% set has_any_update = true %}
+        <span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 0.7rem; cursor: pointer;" 
+              title="Minor update available: {{ update.minor }} (Current: {{ update.current_tag }})"
+              onclick="selfConvert('{{ update.minor }}')">
+            <span class="mdi mdi-chevron-up"></span> Minor: {{ update.minor }}
+        </span>
+    {% endif %}
+    {% if update.fix %}
+        {% set has_any_update = true %}
+        <span class="badge bg-info text-dark rounded-pill ms-1" style="font-size: 0.7rem; cursor: pointer;" 
+              title="Fix/Patch available: {{ update.fix }} (Current: {{ update.current_tag }})"
+              onclick="selfConvert('{{ update.fix }}')">
+            <span class="mdi mdi-patch"></span> Fix: {{ update.fix }}
+        </span>
+    {% endif %}
+
+    {% if not has_any_update %}
+        {% if update.has_update %}
+            <span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 0.7rem; cursor: pointer;" 
+                  title="Image was updated (Remote: {{ update.remote_created|date('d.m.Y H:i') }}). Click to update."
+                  onclick="selfConvert('{{ update.current_tag }}')">
+                <span class="mdi mdi-update"></span> Update available
+            </span>
+        {% else %}
+            <span class="badge bg-success rounded-pill ms-1" style="font-size: 0.7rem;" title="Up to date">
+                <span class="mdi mdi-check"></span> Up to date
+            </span>
+        {% endif %}
+    {% endif %}
+{% elseif update.status == 'error' %}
+    <span class="badge bg-light text-muted rounded-pill ms-1" style="font-size: 0.7rem;" title="{{ update.message }}">
+        <span class="mdi mdi-alert-circle-outline"></span> Check failed
+    </span>
+{% else %}
+    <span class="badge bg-light text-muted rounded-pill ms-1" style="font-size: 0.7rem;">
+        <span class="mdi mdi-loading mdi-spin"></span> Checking...
+    </span>
+{% endif %}

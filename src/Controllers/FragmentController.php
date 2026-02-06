@@ -49,4 +49,18 @@ class FragmentController
             'slug' => $slug
         ]);
     }
+
+    public function checkUpdate(Request $request, Response $response, array $args): Response
+    {
+        $slug = $args['slug'];
+        $addonController = new AddonController();
+        $tempResponse = new \Slim\Psr7\Response();
+        $updateResponse = $addonController->checkImageUpdate($request, $tempResponse, ['slug' => $slug]);
+        $updateData = json_decode((string)$updateResponse->getBody(), true);
+
+        return $this->render($response, 'update-status', [
+            'update' => $updateData,
+            'slug' => $slug
+        ]);
+    }
 }
