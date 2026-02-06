@@ -14,13 +14,17 @@ This tool is a web-based converter that transforms any Docker image into a Home 
 - **Environment Variables**:
   - **Static Variables**: Fixed within the add-on configuration.
   - **Editable Variables**: Can be changed via the Home Assistant GUI after installation using a universal wrapper script.
+  - **User-Defined Variables**: Optional support for the `env_vars` option, allowing users to define their own custom variables in the HA configuration.
 
-### 🛠️ Quirks Mode (Advanced Features)
+### 🛠️ Quirks Mode & Advanced Features
 
 An optional mode that activates the `run.sh` wrapper to enable advanced features:
 - **Editable Variables**: Enables the "Editable in HA GUI" option for environment variables.
 - **Auto-Tool Installation**: Automatically attempts to install `bash`, `jq`, and `curl` if a package manager is detected.
-- **Bashio Integration**: Automatically installs [bashio](https://github.com/hassio-addons/bashio) if `bash`, `jq`, and `curl` are available, providing powerful helper functions for your scripts.
+- **Bashio Integration**: 
+  - Automatically installs [bashio](https://github.com/hassio-addons/bashio) if `bash`, `jq`, and `curl` are available.
+  - **Version Selection**: Choose a specific bashio version from a curated list (fetched directly from GitHub).
+- **Gomplate Integration**: Automatically includes [gomplate](https://github.com/hairyhenderson/gomplate) when user-defined variables are enabled, ensuring robust template and variable processing.
 - **Custom Startup Script**: Inject custom shell commands that run before the main application starts (via a syntax-highlighted editor).
 - **⚠️ Risk Note**: Quirks mode replaces the original entrypoint with a wrapper script. While it attempts to preserve the original behavior, complex images might require manual adjustments.
 
@@ -109,3 +113,16 @@ A global `repository.yaml` is maintained in the main data directory.
 ## Environment Variables
 
 - `CONVERTER_DATA_DIR`: (Optional) Path to the data directory. Default is `./data`. When the converter runs as an HA add-on, this is automatically set to `/addons`.
+
+---
+
+## 💎 Credits & Acknowledgments
+
+This project wouldn't be possible without these amazing tools and libraries:
+
+- **[bashio](https://github.com/hassio-addons/bashio)**: A powerful library for Home Assistant add-ons that provides essential helper functions.
+- **[gomplate](https://github.com/hairyhenderson/gomplate)**: A flexible template renderer used for robust environment variable processing.
+- **[crane](https://github.com/google/go-containerregistry)**: Used for deep inspection and analysis of container images.
+- **[EasyMDE](https://github.com/Ionaru/easy-markdown-editor)**: Provides the beautiful Markdown editor for add-on documentation.
+- **[Slim Framework](https://www.slimframework.com/)**: The lightweight PHP framework powering the backend.
+- **[Twig](https://twig.symfony.com/)**: The modern template engine for PHP.

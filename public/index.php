@@ -4,6 +4,7 @@ use App\Controllers\AddonController;
 use App\Controllers\GenerateController;
 use App\Controllers\IndexController;
 use App\Controllers\SettingsController;
+use App\Controllers\FragmentController;
 use Slim\Factory\AppFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -15,6 +16,12 @@ $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
 // Hauptseite - Converter Interface
 $app->get('/', [IndexController::class, 'index']);
+
+// htmx Fragmente
+$app->group('/fragments', function ($group) {
+    $group->get('/addon-list', [FragmentController::class, 'addonList']);
+    $group->get('/addon-details/{slug}', [FragmentController::class, 'addonDetails']);
+});
 
 // Liste der Add-ons
 $app->get('/addons', [AddonController::class, 'list']);
@@ -41,6 +48,7 @@ $app->delete('/addons/{slug}', [AddonController::class, 'delete']);
 $app->get('/tags', [AddonController::class, 'getTags']);
 $app->get('/image-tags', [AddonController::class, 'getImageTags']);
 $app->get('/detect-pm', [AddonController::class, 'detectPackageManager']);
+$app->get('/bashio-versions', [AddonController::class, 'getBashioVersions']);
 $app->post('/self-convert', [AddonController::class, 'selfConvert']);
 
 // Add-on Generierung
