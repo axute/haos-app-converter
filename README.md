@@ -31,6 +31,10 @@ An optional mode that activates the `run.sh` wrapper to enable advanced features
 ### 🧩 Other Features
 
 - **Universal Shell Support**: POSIX-compliant `/bin/sh` wrapper script, ensuring compatibility with minimalist images (e.g., Alpine) without `jq` or `bash` dependencies.
+- **Image Update Check**:
+  - **Auto-Detection**: Automatically checks if a newer version of the base image is available (supports Major, Minor, and Patch detection).
+  - **Manual Refresh**: Trigger a fresh update check manually, bypassing the 6-hour cache.
+  - **One-Click Update**: Update existing add-ons to a newer base image version with a single click.
 - **Clean Dockerfiles**: Minimal generated `Dockerfile`. Standard add-ons use `FROM`, while advanced ones integrate the wrapper logic automatically.
 - **Simplified Config**: Clean `config.yaml` that only includes `options` and `schema` when necessary.
 
@@ -39,23 +43,30 @@ An optional mode that activates the `run.sh` wrapper to enable advanced features
   - Seamless access to the web interface via Home Assistant Ingress.
   - Customizable **Panel Icon** (MDI) and **Panel Title** for the sidebar.
   - **Ingress Stream** support for WebSockets/VNC.
+- **Add-on Homepage**: Option to provide a **Homepage/URL** in the configuration, which is shown in the Home Assistant Add-on Store.
 - **Web UI Configuration**: Automatic `webui` URL generation (e.g., `http://[HOST]:[PORT:xxxx]/`) if Ingress is disabled.
 - **Storage Mappings (Map)**: Full support for HA storage folders (`config`, `ssl`, `share`, etc.) with `RW`/`RO` modes and **custom destination paths** within the container.
-- **Port Mappings**: Easy definition of container-to-host port mappings.
+- **Port Mappings**: 
+  - Easy definition of container-to-host port mappings.
+  - **Port Descriptions**: Add custom descriptions for each port mapping, which are stored in `config.yaml` and visible in Home Assistant.
 - **Backup Integration**: Full support for `disabled`, `hot` (online), and `cold` (offline) backup modes with detailed descriptions.
 - **tmpfs Support**: Optional use of memory file system for `/tmp` to improve performance and reduce disk wear.
 
 ### 🎨 User Experience & UI
 - **Accordion-Based Form**: Streamlined editing process organized into four clear sections:
-  1. **Basic Information**: Name, version, image, and long description (Markdown).
+  1. **Basic Information**: Name, version, image, and long description (Markdown). Includes **Homepage/URL** support.
   2. **Ingress & Web UI**: Access settings and backup modes.
-  3. **Ports & Storage**: Port mappings and HA folder access.
+  3. **Ports & Storage**: Port mappings with **custom descriptions** and HA folder access.
   4. **Environment Variables**: Static/editable variables, Quirks mode, and Startup scripts.
+- **Modern HTMX Integration**: 
+  - Dynamic loading of the add-on list and update status.
+  - Smooth UI updates without full page reloads.
 - **Intelligent Docker Image Selection**: 
   - Separate inputs for Image Name and Tag.
   - **Manual Tag Fetcher**: Dedicated button (🔍) to fetch available tags directly from the registry using `crane`.
   - **Automatic PM Detection**: Real-time identification of the package manager with a manual refresh option (🔄).
   - **Smart Sorting**: Tags are sorted by version, with `latest` at the top and technical tags (signatures/hashes) at the bottom.
+- **Smart Variable Filtering**: Automatically hides internal variables (`env_vars`) and system-generated environment variables (`HAOS_CONVERTER_*`) from the UI to prevent accidental modification of core functionality.
 - **Add-on Documentation (Markdown)**: 
   - Integrated **EasyMDE** editor with syntax highlighting and live preview.
   - Automatic `README.md` generation for the HA Add-on Store.
