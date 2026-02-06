@@ -143,6 +143,10 @@ class AddonController
         // Fixierte Variablen aus 'environment'
         if (isset($config['environment']) && is_array($config['environment'])) {
             foreach ($config['environment'] as $key => $value) {
+                // HAOS_CONVERTER_* sind systemgenerierte Variablen und sollen nicht gelistet werden.
+                if (str_starts_with($key, 'HAOS_CONVERTER_')) {
+                    continue;
+                }
                 $envVars[] = [
                     'key'      => $key,
                     'value'    => $value,
@@ -153,6 +157,12 @@ class AddonController
         // Editierbare Variablen aus 'options'/'schema'
         if (isset($config['options']) && is_array($config['options'])) {
             foreach ($config['options'] as $key => $value) {
+                // 'env_vars' ist ein spezielles Feld für die Checkbox "Allow user to create environment variables"
+                // HAOS_CONVERTER_* sind systemgenerierte Variablen.
+                // Beides soll nicht als normale Umgebungsvariable gelistet werden.
+                if ($key === 'env_vars' || str_starts_with($key, 'HAOS_CONVERTER_')) {
+                    continue;
+                }
                 // Nur hinzufügen, wenn noch nicht als fixierte Variable vorhanden (sollte eigentlich nicht passieren)
                 $exists = false;
                 foreach ($envVars as $ev) {
@@ -608,9 +618,10 @@ class AddonController
 
         $fullImage = $image . ':' . $tag;
         $cacheFile = $dataDir . '/.cache/update_check_' . md5($fullImage) . '.json';
+        $force = $request->getQueryParams()['force'] ?? false;
 
-        // Cache für 6 Stunden
-        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 21600)) {
+        // Cache für 6 Stunden (außer force=1)
+        if (!$force && file_exists($cacheFile) && (time() - filemtime($cacheFile) < 21600)) {
             $response->getBody()->write(file_get_contents($cacheFile));
             return $response->withHeader('Content-Type', 'application/json');
         }

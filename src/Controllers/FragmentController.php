@@ -53,8 +53,16 @@ class FragmentController
     public function checkUpdate(Request $request, Response $response, array $args): Response
     {
         $slug = $args['slug'];
+        $force = $request->getQueryParams()['force'] ?? null;
+        
         $addonController = new AddonController();
         $tempResponse = new \Slim\Psr7\Response();
+        
+        // Query Parameter an den AddonController weiterreichen
+        if ($force) {
+            $request = $request->withQueryParams(['force' => $force]);
+        }
+        
         $updateResponse = $addonController->checkImageUpdate($request, $tempResponse, ['slug' => $slug]);
         $updateData = json_decode((string)$updateResponse->getBody(), true);
 

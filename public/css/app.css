@@ -87,3 +87,11 @@ body {
 .list-group-item { border-left: none; border-right: none; padding: 16px; border-color: #eeeeee; }
 .list-group-item:first-child { border-top: none; }
 .list-group-item:last-child { border-bottom: none; }
+
+/* HTMX Indicator for Refresh Icon */
+.htmx-indicator-container.htmx-request .refresh-icon {
+    display: none;
+}
+.htmx-indicator-container.htmx-request .loading-icon {
+    display: inline-block !important;
+}

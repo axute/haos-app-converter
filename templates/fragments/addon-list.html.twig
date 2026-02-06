@@ -30,18 +30,21 @@
                             {% if addon.quirks %}
                                 <span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 0.7rem;">quirks</span>
                             {% endif %}
-                            <span id="update-status-{{ addon.slug }}" 
-                                  hx-get="{{ basePath }}/fragments/check-update/{{ addon.slug }}" 
-                                  hx-trigger="load" 
-                                  hx-swap="outerHTML"
-                                  class="ms-1">
-                                <span class="badge bg-light text-muted rounded-pill" style="font-size: 0.7rem;">
-                                    <span class="mdi mdi-loading mdi-spin"></span>
-                                </span>
-                            </span>
-                            <br>
                             <small class="text-muted d-block">{{ addon.description }}</small>
-                            <small class="text-muted">Version: {{ addon.version }} | Image: <code>{{ addon.image }}</code></small>
+                            <small class="text-muted">Version: {{ addon.version }}</small>
+                            <div class="mt-1 d-flex align-items-center flex-wrap">
+                                <small class="text-muted">Image: <code>{{ addon.image }}</code></small>
+                                <div id="update-status-{{ addon.slug }}" 
+                                      hx-get="{{ basePath }}/fragments/check-update/{{ addon.slug }}" 
+                                      hx-trigger="load" 
+                                      hx-swap="outerHTML"
+                                      hx-indicator="this"
+                                      class="d-inline-block">
+                                    <span class="badge bg-light text-muted rounded-pill htmx-indicator" style="font-size: 0.7rem;">
+                                        <span class="mdi mdi-loading mdi-spin"></span>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     {% if isSelf %}

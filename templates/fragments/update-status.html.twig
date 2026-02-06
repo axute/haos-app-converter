@@ -1,3 +1,4 @@
+<div id="update-status-{{ slug }}" class="d-inline-block">
 {% if update.status == 'success' %}
     {% set has_any_update = false %}
     {% if update.major %}
@@ -38,12 +39,32 @@
             </span>
         {% endif %}
     {% endif %}
+
+    <span class="ms-1 text-muted htmx-indicator-container" style="cursor: pointer; font-size: 0.8rem;" 
+          title="Update-Check manuell triggern"
+          hx-get="{{ basePath }}/fragments/check-update/{{ slug }}?force=1"
+          hx-target="#update-status-{{ slug }}"
+          hx-swap="outerHTML"
+          hx-indicator="this">
+        <span class="mdi mdi-refresh refresh-icon"></span>
+        <span class="mdi mdi-loading mdi-spin loading-icon" style="display:none;"></span>
+    </span>
 {% elseif update.status == 'error' %}
     <span class="badge bg-light text-muted rounded-pill ms-1" style="font-size: 0.7rem;" title="{{ update.message }}">
         <span class="mdi mdi-alert-circle-outline"></span> Check failed
+    </span>
+    <span class="ms-1 text-muted htmx-indicator-container" style="cursor: pointer; font-size: 0.8rem;" 
+          title="Update-Check erneut versuchen"
+          hx-get="{{ basePath }}/fragments/check-update/{{ slug }}?force=1"
+          hx-target="#update-status-{{ slug }}"
+          hx-swap="outerHTML"
+          hx-indicator="this">
+        <span class="mdi mdi-refresh refresh-icon"></span>
+        <span class="mdi mdi-loading mdi-spin loading-icon" style="display:none;"></span>
     </span>
 {% else %}
     <span class="badge bg-light text-muted rounded-pill ms-1" style="font-size: 0.7rem;">
         <span class="mdi mdi-loading mdi-spin"></span> Checking...
     </span>
 {% endif %}
+</div>
