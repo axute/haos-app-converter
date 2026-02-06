@@ -44,6 +44,12 @@ if command -v bash >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 && command -
             ln -s /usr/lib/bashio/bashio /usr/bin/bashio
             chmod +x /usr/bin/bashio
             echo "bashio v${BASHIO_VERSION} installed successfully"
+
+            # Re-exec with bash again to ensure bashio is available in the current shell context
+            if [ -z "$BASH_VERSION" ]; then
+                echo "Switching to bashio after bashio installation..."
+                exec bashio "$0" "$@"
+            fi
         fi
         rm -rf /tmp/bashio
     fi
@@ -56,16 +62,14 @@ if [ -f /data/options.json ]; then
     echo "-------------------------------------------------------"
     
     if command -v bashio >/dev/null 2>&1; then
-        echo "Using bashio to export options..."
-        # bashio hat keine direkte Funktion um alle Optionen als ENV zu exportieren,
-        # aber wir können die Keys loopen oder bashio jq verwenden.
-        # Am einfachsten: bashio jq nutzen um die Keys zu bekommen.
-        KEYS=$(bashio::config.keys)
+        echo "Using bashio and jq to export options..."
+        KEYS=$(jq -r 'keys[] | select(. != "env_vars")' /data/options.json)
         for key in $KEYS; do
             value=$(bashio::config "$key")
             export "$key"="$value"
             echo "export $key=\"$value\""
         done
+
     elif command -v jq >/dev/null 2>&1; then
         echo "Using jq to export options..."
         # Extrahiere Schlüssel und Werte mit jq
