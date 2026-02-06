@@ -1,0 +1,30 @@
+<?php
+
+namespace App;
+
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
+
+class View
+{
+    private Environment $twig;
+    private string $basePath;
+
+    public function __construct()
+    {
+        $loader = new FilesystemLoader(__DIR__ . '/../templates');
+        $this->twig = new Environment($loader, [
+            'cache' => false, // Für Entwicklung deaktiviert, könnte in prod aktiviert werden
+            'debug' => true,
+        ]);
+
+        $this->basePath = rtrim(str_replace('/index.php', '', $_SERVER['SCRIPT_NAME'] ?? ''), '/');
+        
+        $this->twig->addGlobal('basePath', $this->basePath);
+    }
+
+    public function render(string $template, array $data = []): string
+    {
+        return $this->twig->render($template, $data);
+    }
+}

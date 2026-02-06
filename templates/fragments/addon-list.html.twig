@@ -1,0 +1,61 @@
+{% if repository is defined and repository is iterable %}
+    <div id="repoInfo" class="mb-2 text-muted small" style="padding: 0 16px;">
+        {% if repository.name is not empty %}<strong>{{ repository.name }}</strong>{% endif %}
+        {% if repository.name is not empty and repository.description is not empty %} — {% endif %}
+        {% if repository.description is not empty %}{{ repository.description }}{% endif %}
+    </div>
+{% endif %}
+
+<div id="addonList" class="list-group list-group-flush mb-3">
+    {% if addons is empty %}
+        <div class="list-group-item">No add-ons found</div>
+    {% else %}
+        {% for addon in addons %}
+            {% set isSelf = (addon.slug == 'haos_addon_converter') %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3 text-center" style="width: 40px; font-size: 24px;">
+                            {% if addon.has_local_icon %}
+                                <img src="{{ basePath }}/addons/{{ addon.slug }}/icon.png" style="width: 32px; height: 32px;">
+                            {% else %}
+                                📦
+                            {% endif %}
+                        </div>
+                        <div>
+                            <strong>{{ addon.name }}</strong>
+                            {% if addon.detected_pm is not empty %}
+                                <span class="badge bg-info text-dark rounded-pill ms-1" style="font-size: 0.7rem;">{{ addon.detected_pm }}</span>
+                            {% endif %}
+                            {% if addon.quirks %}
+                                <span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 0.7rem;">quirks</span>
+                            {% endif %}
+                            <br>
+                            <small class="text-muted d-block">{{ addon.description }}</small>
+                            <small class="text-muted">Version: {{ addon.version }} | Image: <code>{{ addon.image }}</code></small>
+                        </div>
+                    </div>
+                    {% if isSelf %}
+                        <span class="badge bg-secondary rounded-pill">System</span>
+                    {% else %}
+                        <div class="text-nowrap">
+                            <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" title="Info" 
+                                    hx-get="{{ basePath }}/fragments/addon-details/{{ addon.slug }}" 
+                                    hx-target="#addon-info-{{ addon.slug }}"
+                                    onclick="bootstrap.Collapse.getOrCreateInstance(document.getElementById('addon-info-{{ addon.slug }}')).toggle()">
+                                <span class="mdi mdi-information-outline"></span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" onclick="editAddon('{{ addon.slug }}')">
+                                <span class="mdi mdi-pencil"></span>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-ha-outline rounded-pill text-danger border-danger" onclick="deleteAddon('{{ addon.slug }}')">
+                                <span class="mdi mdi-delete"></span>
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+                <div id="addon-info-{{ addon.slug }}" class="collapse mt-3"></div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>

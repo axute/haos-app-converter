@@ -48,6 +48,7 @@ $app->delete('/addons/{slug}', [AddonController::class, 'delete']);
 $app->get('/tags', [AddonController::class, 'getTags']);
 $app->get('/image-tags', [AddonController::class, 'getImageTags']);
 $app->get('/detect-pm', [AddonController::class, 'detectPackageManager']);
+$app->get('/bashio-versions', [AddonController::class, 'getBashioVersions']);
 $app->post('/self-convert', [AddonController::class, 'selfConvert']);
 
 // Add-on Generierung

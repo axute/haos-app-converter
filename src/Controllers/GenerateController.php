@@ -41,6 +41,8 @@ class GenerateController
         $detectedPm = $data['detected_pm'] ?? null;
         $isSelfConvert = $data['self_convert'] ?? false;
         $quirks = $data['quirks'] ?? false;
+        $allowUserEnv = $data['allow_user_env'] ?? false;
+        $bashioVersion = $data['bashio_version'] ?? '';
         $startupScript = $data['startup_script'] ?? '';
         
         if (empty($addonName) || empty($image)) {
@@ -82,6 +84,13 @@ class GenerateController
             $this->saveMetadata($addonPath, ['detected_pm' => $detectedPm]);
             // Paketmanager als feste Umgebungsvariable hinzufügen
             $config['environment']['HAOS_CONVERTER_PM'] = $detectedPm;
+        }
+
+        if ($bashioVersion) {
+            $config['environment']['HAOS_CONVERTER_BASHIO_VERSION'] = $bashioVersion;
+        } else {
+            // Standardversion falls aus irgendeinem Grund nichts übergeben wurde
+            $config['environment']['HAOS_CONVERTER_BASHIO_VERSION'] = '0.17.5';
         }
 
         // Image Informationen via crane abrufen
@@ -136,7 +145,7 @@ class GenerateController
         }
 
         // Umgebungsvariablen verarbeiten
-        if (!empty($envVars)) {
+        if (!empty($envVars) || $allowUserEnv) {
             $environment = [];
             $options = [];
             $schema = [];
@@ -156,10 +165,15 @@ class GenerateController
                 }
             }
 
+            if ($allowUserEnv) {
+                $options['env_vars'] = [];
+                $schema['env_vars'] = ['str'];
+            }
+
             if (!empty($environment)) {
                 $config['environment'] = $environment;
             }
-            if ($quirks && !empty($options)) {
+            if (!empty($options)) {
                 $config['options'] = $options;
                 $config['schema'] = $schema;
             }
@@ -193,12 +207,15 @@ class GenerateController
         // Hilfsdateien kopieren/erstellen
         $this->saveMetadata($addonPath, [
             'quirks' => $quirks,
+            'allow_user_env' => $allowUserEnv,
+            'bashio_version' => $bashioVersion,
             'has_startup_script' => !empty($startupScript)
         ]);
 
         if ($quirks) {
             // Wrapper run.sh wird kopiert, wenn Quirks aktiv sind (für Startup Script ODER editable Env)
-            if ($hasEditableEnv || !empty($startupScript)) {
+            // Auch wenn allow_user_env aktiv ist, brauchen wir run.sh
+            if ($hasEditableEnv || !empty($startupScript) || $allowUserEnv) {
                 copy(__DIR__ . '/../../helper/run.sh', $addonPath . '/run.sh');
                 chmod($addonPath . '/run.sh', 0755);
 
@@ -208,6 +225,10 @@ class GenerateController
                 // Dockerfile erstellen
                 $dockerfileTemplate = file_get_contents(__DIR__ . '/../../helper/template.Dockerfile');
                 $dockerfileContent = str_replace('$image', $image, $dockerfileTemplate);
+
+                if ($allowUserEnv) {
+                    $dockerfileContent = "COPY --from=hairyhenderson/gomplate:stable /gomplate /bin/gomplate\n" . $dockerfileContent;
+                }
 
                 if (!empty($startupScript)) {
                     file_put_contents($addonPath . '/start.sh', $startupScript);
@@ -224,6 +245,23 @@ class GenerateController
                 // Quirks an, aber keine Features genutzt -> Standard Dockerfile
                 file_put_contents($addonPath . '/Dockerfile', "FROM $image\n");
             }
+        } elseif ($allowUserEnv) {
+            // Auch ohne Quirks-Modus: Wenn allow_user_env aktiv ist, brauchen wir run.sh und gomplate
+            copy(__DIR__ . '/../../helper/run.sh', $addonPath . '/run.sh');
+            chmod($addonPath . '/run.sh', 0755);
+
+            file_put_contents($addonPath . '/original_entrypoint', (is_array($origEntrypoint) && !empty($origEntrypoint)) ? implode(' ', $origEntrypoint) : ($origEntrypoint ?? ''));
+            file_put_contents($addonPath . '/original_cmd', (is_array($origCmd) && !empty($origCmd)) ? implode(' ', $origCmd) : ($origCmd ?? ''));
+
+            $dockerfileTemplate = file_get_contents(__DIR__ . '/../../helper/template.Dockerfile');
+            $dockerfileContent = str_replace('$image', $image, $dockerfileTemplate);
+            
+            $dockerfileContent = "COPY --from=hairyhenderson/gomplate:stable /gomplate /bin/gomplate\n" . $dockerfileContent;
+            
+            $dockerfileContent .= "\nENTRYPOINT [\"/run.sh\"]\n";
+            $dockerfileContent .= "CMD []\n";
+
+            file_put_contents($addonPath . '/Dockerfile', $dockerfileContent);
         } else {
             // "Legacy" Modus: Wir brauchen kein spezielles Dockerfile oder Wrapper-Script
             // Falls Dateien von vorherigen Versuchen existieren, löschen wir sie lieber nicht (Cleanup könnte riskant sein)

@@ -22,7 +22,35 @@ window.addPort = addPortMapping;
 window.addMap = addMapMapping;
 window.selfConvert = selfConvert;
 
+let bashioVersions = [];
+
+async function fetchBashioVersions() {
+    const loader = document.getElementById('bashioLoader');
+    if (loader) loader.style.display = 'inline-block';
+    try {
+        const response = await fetch(`${basePath}/bashio-versions`);
+        bashioVersions = await response.json();
+        const select = document.getElementById('bashio_version');
+        if (select) {
+            select.innerHTML = '';
+            bashioVersions.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                select.appendChild(opt);
+            });
+        }
+    } catch (e) {
+        console.error('Error fetching bashio versions', e);
+    } finally {
+        if (loader) loader.style.display = 'none';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('bashio_version')) {
+        fetchBashioVersions();
+    }
     easyMDE = new EasyMDE({
         element: document.getElementById('long_description'),
         spellChecker: false,
@@ -51,6 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const quirksCheckbox = document.getElementById('quirks_mode');
     if (quirksCheckbox) {
         quirksCheckbox.addEventListener('change', toggleEditableCheckboxes);
+    }
+
+    const allowUserEnvCheckboxGlobal = document.getElementById('allow_user_env');
+    if (allowUserEnvCheckboxGlobal) {
+        allowUserEnvCheckboxGlobal.addEventListener('change', toggleEditableCheckboxes);
     }
 
     // Form Submissions
@@ -347,6 +380,7 @@ async function detectPM(force = false) {
     
     const pmInput = document.getElementById('detected_pm');
     const btn = document.getElementById('btnDetectPM');
+    const loader = document.getElementById('pmLoader');
 
     if (!force && pmInput.value && pmInput.value !== 'unknown' && pmInput.value !== 'error' && pmInput.value !== 'detecting...') {
         return;
@@ -354,6 +388,7 @@ async function detectPM(force = false) {
 
     pmInput.value = 'detecting...';
     btn.disabled = true;
+    if (loader) loader.style.display = 'inline-block';
     
     try {
         const response = await fetch(`${basePath}/detect-pm?image=${encodeURIComponent(image)}&tag=${encodeURIComponent(tag)}`);
@@ -375,6 +410,8 @@ async function detectPM(force = false) {
         console.error('Error detecting PM', e);
         pmInput.value = 'error';
         btn.disabled = false;
+    } finally {
+        if (loader) loader.style.display = 'none';
     }
 }
 
@@ -432,6 +469,8 @@ async function handleConverterSubmit(e) {
         backup: document.querySelector('input[name="backup"]:checked').value,
         detected_pm: document.getElementById('detected_pm').value,
         quirks: document.getElementById('quirks_mode').checked,
+        allow_user_env: document.getElementById('allow_user_env').checked,
+        bashio_version: document.getElementById('bashio_version').value,
         ports: getPortMappings(),
         map: getMapMappings(),
         env_vars: getEnvVars(),
@@ -620,6 +659,18 @@ async function editAddon(slug) {
     const quirksModeCheckbox = document.getElementById('quirks_mode');
     if (quirksModeCheckbox) quirksModeCheckbox.checked = addon.quirks || false;
     
+    const allowUserEnvCheckbox = document.getElementById('allow_user_env');
+    if (allowUserEnvCheckbox) allowUserEnvCheckbox.checked = addon.allow_user_env || false;
+
+    const bashioVersionInput = document.getElementById('bashio_version');
+    if (bashioVersionInput) {
+        // Sicherstellen, dass die Liste geladen ist
+        if (bashioVersions.length === 0) {
+            await fetchBashioVersions();
+        }
+        bashioVersionInput.value = addon.bashio_version || bashioVersions[0] || '';
+    }
+    
     resetAccordion();
 
     toggleEditableCheckboxes();
@@ -644,6 +695,7 @@ async function toggleAddonInfo(slug) {
             const envMore = (a.env_vars || []).length > 5 ? ` … (+${(a.env_vars||[]).length - 5} weitere)` : '';
             const backup = a.backup ? a.backup : 'disabled';
             const quirks = a.quirks ? 'Ja' : 'Nein';
+            const allowUserEnv = a.allow_user_env ? 'Ja' : 'Nein';
 
             panel.innerHTML = `
                 <div class="p-3 border rounded" style="background:#fafafa">
@@ -652,7 +704,7 @@ async function toggleAddonInfo(slug) {
                             <div><strong>Image:</strong> <code>${a.image}${a.image_tag ? ':'+a.image_tag : ''}</code></div>
                             <div><strong>Detected PM:</strong> ${pm}</div>
                             <div><strong>Backup:</strong> ${backup}</div>
-                            <div><strong>Quirks:</strong> ${quirks}</div>
+                            <div><strong>Quirks:</strong> ${quirks} (User Env: ${allowUserEnv})</div>
                         </div>
                         <div class="col-12 col-md-6">
                             <div><strong>Ingress:</strong> ${ingress}</div>
@@ -841,13 +893,17 @@ async function loadTags(btn) {
 
 function toggleEditableCheckboxes() {
     const quirksMode = document.getElementById('quirks_mode');
+    const allowUserEnv = document.getElementById('allow_user_env');
     if (!quirksMode) return;
     
     const quirksEnabled = quirksMode.checked;
+    const allowUserEnvEnabled = allowUserEnv ? allowUserEnv.checked : false;
+    
     const startupScriptSection = document.getElementById('startupScriptSection');
     if (startupScriptSection) {
-        startupScriptSection.style.display = quirksEnabled ? 'block' : 'none';
-        if (quirksEnabled && startupScriptEditor) {
+        // Sektion anzeigen wenn Quirks ODER Allow User Env aktiv ist
+        startupScriptSection.style.display = (quirksEnabled || allowUserEnvEnabled) ? 'block' : 'none';
+        if ((quirksEnabled || allowUserEnvEnabled) && startupScriptEditor) {
             setTimeout(() => startupScriptEditor.refresh(), 100);
         }
     }

@@ -1,9 +1,12 @@
+{% extends 'layout.html.twig' %}
+
+{% block content %}
 <div id="addonSelection" class="mb-4">
     <div class="ha-card">
         <div class="ha-card-header">
             <span>Existing Add-ons</span>
         </div>
-        <div id="addonContainer" hx-get="<?= $basePath ?? '' ?>/fragments/addon-list" hx-trigger="load, reload from:body" hx-swap="innerHTML">
+        <div id="addonContainer" hx-get="{{ basePath }}/fragments/addon-list" hx-trigger="load, reload from:body" hx-swap="innerHTML">
             <div class="list-group-item d-flex justify-content-center p-4">
                 <div class="spinner-border text-primary" role="status"></div>
                 <span class="ms-2">Loading add-ons...</span>
@@ -35,5 +38,6 @@
     </div>
 </div>
 
-<?php include __DIR__ . '/fragments/converter-form.php'; ?>
-<?php include __DIR__ . '/fragments/settings-view.php'; ?>
+{% include 'fragments/converter-form.html.twig' %}
+{% include 'fragments/settings-view.html.twig' %}
+{% endblock %}

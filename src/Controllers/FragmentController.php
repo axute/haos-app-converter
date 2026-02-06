@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\View;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Symfony\Component\Yaml\Yaml;
@@ -15,14 +16,9 @@ class FragmentController
 
     private function render(Response $response, string $template, array $data = []): Response
     {
-        $basePath = rtrim(str_replace('/index.php', '', $_SERVER['SCRIPT_NAME']), '/');
-        $data['basePath'] = $basePath;
-
-        extract($data);
-        ob_start();
-        include __DIR__ . '/../../templates/fragments/' . $template . '.php';
-        $content = ob_get_clean();
-        $response->getBody()->write($content);
+        $view = new View();
+        $html = $view->render('fragments/' . $template . '.html.twig', $data);
+        $response->getBody()->write($html);
         return $response;
     }
 

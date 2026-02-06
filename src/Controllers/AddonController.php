@@ -176,10 +176,18 @@ class AddonController
 
         // Quirks erkennen (aus metadata.json oder anhand run.sh)
         $quirks = false;
+        $allowUserEnv = false;
+        $bashioVersion = '';
         if (file_exists($metadataFile)) {
             $metadata = json_decode(file_get_contents($metadataFile), true) ?: [];
             if (isset($metadata['quirks'])) {
                 $quirks = (bool)$metadata['quirks'];
+            }
+            if (isset($metadata['allow_user_env'])) {
+                $allowUserEnv = (bool)$metadata['allow_user_env'];
+            }
+            if (isset($metadata['bashio_version'])) {
+                $bashioVersion = $metadata['bashio_version'];
             }
         }
         if (!$quirks) {
@@ -210,6 +218,8 @@ class AddonController
             'map' => $config['map'] ?? [],
             'env_vars' => $envVars,
             'quirks' => $quirks,
+            'allow_user_env' => $allowUserEnv,
+            'bashio_version' => $bashioVersion,
             'startup_script' => $startupScript
         ];
 
@@ -425,6 +435,51 @@ class AddonController
         $genRequest->getBody()->write(json_encode($data));
         
         return $generateController->generate($genRequest, $response);
+    }
+
+    public function getBashioVersions(Request $request, Response $response): Response
+    {
+        $cacheFile = $this->getDataDir() . '/.cache/bashio_versions.json';
+        $versions = [];
+
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 86400)) {
+            $versions = json_decode(file_get_contents($cacheFile), true);
+        }
+
+        if (empty($versions)) {
+            try {
+                $opts = [
+                    'http' => [
+                        'method' => 'GET',
+                        'header' => "User-Agent: PHP\r\n"
+                    ]
+                ];
+                $context = stream_context_create($opts);
+                $json = @file_get_contents('https://api.github.com/repos/hassio-addons/bashio/releases', false, $context);
+                if ($json) {
+                    $data = json_decode($json, true);
+                    foreach ($data as $release) {
+                        $tag = $release['tag_name'];
+                        // v entfernen falls vorhanden
+                        $versions[] = ltrim($tag, 'v');
+                    }
+                    
+                    if (!is_dir(dirname($cacheFile))) {
+                        mkdir(dirname($cacheFile), 0777, true);
+                    }
+                    file_put_contents($cacheFile, json_encode($versions));
+                }
+            } catch (\Exception $e) {
+                // Fallback
+            }
+        }
+
+        if (empty($versions)) {
+            $versions = ['0.16.3', '0.14.3']; // Minimaler Fallback
+        }
+
+        $response->getBody()->write(json_encode($versions));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function delete(Request $request, Response $response, array $args): Response
