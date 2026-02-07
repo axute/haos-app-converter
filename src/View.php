@@ -19,6 +19,13 @@ class View
         ]);
 
         $this->basePath = rtrim(str_replace('/index.php', '', $_SERVER['SCRIPT_NAME'] ?? ''), '/');
+
+        // Support for Home Assistant Ingress or other Reverse Proxies
+        if (isset($_SERVER['HTTP_X_INGRESS_PATH'])) {
+            $this->basePath = rtrim($_SERVER['HTTP_X_INGRESS_PATH'], '/');
+        } elseif (isset($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
+            $this->basePath = rtrim($_SERVER['HTTP_X_FORWARDED_PREFIX'], '/');
+        }
         
         $this->twig->addGlobal('basePath', $this->basePath);
     }
