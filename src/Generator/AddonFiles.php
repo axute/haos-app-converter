@@ -231,7 +231,7 @@ class AddonFiles
         if (!empty($longDescription)) {
 
             file_put_contents($this->addonPath . '/README.md', $longDescription);
-        } elseif (file_exists($this->addonPath . '/icon.png')) {
+        } else {
             file_put_contents($this->addonPath . '/README.md', "# $addonName\n\n$description");
         }
         return $this;
