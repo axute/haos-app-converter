@@ -9,26 +9,45 @@ changelog:
       labels:
         - feature
         - enhancement
-      commits:
-        - 'feat:*'
-        - 'feature:*'
     - title: '🐛 Bug Fixes'
       labels:
         - bug
         - fix
-      commits:
-        - 'fix:*'
     - title: '🧰 Maintenance'
-      commits:
-        - 'chore:*'
-        - 'refactor:*'
-        - 'style:*'
-        - 'ci:*'
-        - 'test:*'
-        - 'build:*'
+      labels:
+        - chore
+        - refactor
+        - ci
     - title: '📖 Documentation'
-      commits:
-        - 'docs:*'
-    - title: '🔄 Others'
-      commits:
-        - '*'
+      labels:
+        - documentation
+  render:
+    compact: false
+    categories:
+      - title: '🚀 Features'
+        labels:
+          - feature
+          - enhancement
+        commits:
+          - 'feat:*'
+          - 'feature:*'
+      - title: '🐛 Bug Fixes'
+        labels:
+          - bug
+          - fix
+        commits:
+          - 'fix:*'
+      - title: '🧰 Maintenance'
+        commits:
+          - 'chore:*'
+          - 'refactor:*'
+          - 'style:*'
+          - 'ci:*'
+          - 'test:*'
+          - 'build:*'
+      - title: '📖 Documentation'
+        commits:
+          - 'docs:*'
+      - title: '🔄 Others'
+        commits:
+          - '*'
