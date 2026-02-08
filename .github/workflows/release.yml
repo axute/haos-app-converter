@@ -13,13 +13,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate changelog
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          npx conventional-changelog-cli -p angular -r 1 -v $VERSION > CHANGELOG_RELEASE.md
-          cat CHANGELOG_RELEASE.md
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          body_path: CHANGELOG_RELEASE.md
+          generate_release_notes: true
