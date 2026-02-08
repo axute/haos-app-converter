@@ -16,7 +16,7 @@ jobs:
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
-          args: --unreleased --tag "${GITHUB_REF_NAME}" > RELEASE_NOTES.md
+          args: -l > RELEASE_NOTES.md
         env:
           OUTPUT: RELEASE_NOTES.md
           GITHUB_REPO: ${{ github.repository }}
