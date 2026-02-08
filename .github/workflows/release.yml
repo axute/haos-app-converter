@@ -13,13 +13,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install tools
-        run: npm install -g conventional-changelog-cli
-
       - name: Generate changelog
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
-          conventional-changelog -p angular -r 1 -u -v $VERSION > CHANGELOG_RELEASE.md
+          npx conventional-changelog-cli -p angular -r 1 -v $VERSION > CHANGELOG_RELEASE.md
           cat CHANGELOG_RELEASE.md
 
       - name: Create GitHub Release
