@@ -18,7 +18,8 @@ jobs:
 
       - name: Generate changelog
         run: |
-          conventional-changelog -p angular -r 1 > CHANGELOG_RELEASE.md
+          VERSION=${GITHUB_REF#refs/tags/v}
+          conventional-changelog -p angular -r 1 -u -v $VERSION > CHANGELOG_RELEASE.md
           cat CHANGELOG_RELEASE.md
 
       - name: Create GitHub Release
