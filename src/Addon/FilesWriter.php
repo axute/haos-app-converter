@@ -8,6 +8,7 @@ use App\Generator\HaRepository;
 use App\Generator\Metadata;
 use App\Tools\Converter;
 use App\Tools\Crane;
+use App\Tools\Scripts;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -41,7 +42,7 @@ class FilesWriter extends FilesAbstract
             $this->image .= ':' . $image_tag;
         }
         $this->isSelfConvert = $this->data['self_convert'] ?? false;
-        $this->slug = $this->generateSlug();
+        $this->slug = $this->data['slug'] ?? $this->generateSlug();
         $this->dataDir = str_replace('\\', '/', $this->getDataDir());
         $this->addonPath = $this->dataDir . '/' . $this->slug;
         if (!is_dir($this->addonPath)) {
@@ -113,7 +114,11 @@ class FilesWriter extends FilesAbstract
         $origEntrypoint = $imageConfig['config']['Entrypoint'] ?? null;
         $origCmd = $imageConfig['config']['Cmd'] ?? null;
         $newMetadata = new Metadata();
-        $newMetadata->add('detected_pm', $this->data['detected_pm'] ?? null);
+        $detectPM = $this->data['detected_pm'] ?? null;
+        if(empty($detectPM)) {
+            $detectPM = Scripts::detectPM($this->image);
+        }
+        $newMetadata->add('detected_pm', $detectPM);
         $newMetadata->add('quirks', $this->data['quirks'] ?? false);
         $newMetadata->add('allow_user_env', $this->data['allow_user_env'] ?? false);
         $newMetadata->add('tmpfs', $this->data['tmpfs'] ?? false);
