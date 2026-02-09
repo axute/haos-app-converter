@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.git_cliff.outputs.tag }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -67,6 +69,8 @@ jobs:
   docker-publish:
     needs: release
     uses: ./.github/workflows/docker-publish.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}
     permissions:
       contents: read
       packages: write
