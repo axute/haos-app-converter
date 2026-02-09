@@ -1,3 +1,8 @@
+[bump]
+features_always_bump_minor = false
+breaking_always_bump_major = true
+initial_tag = "0.1.0"
+
 [changelog]
 header = """
 # Changelog

@@ -1,26 +1,64 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Generate a changelog
-        uses: orhun/git-cliff-action@v4
-        with:
-          config: cliff.toml
-          args: -l > RELEASE_NOTES.md
+
+      - name: Install git-cliff
+        uses: taiki-e/install-action@git-cliff
+
+      - name: Get next version tag
+        id: git_cliff
+        run: |
+          NEXT_TAG=$(git-cliff --bumped-version)
+          echo "tag=$NEXT_TAG" >> $GITHUB_OUTPUT
+          echo "Next tag: $NEXT_TAG"
+
+      - name: Generate Release Name (YYYY.MM.counter)
+        id: release_name
         env:
-          OUTPUT: RELEASE_NOTES.md
-          GITHUB_REPO: ${{ github.repository }}
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          body_path: RELEASE_NOTES.md
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          YEAR=$(date +'%Y')
+          MONTH=$(date +'%m')
+          PREFIX="${YEAR}.${MONTH}."
+          
+          # Search for the highest counter for this month in the release names
+          # We use the GitHub CLI (gh), which is pre-installed on GitHub Runners
+          LAST_RELEASE_NAME=$(gh release list --limit 100 --json name --jq ".[] | select(.name | startswith(\"$PREFIX\")) | .name" | head -n 1)
+          
+          if [ -z "$LAST_RELEASE_NAME" ]; then
+            COUNTER=1
+          else
+            LAST_COUNTER=$(echo $LAST_RELEASE_NAME | awk -F. '{print $3}')
+            COUNTER=$((LAST_COUNTER + 1))
+          fi
+          
+          RELEASE_NAME="${PREFIX}${COUNTER}"
+          echo "name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+          echo "Release name: $RELEASE_NAME"
+
+      - name: Create Tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.git_cliff.outputs.tag }}
+          git push origin ${{ steps.git_cliff.outputs.tag }}
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git-cliff -l > RELEASE_NOTES.md
+          gh release create ${{ steps.git_cliff.outputs.tag }} \
+            --title "${{ steps.release_name.outputs.name }}" \
+            --notes-file RELEASE_NOTES.md
