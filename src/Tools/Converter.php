@@ -4,7 +4,6 @@ namespace App\Tools;
 
 use App\Addon\FilesReader;
 use App\Generator\HaConfig;
-use Exception;
 use Symfony\Component\Yaml\Yaml;
 
 class Converter
@@ -15,46 +14,7 @@ class Converter
 
     public static function getTags(): array
     {
-        $imageName = self::REPOSOTIRY_PATH;
-        $tags = ['latest'];
-
-        try {
-            $tokenUrl = "https://ghcr.io/token?scope=repository:$imageName:pull&service=ghcr.io";
-            $tokenJson = @file_get_contents($tokenUrl);
-            if ($tokenJson) {
-                $tokenData = json_decode($tokenJson, true);
-                $token = $tokenData['token'] ?? '';
-
-                if ($token) {
-                    $tagsUrl = "https://ghcr.io/v2/$imageName/tags/list";
-                    $opts = [
-                        'http' => [
-                            'method' => 'GET',
-                            'header' => "Authorization: Bearer $token\r\n"
-                        ]
-                    ];
-                    $context = stream_context_create($opts);
-                    $tagsJson = @file_get_contents($tagsUrl, false, $context);
-                    if ($tagsJson) {
-                        $tagsData = json_decode($tagsJson, true);
-                        if (isset($tagsData['tags']) && is_array($tagsData['tags'])) {
-                            $tags = $tagsData['tags'];
-                            // Sort tags, latest should be first or handled specially
-                            rsort($tags);
-                            // Ensure 'latest' is in there if not present (though it should be)
-                            if (in_array('latest', $tags)) {
-                                // Move latest to the front
-                                $tags = array_diff($tags, ['latest']);
-                            }
-                            array_unshift($tags, 'latest');
-                        }
-                    }
-                }
-            }
-        } catch (Exception) {
-            // Fallback to ['latest']
-        }
-        return $tags;
+        return Crane::getTags(self::PUBLIC_IMAGE_NAME);
     }
 
     public static function selfConvert(string $tag): array

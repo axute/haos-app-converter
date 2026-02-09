@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Addon\{FilesReader, FilesWriter};
 use App\Generator\{HaConfig, HaRepository};
-use App\Tools\{Bashio, Converter, Crane, Remover, Scripts};
+use App\Tools\{Bashio, Converter, Crane, Remover, Scripts, Version};
 use Exception;
 use Psr\Http\Message\{ResponseInterface as Response, ServerRequestInterface as Request};
 use RuntimeException;
@@ -81,8 +81,8 @@ class AddonController extends ControllerAbstract
             // Fallback: SHA-Tags ans Ende sortieren
             $a_is_sha = (str_starts_with($a, 'sha256-'));
             $b_is_sha = (str_starts_with($b, 'sha256-'));
-            if ($a_is_sha && !$b_is_sha) return 1;
-            if (!$a_is_sha && $b_is_sha) return -1;
+            if ($a_is_sha && !$b_is_sha) return -1;
+            if (!$a_is_sha && $b_is_sha) return 1;
 
             return strcasecmp($b, $a);
         });
@@ -91,7 +91,19 @@ class AddonController extends ControllerAbstract
 
     public function getTags(Request $request, Response $response): Response
     {
-        return $this->success($response, Converter::getTags());
+
+        $tags = array_filter(Converter::getTags(), function ($tag) {
+            if ($tag === 'latest' || Version::fromSemverTag($tag) !== null) {
+                return true;
+            }
+            return false;
+        });
+        usort($tags, function ($a, $b) {
+            if ($a === 'latest') return -1;
+            if ($b === 'latest') return 1;
+            return Version::fromSemverTag($a)->compare(Version::fromSemverTag($b)) * -1;
+        });
+        return $this->success($response, array_values($tags));
     }
 
     public function detectPackageManager(Request $request, Response $response): Response
@@ -127,7 +139,7 @@ class AddonController extends ControllerAbstract
         $params = json_decode($body, true);
         $tag = $params['tag'] ?? 'latest';
         $slug = $params['slug'] ?? null;
-        if(empty($slug)) {
+        if (empty($slug)) {
             return $this->errorMessage($response, new RuntimeException('Slug should not be empty'));
         }
         try {
@@ -136,7 +148,7 @@ class AddonController extends ControllerAbstract
                 try {
                     $filesReader = new FilesReader($slug);
                     $addonData = $filesReader->setImageTag($tag)->jsonSerialize();
-                } catch(Exception) {
+                } catch (Exception) {
                     // catch: create new
                     $addonData = Converter::selfConvert($tag);
                 }

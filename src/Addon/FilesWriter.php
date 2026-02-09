@@ -9,6 +9,7 @@ use App\Generator\Metadata;
 use App\Tools\Converter;
 use App\Tools\Crane;
 use App\Tools\Scripts;
+use App\Tools\Version;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -50,6 +51,13 @@ class FilesWriter extends FilesAbstract
                 throw new RuntimeException('Could not create directory ' . $this->addonPath);
             }
         }
+    }
+
+    public function isConverter():bool {
+        if($this->isSelfConvert || $this->slug === Converter::SLUG){
+            return true;
+        }
+        return false;
     }
 
     private function generateSlug(): string
@@ -162,9 +170,16 @@ class FilesWriter extends FilesAbstract
     protected function generateConfigYaml(): static
     {
         $architectures = Crane::getArchitectures($this->image);
+        $version = $this->data['version'] ?? '1.0.0';
+        if($this->isConverter()) {
+            $detectedVersion = Version::fromSemverTag($this->data['image_tag']);
+            if($detectedVersion !== null) {
+                $version = $detectedVersion->__toString();
+            }
+        }
         $haConfig = new HaConfig(
             $this->data['name'],
-            $this->data['version'] ?? '1.0.0',
+            $version,
             $this->slug,
             $this->data['description'] ?? 'Converted HA Add-on',
             $architectures
