@@ -2,15 +2,16 @@
 
 namespace App\Tools;
 
-use App\Addon\FilesReader;
+use App\App\FilesReader;
 use App\Generator\HaConfig;
 use Symfony\Component\Yaml\Yaml;
 
 class Converter
 {
-    public const string REPOSOTIRY_PATH = 'axute/haos-addon-converter';
-    public const string PUBLIC_IMAGE_NAME = 'ghcr.io/axute/haos-addon-converter';
-    public const string SLUG = 'haos_addon_converter';
+    public const string NAME = 'HAOS App Converter';
+    public const string DEFAULT_REPOSITORY_NAME = 'My HAOS App Repository';
+    public const string PUBLIC_IMAGE_NAME = 'ghcr.io/axute/haos-app-converter';
+    public const string SLUG = 'haos_app_converter';
 
     public static function getTags(): array
     {
@@ -20,7 +21,7 @@ class Converter
     public static function selfConvert(string $tag): array
     {
         $slug = self::SLUG;
-        $configFile = FilesReader::getAddonDir($slug) . '/' . HaConfig::FILENAME;
+        $configFile = FilesReader::getAppDir($slug) . '/' . HaConfig::FILENAME;
         $currentVersion = '1.0.0';
 
         if (file_exists($configFile)) {
@@ -30,11 +31,12 @@ class Converter
 
         // Daten für die Generierung vorbereiten
         $data = [
-            'name'           => 'HAOS Add-on Converter',
-            'image'          => self::PUBLIC_IMAGE_NAME . ":" . $tag,
-            'description'    => 'Web-Converter zum Konvertieren von Docker-Images in Home Assistant Add-ons.',
+            'name'           => 'HAOS App Converter',
+            'image'          => self::PUBLIC_IMAGE_NAME,
+            'image_tag'      => $tag,
+            'description'    => 'Web-Converter zum Konvertieren von Docker-Images in Home Assistant Apps.',
             'version'        => $currentVersion,
-            'url'            => 'https://github.com/axute/haos-addon-converter',
+            'url'            => 'https://github.com/axute/haos-app-converter',
             'ingress'        => true,
             'ingress_port'   => 80,
             'ingress_entry'  => '/',
@@ -42,7 +44,7 @@ class Converter
             'watchdog'       => 'http://[HOST]:[PORT:80]/',
             'ingress_stream' => false,
             'panel_icon'     => 'mdi:toy-brick',
-            'panel_title'    => 'Addon Converter',
+            'panel_title'    => 'App Converter',
             'backup'         => 'hot',
             'self_convert'   => true,
             'map'            => [

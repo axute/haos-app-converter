@@ -2,15 +2,16 @@
 
 namespace App\Generator;
 
+use App\Tools\Converter;
 use Symfony\Component\Yaml\Yaml;
 
 class HaRepository extends Yamlfile
 {
     public const string FILENAME = 'repository.yaml';
-    protected ?string $maintainer = null;
+    protected string $maintainer = Converter::NAME;
     protected ?string $url = null;
 
-    public function __construct(protected string $name)
+    public function __construct(protected string $name = Converter::DEFAULT_REPOSITORY_NAME)
     {
 
     }

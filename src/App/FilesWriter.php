@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Addon;
+namespace App\App;
 
 use App\Generator\Dockerfile;
 use App\Generator\HaConfig;
@@ -17,12 +17,12 @@ class FilesWriter extends FilesAbstract
 {
     protected bool $quirks = false;
     protected bool $hasEditableEnv = false;
-    protected string $addonName;
+    protected string $appName;
     protected string $image;
     protected bool $isSelfConvert = false;
     protected string $slug;
     protected string $dataDir;
-    protected string $addonPath;
+    protected string $appPath;
 
     public function __construct(protected array $data)
     {
@@ -33,9 +33,9 @@ class FilesWriter extends FilesAbstract
                 break;
             }
         }
-        $this->addonName = $this->data['name'] ?? '';
+        $this->appName = $this->data['name'] ?? '';
         $this->image = $this->data['image'] ?? '';
-        if (empty($this->addonName) || empty($this->image)) {
+        if (empty($this->appName) || empty($this->image)) {
             throw new InvalidArgumentException('Name and image are required');
         }
         $image_tag = $this->data['image_tag'] ?? '';
@@ -45,10 +45,10 @@ class FilesWriter extends FilesAbstract
         $this->isSelfConvert = $this->data['self_convert'] ?? false;
         $this->slug = $this->data['slug'] ?? $this->generateSlug();
         $this->dataDir = str_replace('\\', '/', $this->getDataDir());
-        $this->addonPath = $this->dataDir . '/' . $this->slug;
-        if (!is_dir($this->addonPath)) {
-            if (@mkdir($this->addonPath, 0777, true) === false) {
-                throw new RuntimeException('Could not create directory ' . $this->addonPath);
+        $this->appPath = $this->dataDir . '/' . $this->slug;
+        if (!is_dir($this->appPath)) {
+            if (@mkdir($this->appPath, 0777, true) === false) {
+                throw new RuntimeException('Could not create directory ' . $this->appPath);
             }
         }
     }
@@ -66,7 +66,7 @@ class FilesWriter extends FilesAbstract
             return Converter::SLUG;
         }
 
-        $slug = strtolower($this->addonName);
+        $slug = strtolower($this->appName);
         $slug = str_replace([
             ' ',
             '-',
@@ -111,7 +111,7 @@ class FilesWriter extends FilesAbstract
 
         return [
             'status' => 'success',
-            'path'   => realpath($this->addonPath)
+            'path'   => realpath($this->appPath)
         ];
     }
 
@@ -135,7 +135,7 @@ class FilesWriter extends FilesAbstract
         $newMetadata->add('original_entrypoint', $origEntrypoint);
         $newMetadata->add('original_cmd', $origCmd);
         $newMetadata->add('architectures', Crane::getArchitectures($this->image));
-        $metadataFile = $this->addonPath . '/' . Metadata::FILENAME;
+        $metadataFile = $this->appPath . '/' . Metadata::FILENAME;
         $oldMetadata = [];
         if (file_exists($metadataFile)) {
             $oldMetadata = json_decode(file_get_contents($metadataFile), true) ?: [];
@@ -154,15 +154,15 @@ class FilesWriter extends FilesAbstract
         $needsRunSh = ($this->quirks && ($this->hasEditableEnv || !empty($startupScript) || $allowUserEnv)) || $allowUserEnv;
 
         if ($needsRunSh) {
-            copy(__DIR__ . '/../../helper/run.sh', $this->addonPath . '/run.sh');
-            chmod($this->addonPath . '/run.sh', 0755);
+            copy(__DIR__ . '/../../helper/run.sh', $this->appPath . '/run.sh');
+            chmod($this->appPath . '/run.sh', 0755);
 
-            file_put_contents($this->addonPath . '/original_entrypoint', (is_array($origEntrypoint) && !empty($origEntrypoint)) ? implode(' ', $origEntrypoint) : ($origEntrypoint ?? ''));
-            file_put_contents($this->addonPath . '/original_cmd', (is_array($origCmd) && !empty($origCmd)) ? implode(' ', $origCmd) : ($origCmd ?? ''));
+            file_put_contents($this->appPath . '/original_entrypoint', (is_array($origEntrypoint) && !empty($origEntrypoint)) ? implode(' ', $origEntrypoint) : ($origEntrypoint ?? ''));
+            file_put_contents($this->appPath . '/original_cmd', (is_array($origCmd) && !empty($origCmd)) ? implode(' ', $origCmd) : ($origCmd ?? ''));
 
             if (!empty($startupScript)) {
-                file_put_contents($this->addonPath . '/start.sh', $startupScript);
-                chmod($this->addonPath . '/start.sh', 0755);
+                file_put_contents($this->appPath . '/start.sh', $startupScript);
+                chmod($this->appPath . '/start.sh', 0755);
             }
         }
     }
@@ -181,7 +181,7 @@ class FilesWriter extends FilesAbstract
             $this->data['name'],
             $version,
             $this->slug,
-            $this->data['description'] ?? 'Converted HA Add-on',
+            $this->data['description'] ?? 'Converted HA App',
             $architectures
         );
         $haConfig->setUrl($this->data['url'] ?? null);
@@ -284,7 +284,7 @@ class FilesWriter extends FilesAbstract
             $haConfig->setWatchdog($this->data['watchdog']);
         }
 
-        file_put_contents($this->addonPath . '/' . HaConfig::FILENAME, $haConfig);
+        file_put_contents($this->appPath . '/' . HaConfig::FILENAME, $haConfig);
         return $this;
     }
 
@@ -295,7 +295,8 @@ class FilesWriter extends FilesAbstract
                 $iconData = substr($iconFile, strpos($iconFile, ',') + 1);
                 $iconData = base64_decode($iconData);
                 if ($iconData !== false) {
-                    file_put_contents($this->addonPath . '/icon.png', $iconData);
+                    file_put_contents($this->appPath . '/icon.png', $iconData);
+                    file_put_contents($this->appPath . '/logo.png', $iconData); # bug on local apps
                 } else {
                     throw new InvalidArgumentException('Could not decode base64');
                 }
@@ -309,14 +310,14 @@ class FilesWriter extends FilesAbstract
     protected function generateReadme(): static
     {
         $longDescription = $this->data['long_description'] ?? '';
-        $addonName = $this->data['name'];
-        $description = $this->data['description'] ?? 'Converted HA Add-on';
+        $appName = $this->data['name'];
+        $description = $this->data['description'] ?? 'Converted HA App';
 
         if (!empty($longDescription)) {
 
-            file_put_contents($this->addonPath . '/README.md', $longDescription);
+            file_put_contents($this->appPath . '/README.md', $longDescription);
         } else {
-            file_put_contents($this->addonPath . '/README.md', "# $addonName\n\n$description");
+            file_put_contents($this->appPath . '/README.md', "# $appName\n\n$description");
         }
         return $this;
     }
@@ -354,15 +355,14 @@ class FilesWriter extends FilesAbstract
             $dockerfile->addCommand("CMD []");
         }
 
-        file_put_contents($this->addonPath . '/' . Dockerfile::FILENAME, (string)$dockerfile);
+        file_put_contents($this->appPath . '/' . Dockerfile::FILENAME, (string)$dockerfile);
     }
 
     private function ensureRepositoryYaml(): void
     {
         $repoFile = $this->dataDir . '/' . HaRepository::FILENAME;
         if (!file_exists($repoFile)) {
-            $haRepository = new HaRepository('My HAOS Add-on Repository');
-            $haRepository->setMaintainer('HAOS Add-on Converter');
+            $haRepository = new HaRepository();
             file_put_contents($repoFile, $haRepository);
         }
     }

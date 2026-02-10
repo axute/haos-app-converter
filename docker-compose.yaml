@@ -1,7 +1,7 @@
 services:
   haos-converter:
     build: .
-    container_name: haos-addon-converter
+    container_name: haos-app-converter
     environment:
       - HAOS_DEBUG=true
     ports:

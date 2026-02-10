@@ -1,5 +1,5 @@
 {
-    "name": "micro/haos-addon-converter",
+    "name": "micro/haos-app-converter",
     "description": "Converter to convert docker images to Home Assistant addons",
     "type": "project",
     "require": {

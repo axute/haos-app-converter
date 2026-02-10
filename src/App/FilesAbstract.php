@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Addon;
+namespace App\App;
 
 abstract class FilesAbstract
 {
-    public static function getAddonDir(string $slug): string
+    public static function getAppDir(string $slug): string
     {
         return self::getDataDir() . '/' . $slug;
     }

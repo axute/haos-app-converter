@@ -2,19 +2,19 @@
 
 namespace App\Controllers;
 
-use App\Addon\FilesReader;
+use App\App\FilesReader;
 use App\Generator\HaRepository;
+use App\Tools\Converter;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
 class SettingsController extends ControllerAbstract
 {
 
-    public function get(Request $request, Response $response): Response
+    public static function get(Request $request, Response $response): Response
     {
         $repoFile = FilesReader::getDataDir() . '/' . HaRepository::FILENAME;
-        $haRepository = new HaRepository('My HAOS Add-on Repository');
-        $haRepository->setMaintainer('HAOS Add-on Converter');
+        $haRepository = new HaRepository();
 
         if (file_exists($repoFile)) {
             $existing = HaRepository::fromFile($repoFile);
@@ -22,16 +22,16 @@ class SettingsController extends ControllerAbstract
             $haRepository->setMaintainer($existing->getMaintainer());
             $haRepository->setUrl($existing->getUrl());
         }
-        return $this->success($response, $haRepository->jsonSerialize());
+        return self::success($response, $haRepository->jsonSerialize());
     }
 
-    public function update(Request $request, Response $response): Response
+    public static function update(Request $request, Response $response): Response
     {
         $body = (string)$request->getBody();
         $data = json_decode($body, true);
 
-        $name = $data['name'] ?? 'My HAOS Add-on Repository';
-        $maintainer = $data['maintainer'] ?? 'HAOS Add-on Converter';
+        $name = $data['name'] ?? Converter::DEFAULT_REPOSITORY_NAME;
+        $maintainer = $data['maintainer'] ?? Converter::NAME;
         $url = $data['url'] ?? null;
 
         $dataDir = FilesReader::getDataDir();
@@ -47,6 +47,6 @@ class SettingsController extends ControllerAbstract
         }
 
         file_put_contents($repoFile, $haRepository);
-        return $this->success($response,['status'=>'success']);
+        return self::success($response, ['status' => 'success']);
     }
 }

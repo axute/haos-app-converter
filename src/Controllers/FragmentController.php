@@ -2,65 +2,53 @@
 
 namespace App\Controllers;
 
-use App\Addon\FilesReader;
-use App\View;
+use App\App\FilesReader;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Symfony\Component\Yaml\Yaml;
 
 class FragmentController extends ControllerAbstract
 {
 
-    private function render(Response $response, string $template, array $data = []): Response
+    public static function appList(Request $request, Response $response): Response
     {
-        $view = new View();
-        $html = $view->render('fragments/' . $template . '.html.twig', $data);
-        $response->getBody()->write($html);
-        return $response;
-    }
-
-    public function addonList(Request $request, Response $response): Response
-    {
-        $addonController = new AddonController();
+        $appController = new AppController();
         $tempResponse = new \Slim\Psr7\Response();
-        $listResponse = $addonController->list($request, $tempResponse);
+        $listResponse = $appController->list($request, $tempResponse);
         $data = json_decode((string)$listResponse->getBody(), true);
 
-        return $this->render($response, 'addon-list', [
-            'addons' => $data['addons'] ?? [],
+        return self::render($response, 'fragments/app-list', [
+            'apps'       => $data['apps'] ?? [],
             'repository' => $data['repository'] ?? null
         ]);
     }
 
-    public function addonDetails(Request $request, Response $response, array $args): Response
+    public static function appDetails(Request $request, Response $response, string $slug): Response
     {
-        $slug = $args['slug'];
         $details = (new FilesReader($slug))->jsonSerialize();
-        return $this->render($response, 'addon-details', [
-            'addon' => $details,
+        return self::render($response, 'fragments/app-details', [
+            'app'  => $details,
             'slug' => $slug
         ]);
     }
 
-    public function checkUpdate(Request $request, Response $response, array $args): Response
+    public static function checkUpdate(Request $request, Response $response, string $slug): Response
     {
-        $slug = $args['slug'];
         $force = $request->getQueryParams()['force'] ?? null;
-        
-        $addonController = new AddonController();
+
+        $appController = new AppController();
         $tempResponse = new \Slim\Psr7\Response();
-        
-        // Query Parameter an den AddonController weiterreichen
+
+        // Query Parameter an den AppController weiterreichen
         if ($force) {
             $request = $request->withQueryParams(['force' => $force]);
         }
-        
-        $updateResponse = $addonController->checkImageUpdate($request, $tempResponse, ['slug' => $slug]);
+
+        $updateResponse = $appController->checkImageUpdate(request: $request, response: $tempResponse, slug: $slug);
         $updateData = json_decode((string)$updateResponse->getBody(), true);
 
-        return $this->render($response, 'update-status', [
+        return self::render($response, 'fragments/update-status', [
             'update' => $updateData,
-            'slug' => $slug
+            'slug'   => $slug
         ]);
     }
 }

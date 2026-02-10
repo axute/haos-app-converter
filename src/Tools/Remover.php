@@ -2,25 +2,25 @@
 
 namespace App\Tools;
 
-use App\Addon\FilesReader;
+use App\App\FilesReader;
 
 class Remover
 {
-    public static function removeAddon(string $slug): void
+    public static function removeApp(string $slug): void
     {
-        // System addon cannot be deleted
+        // System app cannot be deleted
         if ($slug === Converter::SLUG) {
-            throw new \RuntimeException('System add-on cannot be deleted');
+            throw new \RuntimeException('System app cannot be deleted');
         }
 
-        $addonDir = FilesReader::getAddonDir( $slug);
+        $appDir = FilesReader::getAppDir( $slug);
 
-        if (!is_dir($addonDir)) {
-            throw new \RuntimeException("$addonDir is not a directory");
+        if (!is_dir($appDir)) {
+            throw new \RuntimeException("$appDir is not a directory");
         }
 
         // Verzeichnis rekursiv löschen
-        self::recursiveRmdir($addonDir);
+        self::recursiveRmdir($appDir);
     }
     public static function recursiveRmdir($dir): void
     {

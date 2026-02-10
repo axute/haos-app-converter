@@ -14,7 +14,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: axute/haos-addon-converter
+  IMAGE_NAME: axute/haos-app-converter
 
 jobs:
   build-and-push:

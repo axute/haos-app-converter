@@ -2,7 +2,7 @@
 
 namespace App\Tools;
 
-use App\Addon\FilesReader;
+use App\App\FilesReader;
 
 class Scripts
 {

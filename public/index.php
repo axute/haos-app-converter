@@ -1,62 +1,68 @@
 <?php
 
-use App\Controllers\AddonController;
-use App\Controllers\GenerateController;
+use App\Controllers\AppController;
+use App\Controllers\ConverterController;
+use App\Controllers\FragmentController;
+use App\Controllers\ImageController;
 use App\Controllers\IndexController;
 use App\Controllers\SettingsController;
-use App\Controllers\FragmentController;
 use Slim\Factory\AppFactory;
+use Slim\Handlers\Strategies\RequestResponseArgs;
+use Slim\Routing\RouteCollectorProxy;
 
 require __DIR__ . '/../vendor/autoload.php';
 
 $app = AppFactory::create();
 
 $app->addRoutingMiddleware();
+$routeCollector = $app->getRouteCollector();
+$routeCollector->setDefaultInvocationStrategy(new RequestResponseArgs());
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 
 // Hauptseite - Converter Interface
-$app->get('/', [IndexController::class, 'index']);
+$app->get('/', [
+    IndexController::class,
+    'index'
+]);
 
 // htmx Fragmente
-$app->group('/fragments', function ($group) {
-    $group->get('/addon-list', [FragmentController::class, 'addonList']);
-    $group->get('/addon-details/{slug}', [FragmentController::class, 'addonDetails']);
-    $group->get('/check-update/{slug}', [FragmentController::class, 'checkUpdate']);
+$app->group('/fragments', function (RouteCollectorProxy $group) {
+    $group->get('/app-list', FragmentController::appList(...));
+    $group->get('/app-details/{slug}', FragmentController::appDetails(...));
+    $group->get('/check-update/{slug}', FragmentController::checkUpdate(...));
 });
 
-// Liste der Add-ons
-$app->get('/addons', [AddonController::class, 'list']);
-
-// Details eines Add-ons
-$app->get('/addons/{slug}', [AddonController::class, 'get']);
-
-// Icon eines Add-ons ausliefern
-$app->get('/addons/{slug}/icon.png', function ($request, $response, $args) {
-    $slug = $args['slug'];
-    $dataDir = getenv('CONVERTER_DATA_DIR') ?: __DIR__ . '/../data';
-    $iconFile = $dataDir . '/' . $slug . '/icon.png';
-    if (file_exists($iconFile)) {
-        $response->getBody()->write(file_get_contents($iconFile));
-        return $response->withHeader('Content-Type', 'image/png');
-    }
-    return $response->withStatus(404);
+$app->group('/apps', function (RouteCollectorProxy $group) {
+    $group->get('/list',  AppController::list(...));
+    $group->get('/{slug}/icon.png', function ($request, $response, string $slug) {
+        $dataDir = getenv('CONVERTER_DATA_DIR') ?: __DIR__ . '/../data';
+        $iconFile = $dataDir . '/' . $slug . '/icon.png';
+        if (file_exists($iconFile)) {
+            $response->getBody()->write(file_get_contents($iconFile));
+            return $response->withHeader('Content-Type', 'image/png');
+        }
+        return $response->withStatus(404);
+    });
+    $group->get('/{slug}',  AppController::get(...));
+    $group->delete('/{slug}',  AppController::delete(...));
+    $group->post('/generate', AppController::generate(...));
+    $group->get('/{slug}/convert/{tag}', AppController::convert(...));
 });
 
-// Add-on löschen
-$app->delete('/addons/{slug}', [AddonController::class, 'delete']);
+$app->group('/converter', function (RouteCollectorProxy $group) {
+    $group->get('/tags', ConverterController::getTags(...));
+});
 
-// Selbst-Konvertierung
-$app->get('/tags', [AddonController::class, 'getTags']);
-$app->get('/image-tags', [AddonController::class, 'getImageTags']);
-$app->get('/detect-pm', [AddonController::class, 'detectPackageManager']);
-$app->get('/bashio-versions', [AddonController::class, 'getBashioVersions']);
-$app->post('/self-convert', [AddonController::class, 'selfConvert']);
+$app->group('/image', function (RouteCollectorProxy $group) {
+    $group->get('/{image:.+}/tags', ImageController::getImageTags(...));
+    $group->get('/{image:.+}/pm/{tag}', ImageController::detectPackageManager(...));
+});
 
-// Add-on Generierung
-$app->post('/generate', [GenerateController::class, 'generate']);
+$app->get('/bashio-versions', AppController::getBashioVersions(...));
+
 
 // Repository Einstellungen
-$app->get('/settings', [SettingsController::class, 'get']);
-$app->post('/settings', [SettingsController::class, 'update']);
+$app->get('/settings', SettingsController::get(...));
+$app->post('/settings', SettingsController::update(...));
 
 $app->run();

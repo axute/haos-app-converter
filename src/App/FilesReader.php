@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Addon;
+namespace App\App;
 
 use App\Generator\HaConfig;
 use App\Generator\Metadata;
@@ -47,10 +47,10 @@ class FilesReader extends FilesAbstract implements JsonSerializable
 
     protected function readConfig(): static
     {
-        $configFile = self::getAddonDir($this->slug) . '/' . HaConfig::FILENAME;
+        $configFile = self::getAppDir($this->slug) . '/' . HaConfig::FILENAME;
 
         if (!file_exists($configFile)) {
-            throw new RuntimeException('Addon not found: ' . $configFile);
+            throw new RuntimeException('App not found: ' . $configFile);
         }
 
         $this->config = Yaml::parseFile($configFile);
@@ -160,11 +160,11 @@ class FilesReader extends FilesAbstract implements JsonSerializable
 
     protected function readIcon(): static
     {
-        $addonDir = self::getAddonDir($this->slug);
-        $hasLocalIcon = file_exists($addonDir . '/icon.png');
+        $appDir = self::getAppDir($this->slug);
+        $hasLocalIcon = file_exists($appDir . '/icon.png');
         if ($hasLocalIcon) {
-            $type = pathinfo($addonDir . '/icon.png', PATHINFO_EXTENSION);
-            $data = file_get_contents($addonDir . '/icon.png');
+            $type = pathinfo($appDir . '/icon.png', PATHINFO_EXTENSION);
+            $data = file_get_contents($appDir . '/icon.png');
             $this->iconFileContent = 'data:image/' . $type . ';base64,' . base64_encode($data);
         }
         return $this;
@@ -172,7 +172,7 @@ class FilesReader extends FilesAbstract implements JsonSerializable
 
     protected function readImage(): static
     {
-        $dockerfile = self::getAddonDir($this->slug) . '/Dockerfile';
+        $dockerfile = self::getAppDir($this->slug) . '/Dockerfile';
         if (file_exists($dockerfile)) {
             $content = file_get_contents($dockerfile);
             if (preg_match('/^FROM\s+(.+)$/m', $content, $matches)) {
@@ -193,7 +193,7 @@ class FilesReader extends FilesAbstract implements JsonSerializable
 
     protected function readReadme(): static
     {
-        $readmeFile = self::getAddonDir($this->slug) . '/README.md';
+        $readmeFile = self::getAppDir($this->slug) . '/README.md';
         if (is_file($readmeFile)) {
             $this->longDescription = file_get_contents($readmeFile);
         }
@@ -203,7 +203,7 @@ class FilesReader extends FilesAbstract implements JsonSerializable
     protected function readMetadata()
     {
         // Versuchen wir auch den Ingress Port zu finden, falls er nicht in der config steht (obwohl er dort stehen sollte)
-        $metadataFile = self::getAddonDir($this->slug) . '/' . Metadata::FILENAME;
+        $metadataFile = self::getAppDir($this->slug) . '/' . Metadata::FILENAME;
         if (file_exists($metadataFile)) {
             $metadata = json_decode(file_get_contents($metadataFile), true);
             if (isset($metadata['detected_pm'])) {

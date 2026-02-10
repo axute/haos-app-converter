@@ -2,11 +2,13 @@
 
 namespace App\Tools;
 
-use App\Addon\FilesReader;
+use App\App\FilesReader;
 use Exception;
 
 class Bashio
 {
+    const string REPOSITORY_RELEASES = 'https://api.github.com/repos/hassio-addons/bashio/releases';
+
     public static function getVersions(): array
     {
         $cacheFile = FilesReader::getDataDir() . '/.cache/bashio_versions.json';
@@ -25,7 +27,7 @@ class Bashio
                     ]
                 ];
                 $context = stream_context_create($opts);
-                $json = @file_get_contents('https://api.github.com/repos/hassio-addons/bashio/releases', false, $context);
+                $json = @file_get_contents(self::REPOSITORY_RELEASES, false, $context);
                 if ($json) {
                     $data = json_decode($json, true);
                     foreach ($data as $release) {

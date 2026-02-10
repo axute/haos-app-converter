@@ -1,22 +1,22 @@
 <div class="p-3 border rounded" style="background:#fafafa">
     <div class="row g-2">
         <div class="col-12 col-md-6">
-            <div><strong>Image:</strong> <code>{{ addon.image|default('') }}{{ addon.image_tag is not empty ? ':' ~ addon.image_tag : '' }}</code></div>
-            <div><strong>Detected PM:</strong> {{ addon.detected_pm ?: 'unknown' }}</div>
-            <div><strong>Backup:</strong> {{ addon.backup ?: 'disabled' }}</div>
-            <div><strong>Quirks:</strong> {{ addon.quirks ? 'Ja' : 'Nein' }}{% if addon.allow_user_env %} (User Env: Ja){% endif %}</div>
+            <div><strong>Image:</strong> <code>{{ app.image|default('') }}{{ app.image_tag is not empty ? ':' ~ app.image_tag : '' }}</code></div>
+            <div><strong>Detected PM:</strong> {{ app.detected_pm ?: 'unknown' }}</div>
+            <div><strong>Backup:</strong> {{ app.backup ?: 'disabled' }}</div>
+            <div><strong>Quirks:</strong> {{ app.quirks ? 'Ja' : 'Nein' }}{% if app.allow_user_env %} (User Env: Ja){% endif %}</div>
         </div>
         <div class="col-12 col-md-6">
-            <div><strong>Ingress:</strong> {{ addon.ingress ? 'Enabled (' ~ addon.ingress_port ~ (addon.ingress_stream ? ', stream' : '') ~ ', ' ~ addon.ingress_entry ~ ')' : 'Disabled' }}</div>
-            {% if addon.ingress and addon.panel_title is not empty %}
-                <div><strong>Panel Title:</strong> {{ addon.panel_title }}</div>
+            <div><strong>Ingress:</strong> {{ app.ingress ? 'Enabled (' ~ app.ingress_port ~ (app.ingress_stream ? ', stream' : '') ~ ', ' ~ app.ingress_entry ~ ')' : 'Disabled' }}</div>
+            {% if app.ingress and app.panel_title is not empty %}
+                <div><strong>Panel Title:</strong> {{ app.panel_title }}</div>
             {% endif %}
-            {% if addon.webui is not empty %}
-                <div><strong>WebUI:</strong> <code>{{ addon.webui }}</code></div>
+            {% if app.webui is not empty %}
+                <div><strong>WebUI:</strong> <code>{{ app.webui }}</code></div>
             {% endif %}
             <div><strong>Ports:</strong> 
                 {% set ports = [] %}
-                {% for p in (addon.ports ?: []) %}
+                {% for p in (app.ports ?: []) %}
                     {% if p.host is not empty %}
                         {% set ports = ports|merge([p.host ~ ':' ~ p.container]) %}
                     {% else %}
@@ -27,7 +27,7 @@
             </div>
             <div><strong>Mounts:</strong> 
                 {% set mounts = [] %}
-                {% for m in (addon.map ?: []) %}
+                {% for m in (app.map ?: []) %}
                     {% set mountStr = m.type|default(m.folder) ~ (m.path is not empty ? ':' ~ m.path : '') ~ ' (' ~ (m.readOnly ? 'RO' : 'RW') ~ ')' %}
                     {% set mounts = mounts|merge([mountStr]) %}
                 {% endfor %}
@@ -36,18 +36,18 @@
         </div>
         <div class="col-12">
             <div><strong>Env:</strong> 
-                {% set envs = (addon.env_vars ?: [])|slice(0, 5) %}
+                {% set envs = (app.env_vars ?: [])|slice(0, 5) %}
                 {% for e in envs %}
                     <code>{{ e.key }}</code>
                 {% endfor %}
-                {% if (addon.env_vars ?: [])|length > 5 %}
-                    … (+{{ (addon.env_vars|length) - 5 }} weitere)
+                {% if (app.env_vars ?: [])|length > 5 %}
+                    … (+{{ (app.env_vars|length) - 5 }} weitere)
                 {% endif %}
-                {% if addon.env_vars is empty %}
+                {% if app.env_vars is empty %}
                     —
                 {% endif %}
             </div>
-            <div><strong>tmpfs:</strong> {{ addon.tmpfs ? 'Enabled' : 'Disabled' }}</div>
+            <div><strong>tmpfs:</strong> {{ app.tmpfs ? 'Enabled' : 'Disabled' }}</div>
         </div>
     </div>
 </div>

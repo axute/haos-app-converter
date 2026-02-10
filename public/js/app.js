@@ -10,8 +10,8 @@ if (typeof basePath === 'undefined') {
 
 // Initialization
 // Make functions global immediately
-window.editAddon = editAddon;
-window.deleteAddon = deleteAddon;
+window.editApp = editApp;
+window.deleteApp = deleteApp;
 window.cancelConverter = cancelConverter;
 window.startNew = startNew;
 window.openSettings = openSettings;
@@ -184,7 +184,7 @@ function resetAccordion() {
 }
 
 function startNew() {
-    const addonSelection = document.getElementById('addonSelection');
+    const appSelection = document.getElementById('appSelection');
     const converterForm = document.getElementById('converterForm');
     const cancelBtn = document.getElementById('cancelBtn');
     const submitSection = document.getElementById('submitSection');
@@ -196,7 +196,7 @@ function startNew() {
     const iconPreview = document.getElementById('icon_preview');
     const detectedPm = document.getElementById('detected_pm');
 
-    if (addonSelection) addonSelection.style.display = 'none';
+    if (appSelection) appSelection.style.display = 'none';
     if (converterForm) {
         converterForm.style.display = 'block';
         converterForm.reset();
@@ -257,29 +257,29 @@ function cancelConverter() {
     haConfirm('Do you really want to cancel? All unsaved changes will be lost.', () => {
         const converterForm = document.getElementById('converterForm');
         const settingsView = document.getElementById('settingsView');
-        const addonSelection = document.getElementById('addonSelection');
+        const appSelection = document.getElementById('appSelection');
         const cancelBtn = document.getElementById('cancelBtn');
         const resultDiv = document.getElementById('result');
 
         if (converterForm) converterForm.style.display = 'none';
         if (settingsView) settingsView.style.display = 'none';
-        if (addonSelection) addonSelection.style.display = 'block';
+        if (appSelection) appSelection.style.display = 'block';
         if (cancelBtn) cancelBtn.style.display = 'none';
         if (resultDiv) resultDiv.style.display = 'none';
 
         // Refresh list if htmx is present
         if (typeof htmx !== 'undefined') {
             document.body.dispatchEvent(new Event('reload'));
-        } else if (typeof loadAddons === 'function') {
-            loadAddons();
+        } else if (typeof loadApps === 'function') {
+            loadApps();
         }
     }, 'Cancel Editing', 'Yes, cancel');
 }
 
-async function deleteAddon(slug) {
-    haConfirm(`Do you really want to delete the add-on "${slug}"? This action cannot be undone.`, async () => {
+async function deleteApp(slug) {
+    haConfirm(`Do you really want to delete the app "${slug}"? This action cannot be undone.`, async () => {
         try {
-            const response = await fetch(`${basePath}/addons/${slug}`, {
+            const response = await fetch(`${basePath}/apps/${slug}`, {
                 method: 'DELETE'
             });
             const result = await response.json();
@@ -287,7 +287,7 @@ async function deleteAddon(slug) {
                 if (typeof htmx !== 'undefined') {
                     document.body.dispatchEvent(new Event('reload'));
                 } else {
-                    await loadAddons();
+                    await loadApps();
                 }
             } else {
                 alert('Error during deletion: ' + result.message);
@@ -295,7 +295,7 @@ async function deleteAddon(slug) {
         } catch (error) {
             alert('An error occurred: ' + error.message);
         }
-    }, 'Delete Add-on', 'Delete', 'btn-danger');
+    }, 'Delete App', 'Delete', 'btn-danger');
 }
 
 function handleIconSelect(input) {
@@ -462,7 +462,7 @@ async function detectPM(force = false) {
     if (loader) loader.style.display = 'inline-block';
 
     try {
-        const response = await fetch(`${basePath}/detect-pm?image=${encodeURIComponent(image)}&tag=${encodeURIComponent(tag)}`);
+        const response = await fetch(`${basePath}/image/${image}/pm/${tag}`);
         const data = await response.json();
         const pm = data.pm || 'unknown';
         pmInput.value = pm;
@@ -495,7 +495,7 @@ async function fetchImageTags() {
     datalist.innerHTML = '<option value="loading...">';
 
     try {
-        const response = await fetch(`${basePath}/image-tags?image=${encodeURIComponent(image)}`);
+        const response = await fetch(`${basePath}/image/${image}/tags`);
         const tags = await response.json();
         datalist.innerHTML = '';
         tags.forEach(tag => {
@@ -507,7 +507,7 @@ async function fetchImageTags() {
             datalist.appendChild(option);
         });
         datalist.dataset.image = image;
-        detectPM();
+        await detectPM();
     } catch (e) {
         console.error('Error fetching tags', e);
         datalist.innerHTML = '';
@@ -593,7 +593,7 @@ async function handleConverterSubmit(e) {
         }
     });
 
-    const response = await fetch(`${basePath}/generate`, {
+    const response = await fetch(`${basePath}/apps/generate`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
@@ -604,7 +604,7 @@ async function handleConverterSubmit(e) {
         const resultDiv = document.getElementById('result');
         const resultMessage = document.getElementById('resultMessage');
         if (resultMessage) {
-            resultMessage.innerText = 'Add-on has been created/updated successfully.';
+            resultMessage.innerText = 'App has been created/updated successfully.';
         }
         const resultDetails = document.getElementById('resultDetails');
         if (resultDetails) {
@@ -618,8 +618,8 @@ async function handleConverterSubmit(e) {
         const converterForm = document.getElementById('converterForm');
         if (converterForm) converterForm.style.display = 'none';
 
-        const addonSelection = document.getElementById('addonSelection');
-        if (addonSelection) addonSelection.style.display = 'none';
+        const appSelection = document.getElementById('appSelection');
+        if (appSelection) appSelection.style.display = 'none';
 
         const cancelBtn = document.getElementById('cancelBtn');
         if (cancelBtn) cancelBtn.style.display = 'none';
@@ -629,46 +629,46 @@ async function handleConverterSubmit(e) {
 
         setTimeout(() => {
             if (resultDiv) resultDiv.style.display = 'none';
-            if (addonSelection) addonSelection.style.display = 'block';
+            if (appSelection) appSelection.style.display = 'block';
         }, 3000);
     } else {
         alert('Error: ' + result.message);
     }
 }
 
-async function editAddon(slug) {
-    const response = await fetch(`${basePath}/addons/${slug}`);
-    const addon = await response.json();
+async function editApp(slug) {
+    const response = await fetch(`${basePath}/apps/${slug}`);
+    const app = await response.json();
 
-    const addonSelection = document.getElementById('addonSelection');
+    const appSelection = document.getElementById('appSelection');
     const converterForm = document.getElementById('converterForm');
     const cancelBtn = document.getElementById('cancelBtn');
 
-    if (addonSelection) addonSelection.style.display = 'none';
+    if (appSelection) appSelection.style.display = 'none';
     if (converterForm) converterForm.style.display = 'block';
     if (cancelBtn) cancelBtn.style.display = 'block';
 
     const nameInput = document.getElementById('name');
-    if (nameInput) nameInput.value = addon.name;
+    if (nameInput) nameInput.value = app.name;
 
     const descInput = document.getElementById('description');
-    if (descInput) descInput.value = addon.description;
+    if (descInput) descInput.value = app.description;
 
     const urlInput = document.getElementById('url');
-    if (urlInput) urlInput.value = addon.url || '';
+    if (urlInput) urlInput.value = app.url || '';
 
     if (easyMDE) {
-        easyMDE.value(addon.long_description || '');
+        easyMDE.value(app.long_description || '');
         setTimeout(() => easyMDE.codemirror.refresh(), 100);
     }
     if (startupScriptEditor) {
-        startupScriptEditor.setValue(addon.startup_script || '');
+        startupScriptEditor.setValue(app.startup_script || '');
         setTimeout(() => startupScriptEditor.refresh(), 100);
     }
 
     const iconPreview = document.getElementById('icon_preview');
-    if (addon.icon_file) {
-        iconBase64 = addon.icon_file;
+    if (app.icon_file) {
+        iconBase64 = app.icon_file;
         if (iconPreview) {
             const previewImg = iconPreview.querySelector('img');
             if (previewImg) previewImg.src = iconBase64;
@@ -680,17 +680,17 @@ async function editAddon(slug) {
     }
 
     const imageInput = document.getElementById('image');
-    if (imageInput) imageInput.value = addon.image;
+    if (imageInput) imageInput.value = app.image;
 
     const imageTagInput = document.getElementById('image_tag');
-    if (imageTagInput) imageTagInput.value = addon.image_tag || 'latest';
+    if (imageTagInput) imageTagInput.value = app.image_tag || 'latest';
 
     const versionInput = document.getElementById('version');
     if (versionInput) {
-        versionInput.value = addon.version;
+        versionInput.value = app.version;
         versionInput.readOnly = true;
     }
-    originalVersion = addon.version || '1.0.0';
+    originalVersion = app.version || '1.0.0';
 
     const submitSection = document.getElementById('submitSection');
     const updateSection = document.getElementById('updateSection');
@@ -698,39 +698,39 @@ async function editAddon(slug) {
     if (updateSection) updateSection.style.display = 'block';
 
     const ingressCheckbox = document.getElementById('ingress');
-    if (ingressCheckbox) ingressCheckbox.checked = addon.ingress;
+    if (ingressCheckbox) ingressCheckbox.checked = app.ingress;
 
     const ingressPortInput = document.getElementById('ingress_port');
-    if (ingressPortInput) ingressPortInput.value = addon.ingress_port;
+    if (ingressPortInput) ingressPortInput.value = app.ingress_port;
 
     const ingressEntryInput = document.getElementById('ingress_entry');
-    if (ingressEntryInput) ingressEntryInput.value = addon.ingress_entry || '/';
+    if (ingressEntryInput) ingressEntryInput.value = app.ingress_entry || '/';
 
     const ingressStreamCheckbox = document.getElementById('ingress_stream');
-    if (ingressStreamCheckbox) ingressStreamCheckbox.checked = addon.ingress_stream || false;
+    if (ingressStreamCheckbox) ingressStreamCheckbox.checked = app.ingress_stream || false;
 
     const panelIconInput = document.getElementById('panel_icon');
-    if (panelIconInput) panelIconInput.value = addon.panel_icon || 'mdi:link-variant';
+    if (panelIconInput) panelIconInput.value = app.panel_icon || 'mdi:link-variant';
 
     const panelTitleInput = document.getElementById('panel_title');
-    if (panelTitleInput) panelTitleInput.value = addon.panel_title || '';
+    if (panelTitleInput) panelTitleInput.value = app.panel_title || '';
 
     const panelAdminCheckbox = document.getElementById('panel_admin');
-    if (panelAdminCheckbox) panelAdminCheckbox.checked = addon.panel_admin !== false;
+    if (panelAdminCheckbox) panelAdminCheckbox.checked = app.panel_admin !== false;
 
     let webuiPort = '';
     let webuiProtocol = 'http';
     let webuiPath = '/';
-    if (addon.webui) {
+    if (app.webui) {
         // Parse "scheme://[HOST]:[PORT:xxxx]/path"
-        const match = addon.webui.match(/^(\w+):\/\/\[HOST]:\[PORT:(\d+)](.*)$/);
+        const match = app.webui.match(/^(\w+):\/\/\[HOST]:\[PORT:(\d+)](.*)$/);
         if (match) {
             webuiProtocol = match[1];
             webuiPort = match[2];
             webuiPath = match[3] || '/';
         } else {
             // Fallback for simple [PORT:xxxx] if it was ever used like that
-            const portMatch = addon.webui.match(/\[PORT:(\d+)]/);
+            const portMatch = app.webui.match(/\[PORT:(\d+)]/);
             if (portMatch) webuiPort = portMatch[1];
         }
     }
@@ -745,7 +745,7 @@ async function editAddon(slug) {
 
     // Health
     const timeoutField = document.getElementById('timeout');
-    if (timeoutField) timeoutField.value = (addon.timeout ?? '') === null ? '' : (addon.timeout ?? '');
+    if (timeoutField) timeoutField.value = (app.timeout ?? '') === null ? '' : (app.timeout ?? '');
 
     const wdProtoSel = document.getElementById('watchdog_protocol');
     const wdPortInput = document.getElementById('watchdog_port');
@@ -756,14 +756,14 @@ async function editAddon(slug) {
         wdProtoSel.value = '';
         wdPortInput.value = '';
         wdPathInput.value = '';
-        if (addon.watchdog) {
-            let m = addon.watchdog.match(/^tcp:\/\/\[HOST]:\[PORT:(\d+)]$/);
+        if (app.watchdog) {
+            let m = app.watchdog.match(/^tcp:\/\/\[HOST]:\[PORT:(\d+)]$/);
             if (m) {
                 wdProtoSel.value = 'tcp';
                 wdPortInput.value = m[1];
                 wdPathInput.value = '';
             } else {
-                m = addon.watchdog.match(/^(\w+):\/\/\[HOST]:\[PORT:(\d+)](.*)$/);
+                m = app.watchdog.match(/^(\w+):\/\/\[HOST]:\[PORT:(\d+)](.*)$/);
                 if (m) {
                     wdProtoSel.value = m[1];
                     wdPortInput.value = m[2];
@@ -779,41 +779,41 @@ async function editAddon(slug) {
     const backupDisabled = document.getElementById('backup_disabled');
     if (backupDisabled) backupDisabled.checked = true;
 
-    if (addon.backup === 'hot') {
+    if (app.backup === 'hot') {
         const backupHot = document.getElementById('backup_hot');
         if (backupHot) backupHot.checked = true;
-    } else if (addon.backup === 'cold') {
+    } else if (app.backup === 'cold') {
         const backupCold = document.getElementById('backup_cold');
         if (backupCold) backupCold.checked = true;
     }
 
     const tmpfsCheckbox = document.getElementById('tmpfs');
-    if (tmpfsCheckbox) tmpfsCheckbox.checked = addon.tmpfs || false;
+    if (tmpfsCheckbox) tmpfsCheckbox.checked = app.tmpfs || false;
 
     const detectedPmInput = document.getElementById('detected_pm');
-    if (detectedPmInput) detectedPmInput.value = addon.detected_pm || 'unknown';
+    if (detectedPmInput) detectedPmInput.value = app.detected_pm || 'unknown';
 
-    const btnDetectPM = document.getElementById('btnDetectPM');
-    if (btnDetectPM) {
-        btnDetectPM.disabled = addon.detected_pm && addon.detected_pm !== 'unknown' && addon.detected_pm !== 'error';
-    }
+    // const btnDetectPM = document.getElementById('btnDetectPM');
+    // if (btnDetectPM) {
+    //     btnDetectPM.disabled = app.detected_pm && app.detected_pm !== 'unknown' && app.detected_pm !== 'error';
+    // }
     const hint = document.getElementById('pmSupportInline');
     if (hint) {
-        const pm = addon.detected_pm || 'unknown';
+        const pm = app.detected_pm || 'unknown';
         hint.innerHTML = pmSupportsBashJqCurl(pm) ? '<span class="text-success"><span class="mdi mdi-check-circle"></span> bash, jq + curl installable</span>' : '';
     }
 
     const ingressOptions = document.getElementById('ingressOptions');
-    if (ingressOptions) ingressOptions.style.display = addon.ingress ? 'block' : 'none';
+    if (ingressOptions) ingressOptions.style.display = app.ingress ? 'block' : 'none';
 
     const webUiPortContainer = document.getElementById('webUiPortContainer');
-    if (webUiPortContainer) webUiPortContainer.style.display = addon.ingress ? 'none' : 'block';
+    if (webUiPortContainer) webUiPortContainer.style.display = app.ingress ? 'none' : 'block';
 
     const portsContainer = document.getElementById('portsContainer');
     if (portsContainer) {
         portsContainer.innerHTML = '';
-        if (addon.ports && addon.ports.length > 0) {
-            addon.ports.forEach(p => {
+        if (app.ports && app.ports.length > 0) {
+            app.ports.forEach(p => {
                 addPortMapping(p.container, p.host || '', p.protocol || 'tcp', p.description || '');
             });
         }
@@ -822,8 +822,8 @@ async function editAddon(slug) {
     const mapContainer = document.getElementById('mapContainer');
     if (mapContainer) {
         mapContainer.innerHTML = '';
-        if (addon.map && addon.map.length > 0) {
-            addon.map.forEach(m => {
+        if (app.map && app.map.length > 0) {
+            app.map.forEach(m => {
                 if (typeof m === 'object' && m !== null) {
                     addMapMapping(m.type || m.folder, m.readOnly ? 'ro' : (m.mode || 'rw'), m.path || '');
                 } else if (typeof m === 'string') {
@@ -838,18 +838,18 @@ async function editAddon(slug) {
     const envVarsContainer = document.getElementById('envVarsContainer');
     if (envVarsContainer) {
         envVarsContainer.innerHTML = '';
-        if (addon.env_vars && addon.env_vars.length > 0) {
-            addon.env_vars.forEach(ev => {
+        if (app.env_vars && app.env_vars.length > 0) {
+            app.env_vars.forEach(ev => {
                 addEnvVar(ev.key, ev.value, ev.editable);
             });
         }
     }
 
     const quirksModeCheckbox = document.getElementById('quirks_mode');
-    if (quirksModeCheckbox) quirksModeCheckbox.checked = addon.quirks || false;
+    if (quirksModeCheckbox) quirksModeCheckbox.checked = app.quirks || false;
 
     const allowUserEnvCheckbox = document.getElementById('allow_user_env');
-    if (allowUserEnvCheckbox) allowUserEnvCheckbox.checked = addon.allow_user_env || false;
+    if (allowUserEnvCheckbox) allowUserEnvCheckbox.checked = app.allow_user_env || false;
 
     const bashioVersionInput = document.getElementById('bashio_version');
     if (bashioVersionInput) {
@@ -857,19 +857,19 @@ async function editAddon(slug) {
         if (window.bashioVersions.length === 0) {
             await fetchBashioVersions();
         }
-        bashioVersionInput.value = addon.bashio_version || window.bashioVersions[0] || '';
+        bashioVersionInput.value = app.bashio_version || window.bashioVersions[0] || '';
     }
 
     featureFlags.forEach(flag => {
         const el = document.getElementById(flag);
         if (el) {
-            el.checked = !!(addon.feature_flags && addon.feature_flags[flag]);
+            el.checked = !!(app.feature_flags && app.feature_flags[flag]);
         }
     });
 
-    if (addon.privileged && Array.isArray(addon.privileged)) {
+    if (app.privileged && Array.isArray(app.privileged)) {
         document.querySelectorAll('.privileged-checkbox').forEach(el => {
-            el.checked = addon.privileged.includes(el.value);
+            el.checked = app.privileged.includes(el.value);
         });
     } else {
         document.querySelectorAll('.privileged-checkbox').forEach(el => el.checked = false);
@@ -882,12 +882,12 @@ async function editAddon(slug) {
     window.scrollTo(0, 0);
 }
 
-async function toggleAddonInfo(slug) {
-    const panel = document.getElementById(`addon-info-${slug}`);
+async function toggleAppInfo(slug) {
+    const panel = document.getElementById(`app-info-${slug}`);
     if (panel.dataset.loaded !== '1') {
         panel.innerHTML = `<div class="d-flex justify-content-center p-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>`;
         try {
-            const res = await fetch(`${basePath}/addons/${slug}`);
+            const res = await fetch(`${basePath}/apps/${slug}`);
             const a = await res.json();
 
             const pm = a.detected_pm || 'unknown';
@@ -931,19 +931,19 @@ async function toggleAddonInfo(slug) {
     collapse.toggle();
 }
 
-async function loadAddons() {
-    const response = await fetch(`${basePath}/addons`);
+async function loadApps() {
+    const response = await fetch(`${basePath}/apps`);
     const data = await response.json();
     const repoInfoDiv = document.getElementById('repoInfo');
-    let addons;
+    let apps;
     let repoName = '';
     let repoDesc = '';
 
     if (Array.isArray(data)) {
-        addons = data;
+        apps = data;
         repoInfoDiv.innerHTML = '';
     } else {
-        addons = data.addons || [];
+        apps = data.apps || [];
         if (data.repository) {
             repoName = data.repository.name || '';
             repoDesc = data.repository.description || '';
@@ -957,62 +957,55 @@ async function loadAddons() {
         }
     }
 
-    const list = document.getElementById('addonList');
-    if (addons.length === 0) {
-        list.innerHTML = '<div class="list-group-item">No add-ons found</div>';
+    const list = document.getElementById('appList');
+    if (apps.length === 0) {
+        list.innerHTML = '<div class="list-group-item">No apps found</div>';
         return;
     }
-    list.innerHTML = addons.map(addon => {
-        const isSelf = addon.slug === 'haos_addon_converter';
+    list.innerHTML = apps.map(app => {
+        const isSelf = app.slug === 'haos_app_converter';
         return `
         <div class="list-group-item">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
                     <div class="me-3 text-center" style="width: 40px; font-size: 24px;">
-                        ${addon.has_local_icon
-            ? `<img src="${basePath}/addons/${addon.slug}/icon.png" style="width: 32px; height: 32px;" alt="${addon.slug}">`
+                        ${app.has_local_icon
+            ? `<img src="${basePath}/apps/${app.slug}/icon.png" style="width: 32px; height: 32px;" alt="${app.slug}">`
             : '📦'} 
                     </div>
                     <div>
-                        <strong>${addon.name}</strong>
-                        ${addon.detected_pm ? `<span class="badge bg-info text-dark rounded-pill ms-1" style="font-size: 0.7rem;">${addon.detected_pm}</span>` : ''}
-                        ${addon.detected_pm && pmSupportsBashJqCurl(addon.detected_pm) ? `<span class="text-success ms-1" title="bash, jq + curl installable"><span class="mdi mdi-check-circle"></span></span>` : ''}
-                        ${addon.quirks ? `<span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 0.7rem;">quirks</span>` : ''}
+                        <strong>${app.name}</strong>
+                        ${app.detected_pm ? `<span class="badge bg-info text-dark rounded-pill ms-1" style="font-size: 0.7rem;">${app.detected_pm}</span>` : ''}
+                        ${app.detected_pm && pmSupportsBashJqCurl(app.detected_pm) ? `<span class="text-success ms-1" title="bash, jq + curl installable"><span class="mdi mdi-check-circle"></span></span>` : ''}
+                        ${app.quirks ? `<span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 0.7rem;">quirks</span>` : ''}
                         <br>
-                        <small class="text-muted d-block">${addon.description}</small>
-                        <small class="text-muted">Version: ${addon.version} | Image: <code>${addon.image}</code></small>
+                        <small class="text-muted d-block">${app.description}</small>
+                        <small class="text-muted">Version: ${app.version} | Image: <code>${app.image}</code></small>
                     </div>
                 </div>
                 ${isSelf ?
             '<span class="badge bg-secondary rounded-pill">System</span>' :
             `<div class="text-nowrap">
-                        <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" title="Info" onclick="toggleAddonInfo('${addon.slug}')">
+                        <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" title="Info" onclick="toggleAppInfo('${app.slug}')">
                             <span class="mdi mdi-information-outline"></span>
                         </button>
-                        <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" onclick="editAddon('${addon.slug}')">
+                        <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" onclick="editApp('${app.slug}')">
                             <span class="mdi mdi-pencil"></span>
                         </button>
-                        <button type="button" class="btn btn-sm btn-ha-outline rounded-pill text-danger border-danger" onclick="deleteAddon('${addon.slug}')">
+                        <button type="button" class="btn btn-sm btn-ha-outline rounded-pill text-danger border-danger" onclick="deleteApp('${app.slug}')">
                             <span class="mdi mdi-delete"></span>
                         </button>
                     </div>`
         }
             </div>
-            <div id="addon-info-${addon.slug}" class="collapse mt-3"></div>
+            <div id="app-info-${app.slug}" class="collapse mt-3"></div>
         </div>
     `
     }).join('');
 }
 
-// Initial load removed - handled by HTMX in templates/index.php
-/*
-if (document.getElementById('addonList')) {
-    loadAddons();
-}
-*/
-
 async function openSettings() {
-    document.getElementById('addonSelection').style.display = 'none';
+    document.getElementById('appSelection').style.display = 'none';
     document.getElementById('converterForm').style.display = 'none';
     document.getElementById('settingsView').style.display = 'block';
     document.getElementById('cancelBtn').style.display = 'none';
@@ -1028,7 +1021,7 @@ async function openSettings() {
 
 function closeSettings() {
     document.getElementById('settingsView').style.display = 'none';
-    document.getElementById('addonSelection').style.display = 'block';
+    document.getElementById('appSelection').style.display = 'block';
 }
 
 async function handleSettingsSubmit(e) {
@@ -1054,17 +1047,13 @@ async function handleSettingsSubmit(e) {
 }
 
 async function selfConvert(slug, tag = 'latest') {
-    haConfirm(`Do you want to export the HAOS Add-on Converter (Version: ${tag}) as a Home Assistant add-on? The internal version will be incremented automatically.`, async () => {
+    haConfirm(`Do you want to export the HAOS App Converter (Version: ${tag}) as a Home Assistant app? The internal version will be incremented automatically.`, async () => {
         try {
-            const response = await fetch(`${basePath}/self-convert`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({slug: slug, tag: tag})
-            });
+            const response = await fetch(`${basePath}/apps/${encodeURIComponent(slug)}/convert/${encodeURIComponent(tag)}`);
             const result = await response.json();
 
             if (result.status === 'success') {
-                alert('Add-on successfully created in: ' + result.path);
+                alert('App successfully created in: ' + result.path);
                 document.body.dispatchEvent(new Event('reload'));
             } else {
                 alert('Error: ' + result.message);
@@ -1080,7 +1069,7 @@ async function loadTags(slug) {
     if (list.dataset.loaded === 'true') return;
 
     try {
-        const response = await fetch(`${basePath}/tags`);
+        const response = await fetch(`${basePath}/converter/tags`);
         const tags = await response.json();
 
         const header = list.querySelector('.dropdown-header');

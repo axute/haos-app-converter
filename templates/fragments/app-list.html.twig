@@ -6,36 +6,36 @@
     </div>
 {% endif %}
 
-<div id="addonList" class="list-group list-group-flush mb-3">
-    {% if addons is empty %}
-        <div class="list-group-item">No add-ons found</div>
+<div id="appList" class="list-group list-group-flush mb-3">
+    {% if apps is empty %}
+        <div class="list-group-item">No apps found</div>
     {% else %}
-        {% for addon in addons %}
-            {% set isSelf = (addon.slug == 'haos_addon_converter') %}
+        {% for app in apps %}
+            {% set isSelf = (app.slug == 'haos_app_converter') %}
             <div class="list-group-item">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center">
                         <div class="me-3 text-center" style="width: 40px; font-size: 24px;">
-                            {% if addon.has_local_icon %}
-                                <img src="{{ basePath }}/addons/{{ addon.slug }}/icon.png" style="width: 32px; height: 32px;" alt="{{ addon.slug }}">
+                            {% if app.has_local_icon %}
+                                <img src="{{ basePath }}/apps/{{ app.slug }}/icon.png" style="width: 32px; height: 32px;" alt="{{ app.slug }}">
                             {% else %}
                                 📦
                             {% endif %}
                         </div>
                         <div>
-                            <strong>{{ addon.name }}</strong>
-                            {% if addon.detected_pm is not empty %}
-                                <span class="badge bg-info text-dark rounded-pill ms-1" style="font-size: 0.7rem;">{{ addon.detected_pm }}</span>
+                            <strong>{{ app.name }}</strong>
+                            {% if app.detected_pm is not empty %}
+                                <span class="badge bg-info text-dark rounded-pill ms-1" style="font-size: 0.7rem;">{{ app.detected_pm }}</span>
                             {% endif %}
-                            {% if addon.quirks %}
+                            {% if app.quirks %}
                                 <span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 0.7rem;">quirks</span>
                             {% endif %}
-                            <small class="text-muted d-block">{{ addon.description }}</small>
-                            <small class="text-muted">Version: {{ addon.version }}</small>
+                            <small class="text-muted d-block">{{ app.description }}</small>
+                            <small class="text-muted">Version: {{ app.version }}</small>
                             <div class="mt-1 d-flex align-items-center flex-wrap">
-                                <small class="text-muted">Image: <code>{{ addon.image }}:{{ addon.image_tag }}</code></small>
-                                <div id="update-status-{{ addon.slug }}" 
-                                      hx-get="{{ basePath }}/fragments/check-update/{{ addon.slug }}" 
+                                <small class="text-muted">Image: <code>{{ app.image }}:{{ app.image_tag }}</code></small>
+                                <div id="update-status-{{ app.slug }}"
+                                      hx-get="{{ basePath }}/fragments/check-update/{{ app.slug }}"
                                       hx-trigger="load" 
                                       hx-swap="outerHTML"
                                       hx-indicator="this"
@@ -52,21 +52,21 @@
                     {% else %}
                         <div class="text-nowrap">
                             <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" title="Info" 
-                                    hx-get="{{ basePath }}/fragments/addon-details/{{ addon.slug }}" 
-                                    hx-target="#addon-info-{{ addon.slug }}"
-                                    onclick="bootstrap.Collapse.getOrCreateInstance(document.getElementById('addon-info-{{ addon.slug }}')).toggle()">
+                                    hx-get="{{ basePath }}/fragments/app-details/{{ app.slug }}"
+                                    hx-target="#app-info-{{ app.slug }}"
+                                    onclick="bootstrap.Collapse.getOrCreateInstance(document.getElementById('app-info-{{ app.slug }}')).toggle()">
                                 <span class="mdi mdi-information-outline"></span>
                             </button>
-                            <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" onclick="editAddon('{{ addon.slug }}')">
+                            <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" onclick="editApp('{{ app.slug }}')">
                                 <span class="mdi mdi-pencil"></span>
                             </button>
-                            <button type="button" class="btn btn-sm btn-ha-outline rounded-pill text-danger border-danger" onclick="deleteAddon('{{ addon.slug }}')">
+                            <button type="button" class="btn btn-sm btn-ha-outline rounded-pill text-danger border-danger" onclick="deleteApp('{{ app.slug }}')">
                                 <span class="mdi mdi-delete"></span>
                             </button>
                         </div>
                     {% endif %}
                 </div>
-                <div id="addon-info-{{ addon.slug }}" class="collapse mt-3"></div>
+                <div id="app-info-{{ app.slug }}" class="collapse mt-3"></div>
             </div>
         {% endfor %}
     {% endif %}
