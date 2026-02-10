@@ -8,7 +8,7 @@
 
 <div id="appList" class="list-group list-group-flush mb-3">
     {% if apps is empty %}
-        <div class="list-group-item">No add-ons found</div>
+        <div class="list-group-item">No apps found</div>
     {% else %}
         {% for app in apps %}
             {% set isSelf = (app.slug == 'haos_app_converter') %}

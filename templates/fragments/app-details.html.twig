@@ -8,7 +8,7 @@
         </div>
         <div class="col-12 col-md-6">
             <div><strong>Ingress:</strong> {{ app.ingress ? 'Enabled (' ~ app.ingress_port ~ (app.ingress_stream ? ', stream' : '') ~ ', ' ~ app.ingress_entry ~ ')' : 'Disabled' }}</div>
-            {% if app.ingress and addon.panel_title is not empty %}
+            {% if app.ingress and app.panel_title is not empty %}
                 <div><strong>Panel Title:</strong> {{ app.panel_title }}</div>
             {% endif %}
             {% if app.webui is not empty %}

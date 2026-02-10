@@ -277,7 +277,7 @@ function cancelConverter() {
 }
 
 async function deleteApp(slug) {
-    haConfirm(`Do you really want to delete the add-on "${slug}"? This action cannot be undone.`, async () => {
+    haConfirm(`Do you really want to delete the app "${slug}"? This action cannot be undone.`, async () => {
         try {
             const response = await fetch(`${basePath}/apps/${slug}`, {
                 method: 'DELETE'
@@ -295,7 +295,7 @@ async function deleteApp(slug) {
         } catch (error) {
             alert('An error occurred: ' + error.message);
         }
-    }, 'Delete Add-on', 'Delete', 'btn-danger');
+    }, 'Delete App', 'Delete', 'btn-danger');
 }
 
 function handleIconSelect(input) {
@@ -604,7 +604,7 @@ async function handleConverterSubmit(e) {
         const resultDiv = document.getElementById('result');
         const resultMessage = document.getElementById('resultMessage');
         if (resultMessage) {
-            resultMessage.innerText = 'Add-on has been created/updated successfully.';
+            resultMessage.innerText = 'App has been created/updated successfully.';
         }
         const resultDetails = document.getElementById('resultDetails');
         if (resultDetails) {
@@ -959,7 +959,7 @@ async function loadApps() {
 
     const list = document.getElementById('appList');
     if (apps.length === 0) {
-        list.innerHTML = '<div class="list-group-item">No add-ons found</div>';
+        list.innerHTML = '<div class="list-group-item">No apps found</div>';
         return;
     }
     list.innerHTML = apps.map(app => {
@@ -1047,13 +1047,13 @@ async function handleSettingsSubmit(e) {
 }
 
 async function selfConvert(slug, tag = 'latest') {
-    haConfirm(`Do you want to export the HAOS Add-on Converter (Version: ${tag}) as a Home Assistant add-on? The internal version will be incremented automatically.`, async () => {
+    haConfirm(`Do you want to export the HAOS App Converter (Version: ${tag}) as a Home Assistant app? The internal version will be incremented automatically.`, async () => {
         try {
             const response = await fetch(`${basePath}/apps/${encodeURIComponent(slug)}/convert/${encodeURIComponent(tag)}`);
             const result = await response.json();
 
             if (result.status === 'success') {
-                alert('Add-on successfully created in: ' + result.path);
+                alert('App successfully created in: ' + result.path);
                 document.body.dispatchEvent(new Event('reload'));
             } else {
                 alert('Error: ' + result.message);

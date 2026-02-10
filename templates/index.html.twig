@@ -4,18 +4,18 @@
 <div id="appSelection" class="mb-4">
     <div class="ha-card">
         <div class="ha-card-header">
-            <span>Existing Add-ons</span>
+            <span>Existing Apps</span>
         </div>
         <div id="appContainer" hx-get="{{ basePath }}/fragments/app-list" hx-trigger="load, reload from:body" hx-swap="innerHTML">
             <div class="list-group-item d-flex justify-content-center p-4">
                 <div class="spinner-border text-primary" role="status"></div>
-                <span class="ms-2">Loading add-ons...</span>
+                <span class="ms-2">Loading apps...</span>
             </div>
         </div>
         <div class="d-flex justify-content-between mt-3">
             <div>
                 <button type="button" class="btn btn-ha-primary me-2" onclick="startNew()">
-                    <span class="mdi mdi-plus me-1"></span>Create New Add-on
+                    <span class="mdi mdi-plus me-1"></span>Create New App
                 </button>
                 <div class="btn-group">
                     <button type="button" class="btn btn-ha-outline" onclick="selfConvert('{{ converter.slug }}')">

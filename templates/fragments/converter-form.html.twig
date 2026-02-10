@@ -13,7 +13,7 @@
                     <div class="accordion-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="name" class="form-label">Add-on Name</label>
+                                <label for="name" class="form-label">App Name</label>
                                 <input type="text" class="form-control" id="name" required placeholder="e.g. My Awesome Tool">
                             </div>
                             <div class="col-md-6 mb-3">
@@ -122,7 +122,7 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="panel_title" class="form-label">Panel Title (optional)</label>
-                                    <input type="text" class="form-control" id="panel_title" placeholder="Defaults to add-on name">
+                                    <input type="text" class="form-control" id="panel_title" placeholder="Defaults to app name">
                                 </div>
                             </div>
                             <div class="form-check">
@@ -164,19 +164,19 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="backup" id="backup_disabled" value="disabled" checked>
                                 <label class="form-check-label" for="backup_disabled">
-                                    <strong>Disabled</strong> - No backup support for this add-on.
+                                    <strong>Disabled</strong> - No backup support for this app.
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="backup" id="backup_hot" value="hot">
                                 <label class="form-check-label" for="backup_hot">
-                                    <strong>Hot Backup</strong> - The add-on continues to run during the backup. Data must be in a consistent state on disk.
+                                    <strong>Hot Backup</strong> - The app continues to run during the backup. Data must be in a consistent state on disk.
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="backup" id="backup_cold" value="cold">
                                 <label class="form-check-label" for="backup_cold">
-                                    <strong>Cold Backup</strong> - The add-on is stopped before the backup and restarted afterwards. Safer for databases.
+                                    <strong>Cold Backup</strong> - The app is stopped before the backup and restarted afterwards. Safer for databases.
                                 </label>
                             </div>
                         </div>
@@ -213,7 +213,7 @@
                             </div>
                             <div id="envVarsContainer"></div>
                             <div id="envWarning" class="alert alert-warning mt-2" style="display:none;">
-                                <span class="mdi mdi-alert"></span> <strong>Note:</strong> Editable environment variables require the user to set them in the Configuration tab of the add-on in Home Assistant.
+                                <span class="mdi mdi-alert"></span> <strong>Note:</strong> Editable environment variables require the user to set them in the Configuration tab of the app in Home Assistant.
                             </div>
                         </div>
 
@@ -261,7 +261,7 @@
                             <label class="form-check-label" for="allow_user_env">
                                 <strong>Allow user to create environment variables</strong>
                             </label>
-                            <div class="form-text">If enabled, the Home Assistant user can add their own environment variables in the add-on configuration.</div>
+                            <div class="form-text">If enabled, the Home Assistant user can add their own environment variables in the app configuration.</div>
                         </div>
 
                         <div id="startupScriptSection" style="display:none;" class="mb-3">
@@ -542,7 +542,7 @@
         <div class="ha-card-footer mt-4">
             <div id="submitSection" style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <button type="submit" id="generateBtn" class="btn btn-ha-primary btn-lg">
-                    <span class="mdi mdi-creation me-2"></span>Generate Add-on
+                    <span class="mdi mdi-creation me-2"></span>Generate App
                 </button>
                 <div class="btn-group">
                     <button type="button" class="btn btn-ha-outline btn-lg" onclick="downloadConfig()">
