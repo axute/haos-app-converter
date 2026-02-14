@@ -5,6 +5,9 @@
     <div class="ha-card">
         <div class="ha-card-header">
             <span>Existing Apps</span>
+            <button type="button" class="btn btn-ha-primary btn-sm" onclick="startNew()">
+                <span class="mdi mdi-plus me-1"></span>Create New App
+            </button>
         </div>
         <div id="appContainer" hx-get="{{ basePath }}/fragments/app-list" hx-trigger="load, reload from:body" hx-swap="innerHTML">
             <div class="list-group-item d-flex justify-content-center p-4">
@@ -14,9 +17,6 @@
         </div>
         <div class="d-grid gap-2 d-lg-flex justify-content-lg-between mt-3">
             <div class="d-grid gap-2 d-lg-flex">
-                <button type="button" class="btn btn-ha-primary" onclick="startNew()">
-                    <span class="mdi mdi-plus me-1"></span>Create New App
-                </button>
                 <div class="btn-group">
                     <button type="button" class="btn btn-ha-outline" onclick="selfConvert('{{ converter.slug }}')">
                         <span class="mdi mdi-export me-1"></span>Export Converter
