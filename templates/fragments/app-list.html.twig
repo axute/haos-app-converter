@@ -56,11 +56,12 @@
                                        onchange="toggleVersionFixation('{{ app.slug }}', this.checked)">
                                 <label class="form-check-label small" for="vf_{{ app.slug }}" title="Version der App an das Docker-Image binden">Version fixieren</label>
                             </div>
-                            <div class="form-check form-switch d-inline-flex align-items-center me-3">
-                                <input class="form-check-input me-1" type="checkbox" id="au_{{ app.slug }}" {% if app.auto_update %}checked{% endif %}
-                                       onchange="toggleAutoUpdate('{{ app.slug }}', this.checked)">
-                                <label class="form-check-label small" for="au_{{ app.slug }}" title="Automatische Updates aktivieren/deaktivieren">Auto-Update</label>
-                            </div>
+{#                             <!-- next version feature -->#}
+{#                            <div class="form-check form-switch d-inline-flex align-items-center me-3">#}
+{#                                <input class="form-check-input me-1" type="checkbox" id="au_{{ app.slug }}" {% if app.auto_update %}checked{% endif %}#}
+{#                                       onchange="toggleAutoUpdate('{{ app.slug }}', this.checked)">#}
+{#                                <label class="form-check-label small" for="au_{{ app.slug }}" title="Automatische Updates aktivieren/deaktivieren">Auto-Update</label>#}
+{#                            </div>#}
                             <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" title="Info" 
                                     hx-get="{{ basePath }}/fragments/app-details/{{ app.slug }}"
                                     hx-target="#app-info-{{ app.slug }}"
