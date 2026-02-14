@@ -5,92 +5,199 @@ namespace App\Tools;
 use App\File\App\Defaults\Dockerfile;
 use Exception;
 use RuntimeException;
+use Stringable;
 
-class Crane
+class Crane implements Stringable
 {
     public const string CONFIG = 'config';
     public const string TAGS = 'tags';
     public const string MANIFEST = 'manifest';
+    public ?string $tagUpdateFix = null;
+    public ?string $tagUpdateMinor = null;
+    public ?string $tagUpdateMajor = null;
+    public ?string $entrypoint = null;
+    public ?string $cmd = null;
+    public string $image;
+    public string $image_tag = 'latest';
 
-    public static function getUpdateDetailed(string $image, string $tag): array
+    public function __construct(string $fullImage)
     {
-        // 1. Alle Tags abrufen, um nach neueren Versionen mit gleicher Major/Minor zu suchen
-        $allTags = self::getTags($image);
-        $result = [
-            'fix'   => null,
-            'minor' => null,
-            'major' => null
-        ];
-        if (!empty($allTags)) {
-            $currentVersion = Version::fromSemverTag($tag);
-            // Wenn der aktuelle Tag eine Version ist (z. B. 1.2.3)
-            if ($currentVersion !== null) {
-
-                foreach ($allTags as $foundTag) {
-                    if (self::sameSchema($foundTag, $tag) === false) {
-                        continue;
-                    }
-                    $foundVersion = Version::fromSemverTag($foundTag);
-                    if ($foundVersion !== null) {
-                        if ($foundVersion->major == $currentVersion->major && $foundVersion->minor == $currentVersion->minor) {
-                            if (version_compare($foundTag, $tag, '>')) {
-                                $result['fix'] = $foundTag;
-                            }
-                        } else if ($foundVersion->major == $currentVersion->major) {
-                            if (version_compare($foundTag, $tag, '>')) {
-                                $result['minor'] = $foundTag;
-                            }
-                        } else if ($foundVersion->major > $currentVersion->major) {
-                            $result['major'] = $foundTag;
-                        }
-                    }
-                }
-            }
+        if (str_contains($fullImage, ':')) {
+            [
+                $this->image,
+                $this->image_tag
+            ] = explode(':', $fullImage, 2);
+        } else {
+            $this->image = $fullImage;
         }
-        return $result;
+        $this->load();
     }
 
-    public static function getTags(string $image): array
+    public function load(bool $force = false): static
     {
-        $cacheEntry = self::getCacheEntry(self::TAGS, $image);
+        $this->getTags($force);
+        $this->getEntryPoint($force);
+        $this->getCmd($force);
+        $this->getPossibleUpdates($force);
+        return $this;
+    }
+
+    public function getTags(bool $force = false): array
+    {
+        $cacheEntry = $this->getCacheEntry(self::TAGS, $force);
         if ($cacheEntry !== null) {
             return $cacheEntry;
         }
         // crane ls verwenden
-        $command = "crane ls " . escapeshellarg($image) . " 2>&1";
+        $command = "crane ls " . escapeshellarg($this->image) . " 2>&1";
         $output = shell_exec($command);
         $tags = explode("\n", trim($output));
-        return self::setCasheEntry(self::TAGS, $image, array_filter($tags, function ($tag) {
+        return $this->setCasheEntry(self::TAGS, array_filter($tags, function ($tag) {
             return !empty($tag) && !str_contains($tag, "error") && !str_contains($tag, "standard_init_linux");
         }));
+
     }
 
-    public static function getCacheEntry(string $type, string $image): null|string|array
+    private function getCacheEntry(string $type, bool $force): null|string|array
     {
-        if (is_file(self::getCacheFilePath($type))) {
-            $json = json_decode(file_get_contents(self::getCacheFilePath($type)), true);
-            if (array_key_exists($image, $json)) {
-                return $json[$image];
+        if ($force === true) {
+            return null;
+        }
+        $key = match ($type) {
+            self::TAGS => $this->image,
+            self::CONFIG, self::MANIFEST => $this->__toString(),
+        };
+        $cacheFilePath = $this->getCacheFilePath($type);
+        if (is_file($cacheFilePath)) {
+            $json = json_decode(file_get_contents($cacheFilePath), true);
+            if (array_key_exists($key, $json)) {
+                return $json[$key];
             }
         }
         return null;
     }
 
-    private static function getCacheFilePath(string $type): string
+    public function __toString(): string
+    {
+        return $this->image . ':' . $this->image_tag;
+    }
+
+    private function getCacheFilePath(string $type): string
     {
         return App::getDataDir() . '/.cache/crane.' . $type . '.json';
     }
 
-    public static function setCasheEntry(string $type, string $image, string|array $data): string|array
+    protected function setCasheEntry(string $type, string|array $data): string|array
     {
-        if (is_file(self::getCacheFilePath($type))) {
-            $json = json_decode(file_get_contents(self::getCacheFilePath($type)), true);
-            $json[$image] = $data;
+        $key = match ($type) {
+            self::TAGS => $this->image,
+            self::CONFIG, self::MANIFEST => $this->__toString(),
+        };
+        $cacheFilePath = $this->getCacheFilePath($type);
+        if (is_file($cacheFilePath)) {
+            $json = json_decode(file_get_contents($cacheFilePath), true);
+            $json[$key] = $data;
         } else {
-            $json = [$image => $data];
+            $json = [$key => $data];
         }
-        Converter::writeFileContent(self::getCacheFilePath($type), json_encode($json, JSON_PRETTY_PRINT));
+        Converter::writeFileContent($cacheFilePath, json_encode($json, JSON_PRETTY_PRINT));
         return $data;
+    }
+
+    public function getEntryPoint(?string $default = null, bool $force = false)
+    {
+        if ($this->entrypoint !== null && $force === false) {
+            return $this->entrypoint;
+        }
+        try {
+            $imageConfig = $this->config($force);
+            $entrypoint = $imageConfig['config']['Entrypoint'] ?? null;
+            if (is_array($entrypoint)) {
+                $entrypoint = implode(' ', $entrypoint);
+            }
+            $this->entrypoint = $entrypoint ?? $default;
+            return $this->entrypoint ?? $default;
+        } catch (Exception) {
+            $this->entrypoint = null;
+            return $default;
+        }
+    }
+
+    private function config(bool $force): array
+    {
+        $cacheEntry = $this->getCacheEntry(self::CONFIG, $force);
+        if ($cacheEntry !== null) {
+            return $cacheEntry;
+        }
+        $command = "crane config " . escapeshellarg($this) . " 2>&1";
+        $output = shell_exec($command);
+        $data = json_decode($output, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new RuntimeException(json_last_error_msg());
+        }
+        return $this->setCasheEntry(self::CONFIG, $data);
+    }
+
+    public function getCmd(?string $default = null, bool $force = false)
+    {
+        if ($this->cmd !== null && $force === false) {
+            return $this->cmd;
+        }
+        try {
+            $imageConfig = $this->config($force);
+            $cmd = $imageConfig['config']['Cmd'] ?? null;
+            if (is_array($cmd)) {
+                $cmd = implode(' ', $cmd);
+            }
+            $this->cmd = $cmd;
+            return $this->cmd ?? $default;
+        } catch (Exception) {
+            $this->cmd = null;
+            return $default;
+        }
+    }
+
+    public function getPossibleUpdates(bool $force = false): array
+    {
+        if (($this->tagUpdateFix !== null || $this->tagUpdateMinor !== null || $this->tagUpdateMajor !== null) && $force === false) {
+            return [
+                'fix'   => $this->tagUpdateFix,
+                'minor' => $this->tagUpdateMinor,
+                'major' => $this->tagUpdateMajor
+            ];
+        }
+        // 1. Alle Tags abrufen, um nach neueren Versionen mit gleicher Major/Minor zu suchen
+        $allTags = $this->getTags($force);
+        if (!empty($allTags)) {
+            $currentVersion = Version::fromSemverTag($this->image_tag);
+            // Wenn der aktuelle Tag eine Version ist (z. B. 1.2.3)
+            if ($currentVersion !== null) {
+                foreach ($allTags as $foundTag) {
+                    if (self::sameSchema($foundTag, $this->image_tag) === false) {
+                        continue;
+                    }
+                    $foundVersion = Version::fromSemverTag($foundTag);
+                    if ($foundVersion !== null) {
+                        if ($foundVersion->major == $currentVersion->major && $foundVersion->minor == $currentVersion->minor) {
+                            if (version_compare($foundTag, $this->image_tag, '>')) {
+                                $this->tagUpdateFix = $foundTag;
+                            }
+                        } else if ($foundVersion->major == $currentVersion->major) {
+                            if (version_compare($foundTag, $this->image_tag, '>')) {
+                                $this->tagUpdateMinor = $foundTag;
+                            }
+                        } else if ($foundVersion->major > $currentVersion->major) {
+                            $this->tagUpdateMajor = $foundTag;
+                        }
+                    }
+                }
+            }
+        }
+        return [
+            'fix'   => $this->tagUpdateFix,
+            'minor' => $this->tagUpdateMinor,
+            'major' => $this->tagUpdateMajor
+        ];
     }
 
     protected static function sameSchema(string $tag1, string $tag2): bool
@@ -114,13 +221,18 @@ class Crane
         return true;
     }
 
-    public static function getArchitectures(string $fullImage): array
+    public static function i(string $fullImage): Crane
     {
-        $cacheEntry = self::getCacheEntry(self::MANIFEST, $fullImage);
+        return new static($fullImage);
+    }
+
+    public function getArchitectures(bool $force = false): array
+    {
+        $cacheEntry = $this->getCacheEntry(self::MANIFEST, $force);
         if ($cacheEntry !== null) {
             return $cacheEntry;
         }
-        $command = "crane manifest " . escapeshellarg($fullImage) . " 2>&1";
+        $command = "crane manifest " . escapeshellarg($this) . " 2>&1";
         $output = @shell_exec($command);
         $data = @json_decode($output, true);
         $allowedArchitectures = Dockerfile::ARCHITECTURES;
@@ -140,18 +252,18 @@ class Crane
                 }
             }
             if (count($foundArchitectures)) {
-                return self::setCasheEntry(self::MANIFEST, $fullImage, self::reworkArchitectures($foundArchitectures));
+                return $this->setCasheEntry(self::MANIFEST, self::reworkArchitectures($foundArchitectures));
             }
         }
 
         try {
-            $data = self::getConfig($fullImage);
+            $data = $this->config($force);
             if (array_key_exists('architecture', $data) && in_array($data['architecture'], $allowedArchitectures)) {
-                return self::setCasheEntry(self::MANIFEST, $fullImage, self::reworkArchitectures([$data['architecture']]));
+                return $this->setCasheEntry(self::MANIFEST, self::reworkArchitectures([$data['architecture']]));
             }
-            return self::setCasheEntry(self::MANIFEST, $fullImage, []);
+            return $this->setCasheEntry(self::MANIFEST, []);
         } catch (RuntimeException) {
-            return self::setCasheEntry(self::MANIFEST, $fullImage, []);
+            return $this->setCasheEntry(self::MANIFEST, []);
         }
     }
 
@@ -168,46 +280,4 @@ class Crane
         return $architectures;
     }
 
-    public static function getConfig(string $image): array
-    {
-        $cacheEntry = self::getCacheEntry(self::CONFIG, $image);
-        if ($cacheEntry !== null) {
-            return $cacheEntry;
-        }
-        $command = "crane config " . escapeshellarg($image) . " 2>&1";
-        $output = shell_exec($command);
-        $data = json_decode($output, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new RuntimeException(json_last_error_msg());
-        }
-        return self::setCasheEntry(self::CONFIG, $image, $data);
-    }
-
-    public static function getOriginalCmd(string $image, ?string $default = null): ?string
-    {
-        try {
-            $imageConfig = Crane::getConfig($image);
-            $cmd = $imageConfig['config']['Cmd'] ?? null;
-            if (is_array($cmd)) {
-                $cmd = implode(' ', $cmd);
-            }
-            return $cmd ?? $default;
-        } catch (Exception) {
-            return $default;
-        }
-    }
-
-    public static function getOriginalEntrypoint(string $image, ?string $default = null)
-    {
-        try {
-            $imageConfig = Crane::getConfig($image);
-            $entrypoint = $imageConfig['config']['Entrypoint'] ?? null;
-            if (is_array($entrypoint)) {
-                $entrypoint = implode(' ', $entrypoint);
-            }
-            return $entrypoint ?? $default;
-        } catch (Exception) {
-            return $default;
-        }
-    }
 }

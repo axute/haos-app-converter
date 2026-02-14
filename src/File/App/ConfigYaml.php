@@ -156,7 +156,7 @@ class ConfigYaml extends FileAbstract
     {
 
         $this->slug = $this->app->slug;
-        $webform->setIfNotEmpty($this, 'arch', fn() => Crane::getArchitectures($webform->extractFullDockerImageName()));
+        $webform->setIfNotEmpty($this, 'arch', fn() => Crane::i($webform->extractFullDockerImageName())->getArchitectures());
         $webform->setIfDefined($this, 'name', '');
         $webform->setIfDefined($this, 'description', '');
         $webform->setIfDefined($this, 'version', Defaults::VERSION);

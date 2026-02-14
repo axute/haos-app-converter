@@ -64,7 +64,7 @@ class AppController extends ControllerAbstract
             $data = json_decode($body, true) ?? [];
             $metadataJson = App::get($slug)->metadataJson;
             foreach ($data as $key => $value) {
-                    $metadataJson->{$key} = $value;
+                $metadataJson->{$key} = $value;
             }
             $metadataJson->saveFileContent();
 
@@ -111,7 +111,6 @@ class AppController extends ControllerAbstract
     {
         $dataDir = App::getDataDir();
         try {
-
             $image = App::get($slug)->dockerfile->image;
             $tag = App::get($slug)->dockerfile->image_tag;
         } catch (Exception $e) {
@@ -139,10 +138,11 @@ class AppController extends ControllerAbstract
             'image'       => $fullImage,
             'current_tag' => $tag
         ];
-        $updates = Crane::getUpdateDetailed($image, $tag);
+        $crane = new Crane($fullImage);
+        $updates = $crane->getPossibleUpdates($force);
         $result = array_merge($result, $updates);
 
-        $architectures = Crane::getArchitectures($fullImage);
+        $architectures = $crane->getArchitectures();
         $result['architectures'] = [];
         foreach ($architectures as $arch) {
             $result['architectures'][] = [

@@ -13,7 +13,7 @@ class Converter
 
     public static function getTags(): array
     {
-        return Crane::getTags(self::PUBLIC_IMAGE_NAME);
+        return Crane::i(self::PUBLIC_IMAGE_NAME)->getTags();
     }
 
     public static function selfConvert(string $tag): array

@@ -61,9 +61,10 @@ class MetadataJson extends FileAbstract
 
         $extractImage = $webform->extractFullDockerImageName();
         if ($extractImage !== null) {
+            $crane = new Crane($extractImage);
             // Metadaten initial speichern/laden
-            $this->original_cmd = Crane::getOriginalCmd($extractImage, '');
-            $this->original_entrypoint = Crane::getOriginalEntrypoint($extractImage, '');
+            $this->original_cmd = $crane->getCmd('');
+            $this->original_entrypoint = $crane->getEntrypoint('');
         }
         return $this->saveFileContent();
     }

@@ -16,7 +16,7 @@ class ImageController extends ControllerAbstract
         if (empty($image)) {
             return self::success($response);
         }
-        $tags = Crane::getTags($image);
+        $tags = Crane::i($image)->getTags();
 
         if (empty($tags)) {
             return self::success($response, ['latest']);
