@@ -48,7 +48,10 @@ class MetadataJson extends FileAbstract
     public function updateFromWebUi(Webform $webform): static
     {
         $this->quirks = $webform->isQuirks();
-        $this->detected_pm = Scripts::detectPm($webform->extractFullDockerImageName());
+        $extractImage = $webform->extractFullDockerImageName();
+        if ($extractImage !== null) {
+            $this->detected_pm = Scripts::detectPm($extractImage);
+        }
         $webform->setIfDefined($this, 'allow_user_env', false);
         $webform->setIfDefined($this, 'bashio_version');
         $webform->setIfDefined($this, 'version_fixation', false);

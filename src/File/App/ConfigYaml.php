@@ -98,6 +98,23 @@ class ConfigYaml extends FileAbstract
 
     public function jsonSerialize(): array
     {
+        $envVars = [];
+        foreach ($this->environment ?? [] as $key => $value) {
+            $envVars[] = [
+                'key'   => $key,
+                'value' => $value,
+                'editable' => false
+            ];
+        }
+        foreach ($this->options ?? [] as $key => $value) {
+            if ($key === 'env_vars') continue;
+            $envVars[] = [
+                'key' => $key,
+                'value' => $value,
+                'editable' => true
+            ];
+        }
+
         if (empty($this->url)) {
             unset($this->url);
         }
@@ -148,6 +165,7 @@ class ConfigYaml extends FileAbstract
             }
         }
         $data = $this->getData();
+        $data['env_vars'] = $envVars;
         ksort($data);
         return $data;
     }
@@ -173,6 +191,8 @@ class ConfigYaml extends FileAbstract
         $webform->setIfDefined($this, 'watchdog');
         $webform->setIfNotEmpty($this, 'boot', Defaults::BOOT, null, $this->setBoot(...));
         $this->startup = Defaults::STARTUP;
+        $this->environment = [];
+        $this->options = [];
         $this->addEnvironment('HAOS_CONVERTER_BASHIO_VERSION', $webform->isNotEmpty('bashio_version') ? $webform->bashio_version : '0.17.5');
         if ($webform->isNotEmpty('detected_pm')) {
             $this->addEnvironment('HAOS_CONVERTER_PM', $webform->detected_pm);
@@ -205,8 +225,8 @@ class ConfigYaml extends FileAbstract
         $allow_user_env = $webform->allow_user_env ?? false;
         if ($webform->env_vars || $allow_user_env) {
             foreach ($webform->env_vars ?? [] as $envVar) {
-                if (!empty($envVar['key']) !== false) {
-                    $editable = $var['editable'] ?? false;
+                if (!empty($envVar['key'])) {
+                    $editable = $envVar['editable'] ?? false;
                     if ($allow_user_env && $editable) {
                         $this->addOption(
                             key: $envVar['key'],
@@ -214,7 +234,7 @@ class ConfigYaml extends FileAbstract
                             schema: 'str?'
                         );
                     } else {
-                        $this->addEnvironment($envVar['key'], $envVar['value']);
+                        $this->addEnvironment($envVar['key'], $envVar['value'] ?? '');
                     }
                 }
             }
