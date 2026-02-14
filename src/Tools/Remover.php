@@ -2,8 +2,6 @@
 
 namespace App\Tools;
 
-use App\App\FilesReader;
-
 class Remover
 {
     public static function removeApp(string $slug): void
@@ -13,7 +11,7 @@ class Remover
             throw new \RuntimeException('System app cannot be deleted');
         }
 
-        $appDir = FilesReader::getAppDir( $slug);
+        $appDir =  App::get($slug)->getAppDir();
 
         if (!is_dir($appDir)) {
             throw new \RuntimeException("$appDir is not a directory");

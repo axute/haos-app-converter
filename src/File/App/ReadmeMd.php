@@ -1,0 +1,56 @@
+<?php
+
+namespace App\File\App;
+
+use App\File\FileAbstract;
+use App\Tools\Converter;
+use App\Tools\Webform;
+
+class ReadmeMd extends FileAbstract
+{
+
+    public ?string $long_description = null;
+
+    public function loadFileContent(): static
+    {
+        if($this->isFile()) {
+            $this->long_description = file_get_contents($this->getFilePath());
+        }
+        return $this;
+    }
+
+    public function getFilename(): string
+    {
+        return 'README.md';
+    }
+
+    public function saveFileContent(): static
+    {
+        if(!empty(trim($this->long_description))) {
+            Converter::writeFileContent($this->getFilePath(), $this);
+            return $this;
+        }
+        return $this->clearFile();
+    }
+
+    public function updateFromWebui(Webform $webform): static
+    {
+        $webform->setIfDefined($this,'long_description');
+        return $this->saveFileContent();
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'long_description' => $this->long_description,
+        ];
+    }
+
+    public function __toString()
+    {
+        if(!empty(trim($this->long_description))) {
+            return $this->long_description;
+        }
+        return '';
+    }
+}

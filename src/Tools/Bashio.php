@@ -2,7 +2,6 @@
 
 namespace App\Tools;
 
-use App\App\FilesReader;
 use Exception;
 
 class Bashio
@@ -11,7 +10,7 @@ class Bashio
 
     public static function getVersions(): array
     {
-        $cacheFile = FilesReader::getDataDir() . '/.cache/bashio_versions.json';
+        $cacheFile = App::getDataDir() . '/.cache/bashio_versions.json';
         $versions = [];
 
         if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < 86400)) {

@@ -10,7 +10,7 @@ use Slim\Factory\AppFactory;
 use Slim\Handlers\Strategies\RequestResponseArgs;
 use Slim\Routing\RouteCollectorProxy;
 
-require __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../setup.php';
 
 $app = AppFactory::create();
 
@@ -47,6 +47,7 @@ $app->group('/apps', function (RouteCollectorProxy $group) {
     $group->delete('/{slug}',  AppController::delete(...));
     $group->post('/generate', AppController::generate(...));
     $group->get('/{slug}/convert/{tag}', AppController::convert(...));
+    $group->post('/{slug}/metadata', AppController::updateMetadata(...));
 });
 
 $app->group('/converter', function (RouteCollectorProxy $group) {

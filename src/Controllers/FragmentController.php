@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\App\FilesReader;
+use App\Tools\App;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -24,9 +24,8 @@ class FragmentController extends ControllerAbstract
 
     public static function appDetails(Request $request, Response $response, string $slug): Response
     {
-        $details = (new FilesReader($slug))->jsonSerialize();
         return self::render($response, 'fragments/app-details', [
-            'app'  => $details,
+            'app'  => App::get($slug)->getData(),
             'slug' => $slug
         ]);
     }

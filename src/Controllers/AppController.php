@@ -2,9 +2,9 @@
 
 namespace App\Controllers;
 
-use App\App\{FilesReader, FilesWriter};
-use App\Generator\{HaConfig, HaRepository};
-use App\Tools\{Bashio, Converter, Crane, Remover};
+use App\File\App\Defaults\Dockerfile;
+use App\File\Repository\RepositoryYaml;
+use App\Tools\{App, Bashio, Converter, Crane, Remover};
 use Exception;
 use Psr\Http\Message\{ResponseInterface as Response, ServerRequestInterface as Request};
 use RuntimeException;
@@ -13,42 +13,10 @@ class AppController extends ControllerAbstract
 {
     public static function list(Request $request, Response $response): Response
     {
-        $dataDir = FilesReader::getDataDir();
-        $apps = [];
-
-        if (is_dir($dataDir)) {
-            $dirs = array_filter(glob($dataDir . '/*'), 'is_dir');
-            foreach ($dirs as $dir) {
-                $slug = basename($dir);
-                try {
-                    $reader = new FilesReader($slug);
-                    $apps[] = $reader->jsonSerialize();
-                } catch (Exception) {
-                    continue;
-                }
-            }
-        }
-
-        // Alphabetisch sortieren nach "name"
-        usort($apps, function ($a, $b) {
-            return strcasecmp($a['name'], $b['name']);
-        });
-
-        $repository = HaRepository::getInstance()?->jsonSerialize();
         return self::success($response, [
-            'apps'       => $apps,
-            'repository' => $repository
+            'apps'       => App::list(),
+            'repository' => RepositoryYaml::instance()->getData()
         ]);
-    }
-
-    public static function get(Request $request, Response $response, string $slug): Response
-    {
-        try {
-            $reader = new FilesReader($slug);
-            return self::success($response, $reader->jsonSerialize());
-        } catch (Exception $e) {
-            return self::errorMessage($response, $e);
-        }
     }
 
     public static function convert(Request $request, Response $response, string $slug, string $tag): Response
@@ -57,24 +25,28 @@ class AppController extends ControllerAbstract
             return self::errorMessage($response, new RuntimeException('Slug should not be empty'));
         }
         try {
+            $app = null;
             if ($slug === Converter::SLUG) {
                 // haos-app-converter exists
-                try {
-                    $filesReader = new FilesReader($slug);
-                    $appData = $filesReader->setImageTag($tag)->jsonSerialize();
-                } catch (Exception) {
-                    // catch: create new
-                    $appData = Converter::selfConvert($tag);
-                }
+                $app = App::get($slug)->update(Converter::selfConvert($tag));
             } else {
                 // any other existing app
-                $filesReader = new FilesReader($slug);
-                $appData = $filesReader->setImageTag($tag)->jsonSerialize();
+                $app = App::get($slug);
             }
-            $filesWriter = new FilesWriter($appData);
-            $filesWriter->increaseVersion();
-            $result = $filesWriter->create();
-            return self::success($response, $result);
+            $app->configYaml->increaseVersion();
+            return self::success($response, [
+                'status' => 'success',
+                'path'   => realpath($app->getAppDir())
+            ]);
+        } catch (Exception $e) {
+            return self::errorMessage($response, $e);
+        }
+    }
+
+    public static function get(Request $request, Response $response, string $slug): Response
+    {
+        try {
+            return self::success($response, App::get($slug)->getData());
         } catch (Exception $e) {
             return self::errorMessage($response, $e);
         }
@@ -83,6 +55,28 @@ class AppController extends ControllerAbstract
     public static function getBashioVersions(Request $request, Response $response): Response
     {
         return self::success($response, Bashio::getVersions());
+    }
+
+    public static function updateMetadata(Request $request, Response $response, string $slug): Response
+    {
+        try {
+            $body = (string)$request->getBody();
+            $data = json_decode($body, true) ?? [];
+            $metadataJson = App::get($slug)->metadataJson;
+            foreach ($data as $key => $value) {
+                    $metadataJson->{$key} = $value;
+            }
+            $metadataJson->saveFileContent();
+
+            App::get($slug)->mergeVersion();
+            return self::success($response, [
+                'status' => 'success',
+                'slug'   => $slug,
+                'saved'  => $data
+            ]);
+        } catch (Exception $e) {
+            return self::errorMessage($response, $e);
+        }
     }
 
     public static function delete(Request $request, Response $response, string $slug): Response
@@ -101,13 +95,13 @@ class AppController extends ControllerAbstract
 
     public static function generate(Request $request, Response $response): Response
     {
-        $body = (string)$request->getBody();
-        $data = json_decode($body, true);
-
         try {
-            $appWriter = new FilesWriter($data);
-            $result = $appWriter->create();
-            return self::success($response, $result);
+            $data = json_decode((string)$request->getBody(), true);
+            $app = App::detectOrCrate($data)?->update($data)->save();
+            return self::success($response, [
+                'status' => 'success',
+                'path'   => realpath($app->getAppDir())
+            ]);
         } catch (Exception $e) {
             return self::errorMessage($response, $e);
         }
@@ -115,11 +109,11 @@ class AppController extends ControllerAbstract
 
     public static function checkImageUpdate(Request $request, Response $response, string $slug): Response
     {
-        $dataDir = FilesReader::getDataDir();
+        $dataDir = App::getDataDir();
         try {
-            $app = new FilesReader($slug);
-            $image = $app->getImage();
-            $tag = $app->getImageTag();
+
+            $image = App::get($slug)->dockerfile->image;
+            $tag = App::get($slug)->dockerfile->image_tag;
         } catch (Exception $e) {
             return self::errorMessage($response, $e);
         }
@@ -153,7 +147,7 @@ class AppController extends ControllerAbstract
         foreach ($architectures as $arch) {
             $result['architectures'][] = [
                 'name' => $arch,
-                'lts'  => in_array($arch, HaConfig::ARCHITECTURES_SUPPORTED_LONGTERM)
+                'lts'  => in_array($arch, Dockerfile::ARCHITECTURES_SUPPORTED_LONGTERM)
             ];
         }
 

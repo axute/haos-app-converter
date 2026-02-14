@@ -23,8 +23,43 @@ window.addPort = addPortMapping;
 window.addMap = addMapMapping;
 window.selfConvert = selfConvert;
 window.updateVersion = updateVersion;
+window.toggleVersionFixation = toggleVersionFixation;
+window.toggleAutoUpdate = toggleAutoUpdate;
+window.updateAppMetadata = updateAppMetadata;
+
+async function updateAppMetadata(slug, payload) {
+    try {
+        const res = await fetch(`${basePath}/apps/${slug}/metadata`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok || data.status !== 'success') {
+            console.warn('Fehler beim Speichern der Metadaten:', data);
+        }
+        return data;
+    } catch (e) {
+        console.error('Netzwerkfehler beim Speichern der Metadaten', e);
+    }
+
+}
+
+async function toggleVersionFixation(slug, checked) {
+    await updateAppMetadata(slug, { version_fixation: !!checked });
+    // Falls der Edit-Dialog offen ist, Update-Buttons aus-/einblenden
+    const versionButtonsGroup = document.querySelector('#updateSection .btn-group');
+    if (versionButtonsGroup) {
+        versionButtonsGroup.style.display = checked ? 'none' : 'inline-flex';
+    }
+}
+
+async function toggleAutoUpdate(slug, checked) {
+    await updateAppMetadata(slug, { auto_update: !!checked });
+}
 
 async function fetchBashioVersions() {
+
     const loader = document.getElementById('bashioLoader');
     if (loader) loader.style.display = 'inline-block';
     try {
@@ -372,36 +407,34 @@ function addPortMapping(containerPort = '', hostPort = '', protocol = 'tcp', des
 
 function getPortMappings() {
     const rows = document.querySelectorAll('.port-mapping-row');
-    const ports = [];
+    const ports = {};
     rows.forEach(row => {
         const container = row.querySelector('.port-container').value;
         const protocol = row.querySelector('.port-protocol').value;
         const host = row.querySelector('.port-host').value;
-        const description = row.querySelector('.port-description').value.trim();
         if (container) {
-            ports.push({
-                container: parseInt(container),
-                protocol: protocol,
-                host: (host) ? parseInt(host) : null,
-                description: description || null
-            });
+            const key = `${container}/${protocol}`;
+            ports[key] = host ? parseInt(host) : null;
         }
     });
     return ports;
 }
 
-function addMapMapping(folder = 'config', mode = 'rw', path = '') {
+function addMapMapping(folder = 'data', mode = 'rw', path = '') {
     const container = document.getElementById('mapContainer');
     const div = document.createElement('div');
     div.className = 'input-group mb-2 map-row';
     div.innerHTML = `
         <select class="form-select map-folder" style="max-width: 120px;">
-            <option value="config" ${folder === 'config' ? 'selected' : ''}>config</option>
+            <option value="addon_config" ${folder === 'addon_config' ? 'selected' : ''}>addon_config</option>
+            <option value="addons" ${folder === 'addons' ? 'selected' : ''}>addons</option>
+            <option value="all_addon_configs" ${folder === 'all_addon_configs' ? 'selected' : ''}>all_addon_configs</option>
+            <option value="data" ${folder === 'data' ? 'selected' : ''}>data</option>
+            <option value="backup" ${folder === 'backup' ? 'selected' : ''}>backup</option>
+            <option value="homeassistant_config" ${folder === 'homeassistant_config' ? 'selected' : ''}>homeassistant_config</option>
+            <option value="media" ${folder === 'media' ? 'selected' : ''}>media</option>
             <option value="ssl" ${folder === 'ssl' ? 'selected' : ''}>ssl</option>
             <option value="share" ${folder === 'share' ? 'selected' : ''}>share</option>
-            <option value="media" ${folder === 'media' ? 'selected' : ''}>media</option>
-            <option value="addons" ${folder === 'addons' ? 'selected' : ''}>addons</option>
-            <option value="backup" ${folder === 'backup' ? 'selected' : ''}>backup</option>
         </select>
         <select class="form-select map-mode" style="max-width: 80px;">
             <option value="rw" ${mode === 'rw' ? 'selected' : ''}>RW</option>
@@ -697,6 +730,12 @@ async function editApp(slug) {
     if (submitSection) submitSection.style.display = 'none';
     if (updateSection) updateSection.style.display = 'block';
 
+    // Update-Buttons (Major/Minor/Fix) bei aktiver Version-Fixierung ausblenden
+    const versionButtonsGroup = document.querySelector('#updateSection .btn-group');
+    if (versionButtonsGroup) {
+        versionButtonsGroup.style.display = app.version_fixation ? 'none' : 'inline-flex';
+    }
+
     const ingressCheckbox = document.getElementById('ingress');
     if (ingressCheckbox) ingressCheckbox.checked = app.ingress;
 
@@ -812,9 +851,11 @@ async function editApp(slug) {
     const portsContainer = document.getElementById('portsContainer');
     if (portsContainer) {
         portsContainer.innerHTML = '';
-        if (app.ports && app.ports.length > 0) {
-            app.ports.forEach(p => {
-                addPortMapping(p.container, p.host || '', p.protocol || 'tcp', p.description || '');
+        if (app.ports && typeof app.ports === 'object') {
+            Object.entries(app.ports).forEach(([key, host]) => {
+                const [container, protocol] = key.split('/');
+                const description = (app.ports_description && app.ports_description[key]) || '';
+                addPortMapping(container, host || '', protocol || 'tcp', description);
             });
         }
     }
@@ -893,7 +934,7 @@ async function toggleAppInfo(slug) {
             const pm = a.detected_pm || 'unknown';
             const ingress = a.ingress ? `Enabled (${a.ingress_port}${a.ingress_stream ? ', stream' : ''})` : 'Disabled';
             const webuiPort = a.webui;
-            const portsList = (a.ports || []).map(p => `${p.host}:${p.container}`).join(', ');
+            const portsList = Object.entries(a.ports || {}).map(([key, host]) => `${host || '~'}:${key}`).join(', ');
             const mapList = (a.map || []).join(', ');
             const envVars = (a.env_vars || []).slice(0, 5).map(e => `<code>${e.key}</code>`).join(', ');
             const envMore = (a.env_vars || []).length > 5 ? ` … (+${(a.env_vars || []).length - 5} weitere)` : '';

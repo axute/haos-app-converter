@@ -2,8 +2,6 @@
 
 namespace App\Tools;
 
-use App\App\FilesReader;
-
 class Scripts
 {
     const string CACHE_DIR = '.cache';
@@ -33,7 +31,7 @@ class Scripts
     public static function getCacheDir(): string
     {
         // Caching
-        $cacheDir = FilesReader::getDataDir() . '/' . self::CACHE_DIR;
+        $cacheDir = App::getDataDir() . '/' . self::CACHE_DIR;
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0777, true);
         }

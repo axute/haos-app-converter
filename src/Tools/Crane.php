@@ -2,11 +2,16 @@
 
 namespace App\Tools;
 
-use App\Generator\HaConfig;
+use App\File\App\Defaults\Dockerfile;
+use Exception;
 use RuntimeException;
 
 class Crane
 {
+    public const string CONFIG = 'config';
+    public const string TAGS = 'tags';
+    public const string MANIFEST = 'manifest';
+
     public static function getUpdateDetailed(string $image, string $tag): array
     {
         // 1. Alle Tags abrufen, um nach neueren Versionen mit gleicher Major/Minor zu suchen
@@ -18,7 +23,7 @@ class Crane
         ];
         if (!empty($allTags)) {
             $currentVersion = Version::fromSemverTag($tag);
-            // Wenn der aktuelle Tag eine Version ist (z.B. 1.2.3)
+            // Wenn der aktuelle Tag eine Version ist (z. B. 1.2.3)
             if ($currentVersion !== null) {
 
                 foreach ($allTags as $foundTag) {
@@ -47,13 +52,45 @@ class Crane
 
     public static function getTags(string $image): array
     {
+        $cacheEntry = self::getCacheEntry(self::TAGS, $image);
+        if ($cacheEntry !== null) {
+            return $cacheEntry;
+        }
         // crane ls verwenden
         $command = "crane ls " . escapeshellarg($image) . " 2>&1";
         $output = shell_exec($command);
         $tags = explode("\n", trim($output));
-        return array_filter($tags, function ($tag) {
+        return self::setCasheEntry(self::TAGS, $image, array_filter($tags, function ($tag) {
             return !empty($tag) && !str_contains($tag, "error") && !str_contains($tag, "standard_init_linux");
-        });
+        }));
+    }
+
+    public static function getCacheEntry(string $type, string $image): null|string|array
+    {
+        if (is_file(self::getCacheFilePath($type))) {
+            $json = json_decode(file_get_contents(self::getCacheFilePath($type)), true);
+            if (array_key_exists($image, $json)) {
+                return $json[$image];
+            }
+        }
+        return null;
+    }
+
+    private static function getCacheFilePath(string $type): string
+    {
+        return App::getDataDir() . '/.cache/crane.' . $type . '.json';
+    }
+
+    public static function setCasheEntry(string $type, string $image, string|array $data): string|array
+    {
+        if (is_file(self::getCacheFilePath($type))) {
+            $json = json_decode(file_get_contents(self::getCacheFilePath($type)), true);
+            $json[$image] = $data;
+        } else {
+            $json = [$image => $data];
+        }
+        Converter::writeFileContent(self::getCacheFilePath($type), json_encode($json, JSON_PRETTY_PRINT));
+        return $data;
     }
 
     protected static function sameSchema(string $tag1, string $tag2): bool
@@ -65,13 +102,13 @@ class Crane
         }
         $version1 = Version::fromSemverTag($tag1);
         $version2 = Version::fromSemverTag($tag2);
-        if($version1 === null || $version2 === null) {
+        if ($version1 === null || $version2 === null) {
             return $version1 === $version2;
         }
-        if($version1->buildMetadata !== $version2->buildMetadata) {
+        if ($version1->buildMetadata !== $version2->buildMetadata) {
             return false;
         }
-        if($version1->preRelease !== $version2->preRelease) {
+        if ($version1->preRelease !== $version2->preRelease) {
             return false;
         }
         return true;
@@ -79,10 +116,14 @@ class Crane
 
     public static function getArchitectures(string $fullImage): array
     {
+        $cacheEntry = self::getCacheEntry(self::MANIFEST, $fullImage);
+        if ($cacheEntry !== null) {
+            return $cacheEntry;
+        }
         $command = "crane manifest " . escapeshellarg($fullImage) . " 2>&1";
         $output = @shell_exec($command);
         $data = @json_decode($output, true);
-        $allowedArchitectures = HaConfig::ARCHITECTURES;
+        $allowedArchitectures = Dockerfile::ARCHITECTURES;
         if (is_array($data) && array_key_exists('manifests', $data)) {
             $foundArchitectures = [];
             foreach ($data['manifests'] as $manifest) {
@@ -99,18 +140,18 @@ class Crane
                 }
             }
             if (count($foundArchitectures)) {
-                return self::reworkArchitectures($foundArchitectures);
+                return self::setCasheEntry(self::MANIFEST, $fullImage, self::reworkArchitectures($foundArchitectures));
             }
         }
 
         try {
             $data = self::getConfig($fullImage);
             if (array_key_exists('architecture', $data) && in_array($data['architecture'], $allowedArchitectures)) {
-                return self::reworkArchitectures([$data['architecture']]);
+                return self::setCasheEntry(self::MANIFEST, $fullImage, self::reworkArchitectures([$data['architecture']]));
             }
-            return [];
+            return self::setCasheEntry(self::MANIFEST, $fullImage, []);
         } catch (RuntimeException) {
-            return [];
+            return self::setCasheEntry(self::MANIFEST, $fullImage, []);
         }
     }
 
@@ -127,14 +168,46 @@ class Crane
         return $architectures;
     }
 
-    public static function getConfig(string $image)
+    public static function getConfig(string $image): array
     {
+        $cacheEntry = self::getCacheEntry(self::CONFIG, $image);
+        if ($cacheEntry !== null) {
+            return $cacheEntry;
+        }
         $command = "crane config " . escapeshellarg($image) . " 2>&1";
         $output = shell_exec($command);
         $data = json_decode($output, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new RuntimeException(json_last_error_msg());
         }
-        return $data;
+        return self::setCasheEntry(self::CONFIG, $image, $data);
+    }
+
+    public static function getOriginalCmd(string $image, ?string $default = null): ?string
+    {
+        try {
+            $imageConfig = Crane::getConfig($image);
+            $cmd = $imageConfig['config']['Cmd'] ?? null;
+            if (is_array($cmd)) {
+                $cmd = implode(' ', $cmd);
+            }
+            return $cmd ?? $default;
+        } catch (Exception) {
+            return $default;
+        }
+    }
+
+    public static function getOriginalEntrypoint(string $image, ?string $default = null)
+    {
+        try {
+            $imageConfig = Crane::getConfig($image);
+            $entrypoint = $imageConfig['config']['Entrypoint'] ?? null;
+            if (is_array($entrypoint)) {
+                $entrypoint = implode(' ', $entrypoint);
+            }
+            return $entrypoint ?? $default;
+        } catch (Exception) {
+            return $default;
+        }
     }
 }

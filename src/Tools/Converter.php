@@ -2,8 +2,6 @@
 
 namespace App\Tools;
 
-use App\App\FilesReader;
-use App\Generator\HaConfig;
 use Symfony\Component\Yaml\Yaml;
 
 class Converter
@@ -21,7 +19,7 @@ class Converter
     public static function selfConvert(string $tag): array
     {
         $slug = self::SLUG;
-        $configFile = FilesReader::getAppDir($slug) . '/' . HaConfig::FILENAME;
+        $configFile = App::get($slug)->dockerfile->getFilePath();
         $currentVersion = '1.0.0';
 
         if (file_exists($configFile)) {
@@ -61,12 +59,19 @@ class Converter
             ]
         ];
 
-        // Icon hinzufügen falls vorhanden
+        // Icon hinzufügen, falls vorhanden
         $iconPath = __DIR__ . '/../../icon.png';
         if (file_exists($iconPath)) {
             $iconData = file_get_contents($iconPath);
             $data['icon_file'] = 'data:image/png;base64,' . base64_encode($iconData);
         }
         return $data;
+    }
+    public static function writeFileContent(string $filepath, string $content): false|int
+    {
+        if(is_dir(dirname($filepath)) === false) {
+            mkdir(dirname($filepath), 0777, true);
+        }
+        return file_put_contents($filepath, $content);
     }
 }

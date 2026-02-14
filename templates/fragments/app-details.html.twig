@@ -16,11 +16,14 @@
             {% endif %}
             <div><strong>Ports:</strong> 
                 {% set ports = [] %}
-                {% for p in (app.ports ?: []) %}
-                    {% if p.host is not empty %}
-                        {% set ports = ports|merge([p.host ~ ':' ~ p.container]) %}
+                {% for key, host in (app.ports ?: {}) %}
+                    {% set container_parts = key|split('/') %}
+                    {% set container = container_parts[0] %}
+                    {% set protocol = container_parts[1]|default('tcp') %}
+                    {% if host is not empty %}
+                        {% set ports = ports|merge([host ~ ':' ~ container ~ '/' ~ protocol]) %}
                     {% else %}
-                        {% set ports = ports|merge(['~:'~ p.container]) %}
+                        {% set ports = ports|merge(['~:'~ container ~ '/' ~ protocol]) %}
                     {% endif %}
                 {% endfor %}
                 {{ ports is not empty ? ports|join(', ') : '—' }}
