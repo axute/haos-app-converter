@@ -66,6 +66,9 @@ body {
     padding: 7px 15px;
     font-weight: 500;
     text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 .btn-ha-outline:hover {
     background-color: rgba(3, 169, 244, 0.1);
@@ -87,6 +90,42 @@ body {
 .list-group-item { border-left: none; border-right: none; padding: 16px; border-color: #eeeeee; }
 .list-group-item:first-child { border-top: none; }
 .list-group-item:last-child { border-bottom: none; }
+
+/* Mobile & Tablet Optimizations */
+@media (max-width: 992px) {
+    .header-bar {
+        padding: 12px 16px;
+    }
+    .header-bar h2 {
+        font-size: 1.25rem;
+    }
+    .ha-card {
+        padding: 16px;
+        margin-bottom: 16px;
+        border-radius: 8px;
+    }
+    .accordion-button {
+        padding: 12px 16px;
+        font-size: 1rem;
+    }
+    .btn-lg {
+        padding: 12px 16px;
+        font-size: 1rem;
+    }
+    .w-md-auto, .w-lg-auto {
+        width: auto !important;
+    }
+    .btn-group {
+        display: flex !important;
+        width: 100%;
+    }
+    .btn-group .btn {
+        flex: 1;
+    }
+    .input-group > .form-control, .input-group > .form-select {
+        min-width: 0;
+    }
+}
 
 /* HTMX Indicator for Refresh Icon */
 .htmx-indicator-container.htmx-request .refresh-icon {

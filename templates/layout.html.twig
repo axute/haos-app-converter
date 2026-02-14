@@ -44,7 +44,7 @@
 <script>
     const basePath = '{{ basePath }}';
 </script>
-<script src="{{ basePath }}/js/app.js?v={{ "now"|date("U") }}"></script>
+<script type="module" src="{{ basePath }}/js/app.js?v={{ "now"|date("U") }}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

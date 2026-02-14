@@ -13,58 +13,75 @@
         {% for app in apps %}
             {% set isSelf = (app.slug == 'haos_app_converter') %}
             <div class="list-group-item">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        <div class="me-3 text-center" style="width: 40px; font-size: 24px;">
-                            {% if app.has_local_icon %}
-                                <img src="{{ basePath }}/apps/{{ app.slug }}/icon.png" style="width: 32px; height: 32px;" alt="{{ app.slug }}">
-                            {% else %}
-                                📦
-                            {% endif %}
-                        </div>
-                        <div>
-                            <strong>{{ app.name }}</strong>
-                            {% if app.detected_pm is not empty %}
-                                <span class="badge bg-info text-dark rounded-pill ms-1" style="font-size: 0.7rem;">{{ app.detected_pm }}</span>
-                            {% endif %}
-                            {% if app.quirks %}
-                                <span class="badge bg-warning text-dark rounded-pill ms-1" style="font-size: 0.7rem;">quirks</span>
-                            {% endif %}
-                            <small class="text-muted d-block">{{ app.description }}</small>
-                            <small class="text-muted">Version: {{ app.version }}</small>
-                            <div class="mt-1 d-flex align-items-center flex-wrap">
-                                <small class="text-muted">Image: <code>{{ app.image }}:{{ app.image_tag }}</code></small>
-                                <div id="update-status-{{ app.slug }}"
-                                      hx-get="{{ basePath }}/fragments/check-update/{{ app.slug }}"
-                                      hx-trigger="load" 
-                                      hx-swap="outerHTML"
-                                      hx-indicator="this"
-                                      class="d-inline-block">
-                                    <span class="badge bg-light text-muted rounded-pill htmx-indicator" style="font-size: 0.7rem;">
-                                        <span class="mdi mdi-loading mdi-spin"></span>
-                                    </span>
+                <div class="row align-items-center g-3">
+                    <div class="col-12 col-lg-auto">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3 text-center" style="width: 40px; font-size: 24px;">
+                                {% if app.has_local_icon %}
+                                    <img src="{{ basePath }}/apps/{{ app.slug }}/icon.png" style="width: 32px; height: 32px;" alt="{{ app.slug }}">
+                                {% else %}
+                                    📦
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="d-flex align-items-center flex-wrap">
+                                    <strong class="me-2">{{ app.name }}</strong>
+                                    {% if app.detected_pm is not empty %}
+                                        <span class="badge bg-info text-dark rounded-pill me-1" style="font-size: 0.7rem;">{{ app.detected_pm }}</span>
+                                    {% endif %}
+                                    {% if app.quirks %}
+                                        <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.7rem;">quirks</span>
+                                    {% endif %}
                                 </div>
+                                <small class="text-muted d-block">{{ app.description }}</small>
+                                <small class="text-muted">Version: {{ app.version }}</small>
                             </div>
                         </div>
                     </div>
-                    {% if isSelf %}
-                        <span class="badge bg-secondary rounded-pill">System</span>
-                    {% else %}
-                        <div class="text-nowrap">
-                            <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" title="Info" 
-                                    hx-get="{{ basePath }}/fragments/app-details/{{ app.slug }}"
-                                    hx-target="#app-info-{{ app.slug }}"
-                                    onclick="bootstrap.Collapse.getOrCreateInstance(document.getElementById('app-info-{{ app.slug }}')).toggle()">
-                                <span class="mdi mdi-information-outline"></span>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-ha-outline rounded-pill me-1" onclick="editApp('{{ app.slug }}')">
-                                <span class="mdi mdi-pencil"></span>
-                            </button>
-                            <button type="button" class="btn btn-sm btn-ha-outline rounded-pill text-danger border-danger" onclick="deleteApp('{{ app.slug }}')">
-                                <span class="mdi mdi-delete"></span>
-                            </button>
+
+                    <div class="col-12 col-lg">
+                        <div class="d-flex align-items-center flex-wrap">
+                            <small class="text-muted me-2">Image: <a href="{{ app.image_url }}" target="_blank" class="text-decoration-none"><code>{{ app.image }}:{{ app.image_tag }}</code></a></small>
+                            <div id="update-status-{{ app.slug }}"
+                                  hx-get="{{ basePath }}/fragments/check-update/{{ app.slug }}"
+                                  hx-trigger="load" 
+                                  hx-swap="outerHTML"
+                                  hx-indicator="this"
+                                  class="d-inline-block">
+                                <span class="badge bg-light text-muted rounded-pill htmx-indicator" style="font-size: 0.7rem;">
+                                    <span class="mdi mdi-loading mdi-spin"></span>
+                                </span>
+                            </div>
                         </div>
-                    {% endif %}
+                    </div>
+
+                    <div class="col-12 col-lg-auto text-lg-end">
+                        {% if isSelf %}
+                            <span class="badge bg-secondary rounded-pill">System</span>
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-between justify-content-lg-end flex-wrap gap-2">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input me-1" type="checkbox" id="vf_{{ app.slug }}" {% if app.version_fixation %}checked{% endif %}
+                                           onchange="toggleVersionFixation('{{ app.slug }}', this.checked)">
+                                    <label class="form-check-label small" for="vf_{{ app.slug }}" title="Version der App an das Docker-Image binden">Version fixieren</label>
+                                </div>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-ha-outline rounded-pill" title="Info" 
+                                            hx-get="{{ basePath }}/fragments/app-details/{{ app.slug }}"
+                                            hx-target="#app-info-{{ app.slug }}"
+                                            onclick="bootstrap.Collapse.getOrCreateInstance(document.getElementById('app-info-{{ app.slug }}')).toggle()">
+                                        <span class="mdi mdi-information-outline"></span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-ha-outline rounded-pill" onclick="editApp('{{ app.slug }}')">
+                                        <span class="mdi mdi-pencil"></span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-ha-outline rounded-pill text-danger border-danger" onclick="deleteApp('{{ app.slug }}')">
+                                        <span class="mdi mdi-delete"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
                 <div id="app-info-{{ app.slug }}" class="collapse mt-3"></div>
             </div>

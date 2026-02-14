@@ -11,12 +11,12 @@
                 </h2>
                 <div id="collapseBasic" class="accordion-collapse collapse show" data-bs-parent="#formAccordion">
                     <div class="accordion-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6 mb-3">
                                 <label for="name" class="form-label">App Name</label>
                                 <input type="text" class="form-control" id="name" required placeholder="e.g. My Awesome Tool">
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-12 col-md-6 mb-3">
                                 <label for="version" class="form-label">Version</label>
                                 <input type="text" class="form-control" id="version" value="1.0.0">
                             </div>
@@ -38,15 +38,15 @@
                             <textarea class="form-control" id="long_description" rows="10" placeholder="Detailed description, installation instructions, etc. Supports Markdown."></textarea>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-5">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-5">
                                 <div class="mb-3">
                                     <label for="image" class="form-label">Docker Image Name</label>
                                     <input type="text" class="form-control" id="image" required placeholder="e.g. nginx or alpine" onchange="detectPM()">
                                     <div class="form-text">The image name (without tag).</div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-12 col-md-3">
                                 <div class="mb-3">
                                     <label for="image_tag" class="form-label">Tag</label>
                                     <div class="input-group">
@@ -60,7 +60,7 @@
                                     <div class="form-text">e.g. latest, 3.14</div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-12 col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label" for="detected_pm">Detected Package Manager</label>
                                     <div class="input-group">
@@ -107,20 +107,20 @@
                         </div>
 
                         <div id="ingressOptions" style="display:none;" class="p-3 border rounded mb-3 bg-light">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-6 mb-3">
                                     <label for="ingress_port" class="form-label">Internal Web Port (Ingress)</label>
                                     <input type="number" class="form-control" id="ingress_port" value="80">
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-12 col-md-6 mb-3">
                                     <label for="ingress_entry" class="form-label">Ingress Entry Path</label>
                                     <input type="text" class="form-control" id="ingress_entry" value="/">
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-12 col-md-6 mb-3">
                                     <label for="panel_icon" class="form-label">Panel Icon (MDI)</label>
                                     <input type="text" class="form-control" id="panel_icon" placeholder="mdi:link-variant">
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-12 col-md-6 mb-3">
                                     <label for="panel_title" class="form-label">Panel Title (optional)</label>
                                     <input type="text" class="form-control" id="panel_title" placeholder="Defaults to app name">
                                 </div>
@@ -140,19 +140,19 @@
                         </div>
 
                         <div id="webUiPortContainer" class="mb-3">
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
+                            <div class="row g-2">
+                                <div class="col-12 col-md-4 mb-3">
                                     <label for="web_ui_port" class="form-label">Web UI Port (without Ingress)</label>
                                     <input type="number" class="form-control" id="web_ui_port" placeholder="e.g. 8080">
                                 </div>
-                                <div class="col-md-4 mb-3">
+                                <div class="col-12 col-md-4 mb-3">
                                     <label for="web_ui_protocol" class="form-label">Protocol</label>
                                     <select class="form-select" id="web_ui_protocol">
                                         <option value="http" selected>http</option>
                                         <option value="https">https</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4 mb-3">
+                                <div class="col-12 col-md-4 mb-3">
                                     <label for="web_ui_path" class="form-label">Web UI Path</label>
                                     <input type="text" class="form-control" id="web_ui_path" value="/">
                                 </div>
@@ -518,8 +518,8 @@
                                     <div class="form-text">Allow access to Home Assistant user backend.</div>
                                 </div>
                                 <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" id="advanced_feature">
-                                    <label class="form-check-label" for="advanced_feature"><strong>advanced</strong></label>
+                                    <input class="form-check-input" type="checkbox" id="advanced">
+                                    <label class="form-check-label" for="advanced"><strong>advanced</strong></label>
                                     <div class="form-text">Require "Advanced" mode to show.</div>
                                 </div>
                                 <div class="form-check form-switch mb-3">
@@ -532,6 +532,16 @@
                                     <label class="form-check-label" for="journald"><strong>journald</strong></label>
                                     <div class="form-text">Host's system journal mapped read-only.</div>
                                 </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="apparmor">
+                                    <label class="form-check-label" for="apparmor"><strong>apparmor</strong></label>
+                                    <div class="form-text">Enable AppArmor protection.</div>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="discovery">
+                                    <label class="form-check-label" for="discovery"><strong>discovery</strong></label>
+                                    <div class="form-text">Allow the app to use the discovery service.</div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -540,26 +550,30 @@
         </div>
 
         <div class="ha-card-footer mt-4">
-            <div id="submitSection" style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button type="submit" id="generateBtn" class="btn btn-ha-primary btn-lg">
+            <div id="submitSection" class="d-grid gap-2 d-lg-flex justify-content-lg-start">
+                <button type="submit" id="generateBtn" class="btn btn-ha-primary btn-lg flex-grow-1">
                     <span class="mdi mdi-creation me-2"></span>Generate App
                 </button>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-ha-outline btn-lg" onclick="downloadConfig()">
-                        <span class="mdi mdi-download me-2"></span>Download Config
-                    </button>
-                </div>
-            </div>
-            <div id="updateSection" style="display:none; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button type="submit" id="updateBtn" class="btn btn-ha-primary btn-lg">
-                    <span class="mdi mdi-content-save me-2"></span>Save Changes
+                <button type="button" class="btn btn-ha-outline btn-lg flex-grow-1" onclick="downloadConfig()">
+                    <span class="mdi mdi-download me-2"></span>Download Config
                 </button>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-ha-outline btn-lg" onclick="updateVersion('major')">Major</button>
-                    <button type="button" class="btn btn-ha-outline btn-lg" onclick="updateVersion('minor')">Minor</button>
-                    <button type="button" class="btn btn-ha-primary btn-lg" onclick="updateVersion('fix')">Fix Update</button>
+            </div>
+            <div id="updateSection" style="display:none;" class="d-grid gap-2">
+                <div class="row g-2">
+                    <div class="col-12 col-lg-6">
+                        <button type="submit" id="updateBtn" class="btn btn-ha-primary btn-lg w-100 h-100">
+                            <span class="mdi mdi-content-save me-2"></span>Save Changes
+                        </button>
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <div class="btn-group w-100">
+                            <button type="button" class="btn btn-ha-outline btn-lg" onclick="updateVersion('major')">Major</button>
+                            <button type="button" class="btn btn-ha-outline btn-lg" onclick="updateVersion('minor')">Minor</button>
+                            <button type="button" class="btn btn-ha-primary btn-lg" onclick="updateVersion('fix')">Fix Update</button>
+                        </div>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-ha-outline btn-lg" onclick="cancelConverter()" style="grid-column: span 2;">
+                <button type="button" class="btn btn-ha-outline btn-lg w-100 mt-2" onclick="cancelConverter()">
                     Cancel
                 </button>
             </div>
