@@ -33,7 +33,7 @@
                             <small class="text-muted d-block">{{ app.description }}</small>
                             <small class="text-muted">Version: {{ app.version }}</small>
                             <div class="mt-1 d-flex align-items-center flex-wrap">
-                                <small class="text-muted">Image: <code>{{ app.image }}:{{ app.image_tag }}</code></small>
+                                <small class="text-muted">Image: <a href="{{ app.image_url }}" target="_blank" class="text-decoration-none"><code>{{ app.image }}:{{ app.image_tag }}</code></a></small>
                                 <div id="update-status-{{ app.slug }}"
                                       hx-get="{{ basePath }}/fragments/check-update/{{ app.slug }}"
                                       hx-trigger="load" 

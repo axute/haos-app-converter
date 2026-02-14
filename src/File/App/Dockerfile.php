@@ -106,6 +106,23 @@ class Dockerfile extends FileAbstract
         return [
             'image'     => $this->image,
             'image_tag' => $this->image_tag,
+            'image_url' => $this->getImageUrl(),
         ];
+    }
+
+    public function getImageUrl(): string
+    {
+        $image = $this->image;
+        if (str_contains($image, '/')) {
+            $parts = explode('/', $image);
+            if (str_contains($parts[0], '.')) {
+                // Registry like ghcr.io, quay.io, etc.
+                return 'https://' . $image;
+            }
+            // Docker Hub user/repo
+            return 'https://hub.docker.com/r/' . $image;
+        }
+        // Official Docker Hub image
+        return 'https://hub.docker.com/_/' . $image;
     }
 }
