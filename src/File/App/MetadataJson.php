@@ -48,7 +48,7 @@ class MetadataJson extends FileAbstract
     public function updateFromWebUi(Webform $webform): static
     {
         $this->quirks = $webform->isQuirks();
-        $this->detected_pm = Scripts::detectPm($webform->extractImage());
+        $this->detected_pm = Scripts::detectPm($webform->extractFullDockerImageName());
         $webform->setIfDefined($this, 'allow_user_env', false);
         $webform->setIfDefined($this, 'bashio_version');
         $webform->setIfDefined($this, 'version_fixation', false);
@@ -59,7 +59,7 @@ class MetadataJson extends FileAbstract
             $this->has_startup_script = $this->has_startup_script ?? false;
         }
 
-        $extractImage = $webform->extractImage();
+        $extractImage = $webform->extractFullDockerImageName();
         if ($extractImage !== null) {
             // Metadaten initial speichern/laden
             $this->original_cmd = Crane::getOriginalCmd($extractImage, '');

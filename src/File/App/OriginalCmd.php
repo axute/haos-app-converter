@@ -39,7 +39,7 @@ class OriginalCmd extends FileAbstract
 
     public function updateFromWebui(Webform $webform): static
     {
-        $this->original_cmd = $webform->isQuirks() ? Crane::getOriginalCmd($webform->extractImage(),'') : null;
+        $this->original_cmd = $webform->isQuirks() ? Crane::getOriginalCmd($webform->extractFullDockerImageName(),'') : null;
         return $this->saveFileContent();
     }
 

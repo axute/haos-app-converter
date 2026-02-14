@@ -86,7 +86,7 @@ class Dockerfile extends FileAbstract
         $webform->setIfDefined($this, 'allow_user_env', false, 'allowUserEnv');
         $webform->setIfDefined($this, 'startup_script', false, 'startupScript');
         $this->needRunSh = $webform->isQuirks();
-        $image = $webform->extractImage();
+        $image = $webform->extractFullDockerImageName();
         if ($image !== null) {
             $imageParts = explode(':', $image, 2);
             $this->image = $imageParts[0];

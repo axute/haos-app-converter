@@ -87,7 +87,16 @@ class Webform
         return !($this->data[$key] === null);
     }
 
-    public function extractImage(): ?string
+    public function extractDockerImageTag(): ?string
+    {
+        $image = $this->extractFullDockerImageName();
+        if ($image === null) {
+            return null;
+        }
+        return explode(':', $image, 2)[1];
+    }
+
+    public function extractFullDockerImageName(): ?string
     {
         if (!isset($this->image)) {
             return null;

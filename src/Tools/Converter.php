@@ -29,29 +29,30 @@ class Converter
 
         // Daten für die Generierung vorbereiten
         $data = [
-            'name'           => 'HAOS App Converter',
-            'image'          => self::PUBLIC_IMAGE_NAME,
-            'image_tag'      => $tag,
-            'description'    => 'Web-Converter zum Konvertieren von Docker-Images in Home Assistant Apps.',
-            'version'        => $currentVersion,
-            'url'            => 'https://github.com/axute/haos-app-converter',
-            'ingress'        => true,
-            'ingress_port'   => 80,
-            'ingress_entry'  => '/',
-            'timeout'        => 20,
-            'watchdog'       => 'http://[HOST]:[PORT:80]/',
-            'ingress_stream' => false,
-            'panel_icon'     => 'mdi:toy-brick',
-            'panel_title'    => 'App Converter',
-            'backup'         => 'hot',
-            'self_convert'   => true,
-            'map'            => [
+            'name'             => 'HAOS App Converter',
+            'image'            => self::PUBLIC_IMAGE_NAME,
+            'image_tag'        => $tag,
+            'description'      => 'Web-Converter zum Konvertieren von Docker-Images in Home Assistant Apps.',
+            'version'          => $currentVersion,
+            'url'              => 'https://github.com/axute/haos-app-converter',
+            'ingress'          => true,
+            'ingress_port'     => 80,
+            'ingress_entry'    => '/',
+            'timeout'          => 20,
+            'watchdog'         => 'http://[HOST]:[PORT:80]/',
+            'ingress_stream'   => false,
+            'panel_icon'       => 'mdi:toy-brick',
+            'panel_title'      => 'App Converter',
+            'backup'           => 'hot',
+            'self_convert'     => true,
+            'version_fixation' => true,
+            'map'              => [
                 [
                     'folder' => 'addons',
                     'mode'   => 'rw'
                 ]
             ],
-            'env_vars'       => [
+            'env_vars'         => [
                 [
                     'key'   => 'CONVERTER_DATA_DIR',
                     'value' => '/addons'
@@ -67,9 +68,10 @@ class Converter
         }
         return $data;
     }
+
     public static function writeFileContent(string $filepath, string $content): false|int
     {
-        if(is_dir(dirname($filepath)) === false) {
+        if (is_dir(dirname($filepath)) === false) {
             mkdir(dirname($filepath), 0777, true);
         }
         return file_put_contents($filepath, $content);

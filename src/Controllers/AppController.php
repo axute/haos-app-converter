@@ -33,7 +33,7 @@ class AppController extends ControllerAbstract
                 // any other existing app
                 $app = App::get($slug);
             }
-            $app->configYaml->increaseVersion();
+            $app->configYaml->increaseVersion($app->metadataJson->version_fixation);
             return self::success($response, [
                 'status' => 'success',
                 'path'   => realpath($app->getAppDir())

@@ -156,10 +156,16 @@ class ConfigYaml extends FileAbstract
     {
 
         $this->slug = $this->app->slug;
-        $webform->setIfNotEmpty($this, 'arch', fn() => Crane::getArchitectures($webform->extractImage()));
+        $webform->setIfNotEmpty($this, 'arch', fn() => Crane::getArchitectures($webform->extractFullDockerImageName()));
         $webform->setIfDefined($this, 'name', '');
         $webform->setIfDefined($this, 'description', '');
         $webform->setIfDefined($this, 'version', Defaults::VERSION);
+        if ($webform->isNotEmpty('version_fixation') && $webform->version_fixation === true) {
+            $semverTag = Version::fromSemverTag($webform->extractDockerImageTag());
+            if ($semverTag !== null) {
+                $this->version = (string)$semverTag;
+            }
+        }
         $webform->setIfDefined($this, 'url');
         $webform->setIfDefined($this, 'privileged');
         $webform->setIfDefined($this, 'tmpfs', Defaults::TMPFS);
@@ -277,14 +283,32 @@ class ConfigYaml extends FileAbstract
         return $this;
     }
 
-    public function setVersionFromTag(string $image_tag):static
+    public function setVersionFromTag(string $image_tag): static
     {
         $semver = Version::fromSemverTag($image_tag);
-        if($semver !== null) {
+        if ($semver !== null) {
             $this->version = (string)$semver;
             return $this->saveFileContent();
         }
         return $this;
+    }
+
+    public function increaseVersion(?bool $version_fixation = null): static
+    {
+        $currentVersion = $this->version;
+        if ($currentVersion === null || $version_fixation === true) {
+            return $this;
+        }
+        // Version hochzählen
+        $parts = explode('.', $currentVersion);
+        if (count($parts) === 3) {
+            $parts[2]++;
+            $this->version = implode('.', $parts);
+        } else {
+            $this->version = $currentVersion . '.1';
+        }
+
+        return $this->saveFileContent();
     }
 
     protected function setMapEntries(array $mapEntries): static
@@ -292,7 +316,7 @@ class ConfigYaml extends FileAbstract
         $this->map = null;
         foreach ($mapEntries as $map) {
             $type = $map['folder'] ?? $map['type'];
-            if(in_array($type, Defaults::MAPPINGS) === false) {
+            if (in_array($type, Defaults::MAPPINGS) === false) {
                 continue;
             }
             $readOnly = array_key_exists('mode', $map) ? $map['mode'] === 'ro' : ($map['read_only'] ?? true);
@@ -349,23 +373,5 @@ class ConfigYaml extends FileAbstract
         }
 
         return $this;
-    }
-
-    public function increaseVersion(): static
-    {
-        $currentVersion = $this->version;
-        if ($currentVersion === null) {
-            return $this;
-        }
-        // Version hochzählen
-        $parts = explode('.', $currentVersion);
-        if (count($parts) === 3) {
-            $parts[2]++;
-            $this->version = implode('.', $parts);
-        } else {
-            $this->version = $currentVersion . '.1';
-        }
-
-        return $this->saveFileContent();
     }
 }

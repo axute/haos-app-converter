@@ -49,7 +49,7 @@ class OriginalEntrypoint extends FileAbstract
 
     public function updateFromWebui(Webform $webform): static
     {
-        $this->original_entrypoint = $webform->isQuirks() ? Crane::getOriginalEntrypoint($webform->extractImage(), '') : null;
+        $this->original_entrypoint = $webform->isQuirks() ? Crane::getOriginalEntrypoint($webform->extractFullDockerImageName(), '') : null;
         return $this->saveFileContent();
     }
 }
