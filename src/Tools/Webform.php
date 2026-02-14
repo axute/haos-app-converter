@@ -36,7 +36,7 @@ use App\File\Traits\DataTrait;
  * @property ?string $detected_pm
  * @property ?bool $version_fixation
  * @property ?bool $auto_update
- * @property ?string $maintainer
+ * @property ?array $ports_data
  */
 class Webform
 {

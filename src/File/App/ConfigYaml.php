@@ -101,16 +101,16 @@ class ConfigYaml extends FileAbstract
         $envVars = [];
         foreach ($this->environment ?? [] as $key => $value) {
             $envVars[] = [
-                'key'   => $key,
-                'value' => $value,
+                'key'      => $key,
+                'value'    => $value,
                 'editable' => false
             ];
         }
         foreach ($this->options ?? [] as $key => $value) {
             if ($key === 'env_vars') continue;
             $envVars[] = [
-                'key' => $key,
-                'value' => $value,
+                'key'      => $key,
+                'value'    => $value,
                 'editable' => true
             ];
         }
@@ -199,7 +199,12 @@ class ConfigYaml extends FileAbstract
         }
         $webform->setIfNotEmpty($this, 'backup', null, null, $this->setBackup(...));
         $webform->setIfNotEmpty($this, 'map', [], null, $this->setMapEntries(...));
-        $webform->setIfNotEmpty($this, 'ports', [], null, $this->setPortEntries(...));
+        $webform->setIfNotEmpty($this, 'ports_data', [], null, function ($data) {
+            $this->setPortEntries($data['ports'] ?? []);
+            if (!empty($data['descriptions'])) {
+                $this->ports_description = $data['descriptions'];
+            }
+        });
 
         if ($webform->ingress === true) {
             $this->setupIngress(

@@ -427,16 +427,21 @@ function addPortMapping(containerPort = '', hostPort = '', protocol = 'tcp', des
 function getPortMappings() {
     const rows = document.querySelectorAll('.port-mapping-row');
     const ports = {};
+    const descriptions = {};
     rows.forEach(row => {
         const container = row.querySelector('.port-container').value;
         const protocol = row.querySelector('.port-protocol').value;
         const host = row.querySelector('.port-host').value;
+        const description = row.querySelector('.port-description').value.trim();
         if (container) {
             const key = `${container}/${protocol}`;
             ports[key] = host ? parseInt(host) : null;
+            if (description) {
+                descriptions[key] = description;
+            }
         }
     });
-    return ports;
+    return {ports, descriptions};
 }
 
 function addMapMapping(folder = 'data', mode = 'rw', path = '') {
@@ -613,7 +618,7 @@ async function handleConverterSubmit(e) {
         allow_user_env: document.getElementById('allow_user_env').checked,
         bashio_version: document.getElementById('bashio_version').value,
         url: document.getElementById('url') ? document.getElementById('url').value : null,
-        ports: getPortMappings(),
+        ports_data: getPortMappings(),
         map: getMapMappings(),
         env_vars: getEnvVars(),
         startup_script: startupScriptEditor.getValue(),
