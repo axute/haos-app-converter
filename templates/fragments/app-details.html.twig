@@ -5,6 +5,20 @@
             <div><strong>Detected PM:</strong> {{ app.detected_pm ?: 'unknown' }}</div>
             <div><strong>Backup:</strong> {{ app.backup ?: 'disabled' }}</div>
             <div><strong>Quirks:</strong> {{ app.quirks ? 'Ja' : 'Nein' }}{% if app.allow_user_env %} (User Env: Ja){% endif %}</div>
+            {% if app.advanced %}
+                <div><strong>Advanced:</strong> Ja</div>
+            {% endif %}
+            {% if app.host_network %}
+                <div><strong>Host Network:</strong> Ja</div>
+            {% endif %}
+            {% if app.host_ipc %}<div><strong>Host IPC:</strong> Ja</div>{% endif %}
+            {% if app.host_dbus %}<div><strong>Host DBus:</strong> Ja</div>{% endif %}
+            {% if app.host_pid %}<div><strong>Host PID:</strong> Ja</div>{% endif %}
+            {% if app.host_uts %}<div><strong>Host UTS:</strong> Ja</div>{% endif %}
+            {% if app.hassio_api %}<div><strong>Hassio API:</strong> Ja</div>{% endif %}
+            {% if app.homeassistant_api %}<div><strong>Home Assistant API:</strong> Ja</div>{% endif %}
+            {% if app.docker_api %}<div><strong>Docker API:</strong> Ja</div>{% endif %}
+            {% if app.full_access %}<div><strong>Full Access:</strong> Ja</div>{% endif %}
         </div>
         <div class="col-12 col-md-6">
             <div><strong>Ingress:</strong> {{ app.ingress ? 'Enabled (' ~ app.ingress_port ~ (app.ingress_stream ? ', stream' : '') ~ ', ' ~ app.ingress_entry ~ ')' : 'Disabled' }}</div>
@@ -36,6 +50,21 @@
                 {% endfor %}
                 {{ mounts is not empty ? mounts|join(', ') : '—' }}
             </div>
+            {% if app.audio %}<div><strong>Audio:</strong> Ja</div>{% endif %}
+            {% if app.video %}<div><strong>Video:</strong> Ja</div>{% endif %}
+            {% if app.gpio %}<div><strong>GPIO:</strong> Ja</div>{% endif %}
+            {% if app.usb %}<div><strong>USB:</strong> Ja</div>{% endif %}
+            {% if app.uart %}<div><strong>UART:</strong> Ja</div>{% endif %}
+            {% if app.udev %}<div><strong>UDEV:</strong> Ja</div>{% endif %}
+            {% if app.devicetree %}<div><strong>Devicetree:</strong> Ja</div>{% endif %}
+            {% if app.kernel_modules %}<div><strong>Kernel Modules:</strong> Ja</div>{% endif %}
+            {% if app.stdin %}<div><strong>STDIN:</strong> Ja</div>{% endif %}
+            {% if app.legacy %}<div><strong>Legacy:</strong> Ja</div>{% endif %}
+            {% if app.auth_api %}<div><strong>Auth API:</strong> Ja</div>{% endif %}
+            {% if app.realtime %}<div><strong>Realtime:</strong> Ja</div>{% endif %}
+            {% if app.journald %}<div><strong>Journald:</strong> Ja</div>{% endif %}
+            {% if app.apparmor %}<div><strong>AppArmor:</strong> Ja</div>{% endif %}
+            {% if app.discovery %}<div><strong>Discovery:</strong> Ja</div>{% endif %}
         </div>
         <div class="col-12">
             <div><strong>Env:</strong> 

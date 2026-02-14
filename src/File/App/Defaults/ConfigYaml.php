@@ -55,7 +55,9 @@ class ConfigYaml
         'auth_api',
         'advanced',
         'realtime',
-        'journald'
+        'journald',
+        'apparmor',
+        'discovery'
     ];
     public const string WEBUI_PATH = '/';
     public const string VERSION = '1.0.0';

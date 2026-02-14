@@ -289,7 +289,9 @@ function startNew() {
 
     featureFlags.forEach(flag => {
         const el = document.getElementById(flag);
-        if (el) el.checked = false;
+        if (el) {
+            el.checked = false;
+        }
     });
 
     document.querySelectorAll('.privileged-checkbox').forEach(el => el.checked = false);
@@ -573,7 +575,7 @@ const featureFlags = [
     'hassio_api', 'homeassistant_api', 'docker_api', 'full_access',
     'audio', 'video', 'gpio', 'usb', 'uart', 'udev',
     'devicetree', 'kernel_modules', 'stdin', 'legacy', 'auth_api',
-    'advanced_feature', 'realtime', 'journald'
+    'advanced', 'realtime', 'journald', 'apparmor', 'discovery'
 ];
 
 function getPrivileged() {
@@ -633,15 +635,41 @@ async function handleConverterSubmit(e) {
             const path = (pathVal && pathVal.startsWith('/')) ? pathVal : (pathVal ? '/' + pathVal : '/');
             return `${proto}://[HOST]:[PORT:${p}]${path}`;
         })(),
-        feature_flags: {}
+        feature_flags: {},
+        // Feature Flags flach mappen
+        host_network: document.getElementById('host_network').checked,
+        host_ipc: document.getElementById('host_ipc').checked,
+        host_dbus: document.getElementById('host_dbus').checked,
+        host_pid: document.getElementById('host_pid').checked,
+        host_uts: document.getElementById('host_uts').checked,
+        hassio_api: document.getElementById('hassio_api').checked,
+        homeassistant_api: document.getElementById('homeassistant_api').checked,
+        docker_api: document.getElementById('docker_api').checked,
+        full_access: document.getElementById('full_access').checked,
+        audio: document.getElementById('audio').checked,
+        video: document.getElementById('video').checked,
+        gpio: document.getElementById('gpio').checked,
+        usb: document.getElementById('usb').checked,
+        uart: document.getElementById('uart').checked,
+        udev: document.getElementById('udev').checked,
+        devicetree: document.getElementById('devicetree').checked,
+        kernel_modules: document.getElementById('kernel_modules').checked,
+        stdin: document.getElementById('stdin').checked,
+        legacy: document.getElementById('legacy').checked,
+        auth_api: document.getElementById('auth_api').checked,
+        advanced: document.getElementById('advanced').checked,
+        realtime: document.getElementById('realtime').checked,
+        journald: document.getElementById('journald').checked,
+        apparmor: document.getElementById('apparmor').checked,
+        discovery: document.getElementById('discovery').checked
     };
 
-    featureFlags.forEach(flag => {
-        const el = document.getElementById(flag);
-        if (el) {
-            data.feature_flags[flag] = el.checked;
-        }
-    });
+    // featureFlags.forEach(flag => {
+    //     const el = document.getElementById(flag);
+    //     if (el) {
+    //         data.feature_flags[flag] = el.checked;
+    //     }
+    // });
 
     const response = await fetch(`${basePath}/apps/generate`, {
         method: 'POST',
@@ -921,7 +949,7 @@ async function editApp(slug) {
     featureFlags.forEach(flag => {
         const el = document.getElementById(flag);
         if (el) {
-            el.checked = !!(app.feature_flags && app.feature_flags[flag]);
+            el.checked = !!app[flag];
         }
     });
 
@@ -959,6 +987,14 @@ async function toggleAppInfo(slug) {
             const quirks = a.quirks ? 'Ja' : 'Nein';
             const allowUserEnv = a.allow_user_env ? 'Ja' : 'Nein';
 
+            let flagsHtml = '';
+            featureFlags.forEach(flag => {
+                if (a[flag]) {
+                    const label = flag.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    flagsHtml += `<div><strong>${label}:</strong> Ja</div>`;
+                }
+            });
+
             panel.innerHTML = `
                 <div class="p-3 border rounded" style="background:#fafafa">
                     <div class="row g-2">
@@ -967,6 +1003,7 @@ async function toggleAppInfo(slug) {
                             <div><strong>Detected PM:</strong> ${pm}</div>
                             <div><strong>Backup:</strong> ${backup}</div>
                             <div><strong>Quirks:</strong> ${quirks} (User Env: ${allowUserEnv})</div>
+                            ${flagsHtml}
                         </div>
                         <div class="col-12 col-md-6">
                             <div><strong>Ingress:</strong> ${ingress}</div>
