@@ -147,7 +147,7 @@ class AppController extends ControllerAbstract
 
         try {
             $result = Archiver::checkFiles($tempFile);
-            if($result !== null) {
+            if ($result !== null) {
                 throw new RuntimeException($result);
             }
 
@@ -155,9 +155,19 @@ class AppController extends ControllerAbstract
             Archiver::unzip($tempFile, $destination);
             $var = App::get($slug);
             $var->configYaml->slug = $slug;
+            if ($var->configYaml->{'image'} !== null) {
+                $crane = new Crane($var->configYaml->{'image'});
+                if ($crane->isValid()) {
+                    $var->dockerfile->image = $crane->image;
+                    $var->dockerfile->image_tag = $crane->image_tag;
+                }
+            }
             $var->configYaml->saveFileContent();
 
-            return self::success($response, ['status' => 'success', 'slug' => $slug]);
+            return self::success($response, [
+                'status' => 'success',
+                'slug'   => $slug
+            ]);
         } catch (Exception $e) {
             return self::errorMessage($response, $e);
         } finally {

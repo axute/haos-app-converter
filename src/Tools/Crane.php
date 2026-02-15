@@ -32,13 +32,25 @@ class Crane implements Stringable
         }
         $this->load();
     }
+    public function isValid():bool {
+        if(empty($this->image)) {
+            return false;
+        }
+        if(str_contains($this->image, '{')) {
+            return false;
+        }
+        return true;
+    }
 
     public function load(bool $force = false): static
     {
-        $this->getTags($force);
-        $this->getEntryPoint($force);
-        $this->getCmd($force);
-        $this->getPossibleUpdates($force);
+        if($this->isValid())
+        {
+            $this->getTags($force);
+            $this->getEntryPoint($force);
+            $this->getCmd($force);
+            $this->getPossibleUpdates($force);
+        }
         return $this;
     }
 
