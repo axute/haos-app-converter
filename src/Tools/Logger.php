@@ -37,6 +37,22 @@ class Logger
         self::log($message . $details, 'ERROR');
     }
 
+    public static function getTail(int $lines = 1000): string
+    {
+        $logFile = self::getLogFile();
+        if (!file_exists($logFile)) {
+            return "Log file not found.";
+        }
+
+        $content = file($logFile);
+        if ($content === false) {
+            return "Could not read log file.";
+        }
+
+        $content = array_slice($content, -$lines);
+        return implode("", $content);
+    }
+
     private static function getLogFile(): string
     {
         if (self::$logFile === null) {

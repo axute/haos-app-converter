@@ -29,7 +29,12 @@
             <span class="mdi mdi-auto-fix me-2" style="font-size: 24px;"></span>
             <h2 class="mb-0" style="font-weight: 400;">HAOS App Converter</h2>
         </div>
-        <button type="button" id="cancelBtn" class="btn btn-outline-light btn-sm" style="display:none;" onclick="cancelConverter()">Cancel</button>
+        <div class="d-flex align-items-center">
+            <button type="button" class="btn btn-outline-light btn-sm me-2" onclick="showLogs()">
+                <span class="mdi mdi-text-long me-1"></span>Logs
+            </button>
+            <button type="button" id="cancelBtn" class="btn btn-outline-light btn-sm" style="display:none;" onclick="cancelConverter()">Cancel</button>
+        </div>
     </div>
 </div>
 

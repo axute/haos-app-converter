@@ -41,6 +41,7 @@ $app->group('/fragments', function (RouteCollectorProxy $group) {
     $group->get('/app-list', FragmentController::appList(...));
     $group->get('/app-details/{slug}', FragmentController::appDetails(...));
     $group->get('/check-update/{slug}', FragmentController::checkUpdate(...));
+    $group->get('/logs', FragmentController::logs(...));
 });
 
 $app->group('/apps', function (RouteCollectorProxy $group) {
