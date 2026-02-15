@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\File\App\Defaults\Dockerfile;
 use App\File\Repository\RepositoryYaml;
-use App\Tools\{App, Bashio, Converter, Crane, Remover};
+use App\Tools\{App, Archiver, Bashio, Converter, Crane, Remover};
 use Exception;
 use Psr\Http\Message\{ResponseInterface as Response, ServerRequestInterface as Request};
 use RuntimeException;
@@ -100,8 +100,24 @@ class AppController extends ControllerAbstract
             $app = App::detectOrCrate($data)?->update($data)->save();
             return self::success($response, [
                 'status' => 'success',
+                'slug'   => $app->slug,
                 'path'   => realpath($app->getAppDir())
             ]);
+        } catch (Exception $e) {
+            return self::errorMessage($response, $e);
+        }
+    }
+
+    public static function download(Request $request, Response $response, string $slug): Response
+    {
+        try {
+            $zipFile = Archiver::zipApp($slug);
+            $response->getBody()->write(file_get_contents($zipFile));
+            return $response
+                ->withHeader('Content-Type', 'application/zip')
+                ->withHeader('Content-Disposition', 'attachment; filename="' . $slug . '.zip"')
+                ->withHeader('Pragma', 'no-cache')
+                ->withHeader('Expires', '0');
         } catch (Exception $e) {
             return self::errorMessage($response, $e);
         }

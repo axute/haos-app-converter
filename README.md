@@ -39,6 +39,7 @@ You can also use this converter as a Home Assistant app by adding the following 
 1. Install dependencies:
    ```bash
    composer install
+   php install.php
    ```
 2. Start the PHP web server:
    ```bash

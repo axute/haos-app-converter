@@ -28,9 +28,11 @@ RUN a2enmod rewrite
 # Benötigte System-Abhängigkeiten installieren
 RUN apt-get update && apt-get install -y \
     unzip \
+    libzip-dev \
     git \
     jq \
-    && rm -rf /var/www/html/var/lib/apt/lists/*
+    && docker-php-ext-install zip \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=crane /usr/local/bin/crane /usr/local/bin/crane
 RUN chmod +x /usr/local/bin/crane
@@ -44,7 +46,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . .
 
 # Abhängigkeiten installieren
-RUN composer install --no-interaction --optimize-autoloader
+RUN composer install --no-interaction --optimize-autoloader && php install.php
 
 # Berechtigungen für das Datenverzeichnis setzen
 RUN mkdir -p data && chown -R www-data:www-data data

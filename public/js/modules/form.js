@@ -1,4 +1,6 @@
+// noinspection ES6UnusedImports
 import { haAlert, haConfirm, resetAccordion } from './ui.js';
+// noinspection ES6UnusedImports
 import { updateAppMetadata, fetchBashioVersions } from './api.js';
 
 export const featureFlags = [
@@ -20,7 +22,9 @@ export function startNew(easyMDE, startupScriptEditor, toggleEditableCheckboxes)
     const appSelection = document.getElementById('appSelection');
     const converterForm = document.getElementById('converterForm');
     const cancelBtn = document.getElementById('cancelBtn');
+    // noinspection JSUnusedLocalSymbols
     const submitSection = document.getElementById('submitSection');
+    // noinspection JSUnusedLocalSymbols
     const updateSection = document.getElementById('updateSection');
     const version = document.getElementById('version');
     const portsContainer = document.getElementById('portsContainer');
@@ -32,11 +36,12 @@ export function startNew(easyMDE, startupScriptEditor, toggleEditableCheckboxes)
     if (appSelection) appSelection.style.display = 'none';
     if (converterForm) {
         converterForm.style.display = 'block';
+        converterForm.classList.add('mode-new');
+        converterForm.classList.remove('mode-edit', 'version-fixed');
         converterForm.reset();
     }
     if (cancelBtn) cancelBtn.style.display = 'block';
-    if (submitSection) submitSection.style.display = 'block';
-    if (updateSection) updateSection.style.display = 'none';
+    // Remove direct style manipulation for submitSection/updateSection as it is handled by CSS
 
     if (version) {
         version.readOnly = false;
@@ -58,8 +63,22 @@ export function startNew(easyMDE, startupScriptEditor, toggleEditableCheckboxes)
     const wdHttpFields = document.getElementById('watchdogHttpFields');
     if (wdHttpFields) wdHttpFields.style.display = 'none';
 
-    const urlInput = document.getElementById('url');
-    if (urlInput) urlInput.value = '';
+    const versionUpdateButtons = document.getElementById('versionUpdateButtons');
+    if (versionUpdateButtons) {
+        versionUpdateButtons.style.display = 'block';
+    }
+
+    const versionFixation = document.getElementById('version_fixation');
+    if (versionFixation) {
+        versionFixation.checked = false;
+        versionFixation.onchange = () => {
+            if (versionFixation.checked) {
+                converterForm.classList.add('version-fixed');
+            } else {
+                converterForm.classList.remove('version-fixed');
+            }
+        };
+    }
 
     resetAccordion();
 
@@ -80,6 +99,8 @@ export function startNew(easyMDE, startupScriptEditor, toggleEditableCheckboxes)
     iconBase64 = '';
 
     if (detectedPm) detectedPm.value = '';
+    const formSlug = document.getElementById('form_slug');
+    if (formSlug) formSlug.value = '';
     const btnDetectPM = document.getElementById('btnDetectPM');
     if (btnDetectPM) btnDetectPM.disabled = false;
     const hint = document.getElementById('pmSupportInline');
@@ -99,9 +120,19 @@ export async function editApp(slug, easyMDE, startupScriptEditor, toggleEditable
     if (appSelection) appSelection.style.display = 'none';
     if (converterForm) {
         converterForm.style.display = 'block';
+        converterForm.classList.add('mode-edit');
+        converterForm.classList.remove('mode-new');
+        if (app.version_fixation) {
+            converterForm.classList.add('version-fixed');
+        } else {
+            converterForm.classList.remove('version-fixed');
+        }
         converterForm.reset();
     }
     if (cancelBtn) cancelBtn.style.display = 'block';
+
+    const formSlug = document.getElementById('form_slug');
+    if (formSlug) formSlug.value = slug;
 
     const nameInput = document.getElementById('name');
     if (nameInput) nameInput.value = app.name;
@@ -147,14 +178,18 @@ export async function editApp(slug, easyMDE, startupScriptEditor, toggleEditable
     }
     originalVersion = app.version || '1.0.0';
 
-    const submitSection = document.getElementById('submitSection');
-    const updateSection = document.getElementById('updateSection');
-    if (submitSection) submitSection.style.display = 'none';
-    if (updateSection) updateSection.style.display = 'block';
+    // Removed direct manipulation of submitSection/updateSection
 
-    const versionButtonsGroup = document.querySelector('#updateSection .btn-group');
-    if (versionButtonsGroup) {
-        versionButtonsGroup.style.display = app.version_fixation ? 'none' : 'inline-flex';
+    const versionFixation = document.getElementById('version_fixation');
+    if (versionFixation) {
+        versionFixation.checked = !!app.version_fixation;
+        versionFixation.onchange = () => {
+            if (versionFixation.checked) {
+                converterForm.classList.add('version-fixed');
+            } else {
+                converterForm.classList.remove('version-fixed');
+            }
+        };
     }
 
     const ingressCheckbox = document.getElementById('ingress');
@@ -476,6 +511,7 @@ export async function handleConverterSubmit(easyMDE, startupScriptEditor) {
         detected_pm: document.getElementById('detected_pm').value,
         quirks: document.getElementById('quirks_mode').checked,
         allow_user_env: document.getElementById('allow_user_env').checked,
+        version_fixation: document.getElementById('version_fixation').checked,
         bashio_version: document.getElementById('bashio_version').value,
         url: document.getElementById('url') ? document.getElementById('url').value : null,
         ports_data: getPortMappings(),
@@ -534,6 +570,9 @@ export async function handleConverterSubmit(easyMDE, startupScriptEditor) {
 
     const result = await response.json();
     if (result.status === 'success') {
+        const formSlug = document.getElementById('form_slug');
+        if (formSlug) formSlug.value = result.slug || '';
+
         const resultDiv = document.getElementById('result');
         const resultMessage = document.getElementById('resultMessage');
         if (resultMessage) resultMessage.innerText = 'App has been created/updated successfully.';
@@ -573,6 +612,6 @@ export function updateVersion(type) {
     const versionInput = document.getElementById('version');
     if (versionInput) {
         versionInput.value = parts.join('.');
-        versionInput.dispatchEvent(new Event('submit'));
+        // Manually trigger submit if fixation is off, but here we just want to update the field
     }
 }

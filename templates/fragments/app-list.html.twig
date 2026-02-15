@@ -74,6 +74,9 @@
                                             onclick="bootstrap.Collapse.getOrCreateInstance(document.getElementById('app-info-{{ app.slug }}')).toggle()">
                                         <span class="mdi mdi-information-outline"></span>
                                     </button>
+                                    <button type="button" class="btn btn-sm btn-ha-outline rounded-pill" title="Download ZIP" onclick="downloadApp('{{ app.slug }}')">
+                                        <span class="mdi mdi-download"></span>
+                                    </button>
                                     <button type="button" class="btn btn-sm btn-ha-outline rounded-pill" onclick="editApp('{{ app.slug }}')">
                                         <span class="mdi mdi-pencil"></span>
                                     </button>

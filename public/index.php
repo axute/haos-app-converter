@@ -7,6 +7,7 @@ use App\Controllers\ImageController;
 use App\Controllers\IndexController;
 use App\Controllers\SettingsController;
 use App\Tools\Logger;
+use Psr\Http\Message\RequestInterface;
 use Slim\Factory\AppFactory;
 use Slim\Handlers\Strategies\RequestResponseArgs;
 use Slim\Routing\RouteCollectorProxy;
@@ -19,12 +20,12 @@ $app->addRoutingMiddleware();
 $routeCollector = $app->getRouteCollector();
 $routeCollector->setDefaultInvocationStrategy(new RequestResponseArgs());
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorMiddleware->setDefaultErrorHandler(function ($request, $exception, $displayErrorDetails, $logErrors, $logErrorDetails) use ($app) {
-    Logger::error("Slim Middleware Caught Exception", $exception);
+$errorMiddleware->setDefaultErrorHandler(function (RequestInterface $request, $exception, $displayErrorDetails, $logErrors, $logErrorDetails) use ($app) {
+    Logger::error("Slim Middleware Caught Exception: [{$request->getMethod()}]{$request->getUri()}", $exception);
     $response = $app->getResponseFactory()->createResponse();
     $data = [
         'status' => 'error',
-        'message' => $exception->getMessage(),
+        'message' => "[{$request->getMethod()}]{$request->getUri()}: ".$exception->getMessage(),
     ];
     $response->getBody()->write(json_encode($data));
     return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
@@ -58,6 +59,7 @@ $app->group('/apps', function (RouteCollectorProxy $group) {
     $group->get('/{slug}',  AppController::get(...));
     $group->delete('/{slug}',  AppController::delete(...));
     $group->post('/generate', AppController::generate(...));
+    $group->get('/{slug}/download', AppController::download(...));
     $group->get('/{slug}/convert/{tag}', AppController::convert(...));
     $group->post('/{slug}/metadata', AppController::updateMetadata(...));
 });

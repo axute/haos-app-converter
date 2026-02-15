@@ -1,4 +1,5 @@
 <form id="converterForm" style="display:none;">
+    <input type="hidden" id="form_slug" value="">
     <div id="converterContent" class="ha-card">
         <div class="accordion" id="formAccordion">
             
@@ -83,6 +84,16 @@
                                     <div id="icon_preview" class="mt-2" style="display:none;">
                                         <img src="" alt="Preview" style="max-width: 64px; max-height: 64px;">
                                     </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Version Management</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="version_fixation">
+                                        <label class="form-check-label" for="version_fixation"><strong>Fix Version</strong></label>
+                                    </div>
+                                    <div class="form-text">If enabled, the app version is bound to the docker image tag.</div>
                                 </div>
                             </div>
                         </div>
@@ -550,32 +561,41 @@
         </div>
 
         <div class="ha-card-footer mt-4">
-            <div id="submitSection" class="d-grid gap-2 d-lg-flex justify-content-lg-start">
-                <button type="submit" id="generateBtn" class="btn btn-ha-primary btn-lg flex-grow-1">
-                    <span class="mdi mdi-creation me-2"></span>Generate App
-                </button>
-                <button type="button" class="btn btn-ha-outline btn-lg flex-grow-1" onclick="downloadConfig()">
-                    <span class="mdi mdi-download me-2"></span>Download Config
-                </button>
+            <!-- Submit Section for New Apps -->
+            <div id="submitSection" class="row g-2" style="display:none;">
+                <div class="col-12 col-md-6">
+                    <button type="submit" id="generateBtn" class="btn btn-ha-primary btn-lg w-100">
+                        <span class="mdi mdi-plus-circle me-2"></span>Create App
+                    </button>
+                </div>
+                <div class="col-12 col-md-6">
+                    <button type="button" class="btn btn-ha-outline btn-lg w-100" onclick="cancelConverter()">
+                        <span class="mdi mdi-close me-2"></span>Cancel
+                    </button>
+                </div>
             </div>
-            <div id="updateSection" style="display:none;" class="d-grid gap-2">
+
+            <!-- Update Section for Existing Apps -->
+            <div id="updateSection" style="display:none;">
                 <div class="row g-2">
-                    <div class="col-12 col-lg-6">
+                    <div class="col-12 col-md-8 mode-edit-only">
                         <button type="submit" id="updateBtn" class="btn btn-ha-primary btn-lg w-100 h-100">
                             <span class="mdi mdi-content-save me-2"></span>Save Changes
                         </button>
                     </div>
-                    <div class="col-12 col-lg-6">
-                        <div class="btn-group w-100">
+                    <div id="versionUpdateButtons" class="col-12 col-md-4">
+                        <div class="btn-group w-100 h-100">
                             <button type="button" class="btn btn-ha-outline btn-lg" onclick="updateVersion('major')">Major</button>
                             <button type="button" class="btn btn-ha-outline btn-lg" onclick="updateVersion('minor')">Minor</button>
-                            <button type="button" class="btn btn-ha-primary btn-lg" onclick="updateVersion('fix')">Fix Update</button>
+                            <button type="button" class="btn btn-ha-primary btn-lg" onclick="updateVersion('fix')">Fix</button>
                         </div>
                     </div>
+                    <div class="col-12">
+                        <button type="button" class="btn btn-ha-outline btn-lg w-100 mt-2" onclick="cancelConverter()">
+                            <span class="mdi mdi-close me-2"></span>Cancel
+                        </button>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-ha-outline btn-lg w-100 mt-2" onclick="cancelConverter()">
-                    Cancel
-                </button>
             </div>
             
             <div id="result" class="mt-4" style="display:none;">

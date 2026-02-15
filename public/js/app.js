@@ -40,6 +40,7 @@ window.addPort = () => addPortMapping();
 window.addMap = () => addMapMapping();
 window.selfConvert = selfConvert;
 window.updateVersion = (type) => updateVersion(type);
+window.downloadApp = downloadApp;
 window.toggleVersionFixation = toggleVersionFixation;
 window.toggleAutoUpdate = toggleAutoUpdate;
 window.updateAppMetadata = updateAppMetadata;
@@ -49,6 +50,20 @@ window.showLogs = showLogs;
 window.checkEnvWarnings = checkEnvWarnings;
 window.loadTags = loadTags;
 window.toggleAppInfo = toggleAppInfo;
+
+function downloadApp(slug = null) {
+    if (!slug) {
+        const hiddenSlug = document.getElementById('form_slug');
+        slug = hiddenSlug ? hiddenSlug.value : '';
+    }
+    
+    if (!slug) {
+        haAlert('Please save the app first before downloading.', 'Info');
+        return;
+    }
+    
+    window.location.href = `${basePath}/apps/${slug}/download`;
+}
 
 function cancelConverterManual() {
     haConfirm('Do you really want to cancel? All unsaved changes will be lost.', () => {
@@ -136,10 +151,15 @@ function toggleEditableCheckboxes() {
 }
 
 async function openSettings() {
-    document.getElementById('appSelection').style.display = 'none';
-    document.getElementById('converterForm').style.display = 'none';
-    document.getElementById('settingsView').style.display = 'block';
-    document.getElementById('cancelBtn').style.display = 'none';
+    const converterForm = document.getElementById('converterForm');
+    const appSelection = document.getElementById('appSelection');
+    const settingsView = document.getElementById('settingsView');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    if (converterForm) converterForm.style.display = 'none';
+    if (appSelection) appSelection.style.display = 'none';
+    if (settingsView) settingsView.style.display = 'block';
+    if (cancelBtn) cancelBtn.style.display = 'block';
 
     const response = await fetch(`${basePath}/settings`);
     const settings = await response.json();
@@ -151,8 +171,13 @@ async function openSettings() {
 }
 
 function closeSettings() {
-    document.getElementById('settingsView').style.display = 'none';
-    document.getElementById('appSelection').style.display = 'block';
+    const settingsView = document.getElementById('settingsView');
+    const appSelection = document.getElementById('appSelection');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    if (settingsView) settingsView.style.display = 'none';
+    if (appSelection) appSelection.style.display = 'block';
+    if (cancelBtn) cancelBtn.style.display = 'none';
 }
 
 async function handleSettingsSubmit(e) {

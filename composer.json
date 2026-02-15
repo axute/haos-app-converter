@@ -2,6 +2,12 @@
   "name": "micro/haos-app-converter",
   "description": "Converter to convert docker images to Home Assistant addons",
   "type": "project",
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://asset-packagist.org"
+    }
+  ],
   "require": {
     "slim/slim": "^4.0",
     "slim/psr7": "^1.0",
@@ -9,11 +15,23 @@
     "php-di/php-di": "^7.0",
     "ext-json": "*",
     "twig/twig": "^3.0",
-    "cocur/slugify": "^4.7"
+    "cocur/slugify": "^4.7",
+    "ext-zip": "*",
+    "npm-asset/bootstrap": "^5.3",
+    "npm-asset/htmx.org": "^1.9",
+    "npm-asset/easymde": "^2.18",
+    "npm-asset/codemirror": "^5.65",
+    "npm-asset/font-awesome": "^4.7",
+    "npm-asset/mdi--font": "^7.4"
   },
   "autoload": {
     "psr-4": {
       "App\\": "src/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "composer/installers": true
     }
   }
 }
