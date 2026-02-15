@@ -1,4 +1,4 @@
-import { haAlert, haConfirm } from './modules/ui.js';
+import { haAlert, haConfirm, showLogs } from './modules/ui.js';
 import { 
     updateAppMetadata, 
     fetchBashioVersions, 
@@ -45,6 +45,7 @@ window.toggleAutoUpdate = toggleAutoUpdate;
 window.updateAppMetadata = updateAppMetadata;
 window.haAlert = haAlert;
 window.haConfirm = haConfirm;
+window.showLogs = showLogs;
 window.checkEnvWarnings = checkEnvWarnings;
 window.loadTags = loadTags;
 window.toggleAppInfo = toggleAppInfo;

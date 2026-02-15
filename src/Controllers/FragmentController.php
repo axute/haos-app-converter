@@ -50,4 +50,11 @@ class FragmentController extends ControllerAbstract
             'slug'   => $slug
         ]);
     }
+
+    public static function logs(Request $request, Response $response): Response
+    {
+        return self::render($response, 'fragments/logs', [
+            'logs' => \App\Tools\Logger::getTail(1000)
+        ]);
+    }
 }

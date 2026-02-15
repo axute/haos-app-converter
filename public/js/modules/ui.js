@@ -56,3 +56,17 @@ export function resetAccordion() {
         }
     });
 }
+
+export function showLogs() {
+    const modalEl = document.getElementById('haLogModal');
+    if (!modalEl) return;
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+
+    // Trigger HTMX load for content
+    const logContent = document.getElementById('logContent');
+    if (logContent) {
+        htmx.ajax('GET', `${basePath}/fragments/logs`, {target: '#logContent'});
+    }
+}

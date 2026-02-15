@@ -6,6 +6,7 @@ use App\Controllers\FragmentController;
 use App\Controllers\ImageController;
 use App\Controllers\IndexController;
 use App\Controllers\SettingsController;
+use App\Tools\Logger;
 use Slim\Factory\AppFactory;
 use Slim\Handlers\Strategies\RequestResponseArgs;
 use Slim\Routing\RouteCollectorProxy;
@@ -18,6 +19,16 @@ $app->addRoutingMiddleware();
 $routeCollector = $app->getRouteCollector();
 $routeCollector->setDefaultInvocationStrategy(new RequestResponseArgs());
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware->setDefaultErrorHandler(function ($request, $exception, $displayErrorDetails, $logErrors, $logErrorDetails) use ($app) {
+    Logger::error("Slim Middleware Caught Exception", $exception);
+    $response = $app->getResponseFactory()->createResponse();
+    $data = [
+        'status' => 'error',
+        'message' => $exception->getMessage(),
+    ];
+    $response->getBody()->write(json_encode($data));
+    return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+});
 
 // Hauptseite - Converter Interface
 $app->get('/', [
@@ -30,6 +41,7 @@ $app->group('/fragments', function (RouteCollectorProxy $group) {
     $group->get('/app-list', FragmentController::appList(...));
     $group->get('/app-details/{slug}', FragmentController::appDetails(...));
     $group->get('/check-update/{slug}', FragmentController::checkUpdate(...));
+    $group->get('/logs', FragmentController::logs(...));
 });
 
 $app->group('/apps', function (RouteCollectorProxy $group) {
