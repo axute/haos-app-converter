@@ -1,7 +1,7 @@
 // noinspection ES6UnusedImports
 import { haAlert, haConfirm, resetAccordion } from './ui.js';
 // noinspection ES6UnusedImports
-import { updateAppMetadata, fetchBashioVersions } from './api.js';
+import { updateAppMetadata, fetchBashioVersions, fetchImageEnvVars } from './api.js';
 
 export const featureFlags = [
     'host_network', 'host_ipc', 'host_dbus', 'host_pid', 'host_uts',
@@ -166,7 +166,12 @@ export async function editApp(slug, easyMDE, startupScriptEditor, toggleEditable
     }
 
     const imageInput = document.getElementById('image');
-    if (imageInput) imageInput.value = app.image;
+    if (imageInput) {
+        imageInput.value = app.image;
+        if (typeof fetchImageEnvVars !== 'undefined') {
+             fetchImageEnvVars();
+        }
+    }
 
     const imageTagInput = document.getElementById('image_tag');
     if (imageTagInput) imageTagInput.value = app.image_tag || 'latest';
@@ -376,7 +381,7 @@ export function addEnvVar(key = '', value = '', editable = false) {
     const div = document.createElement('div');
     div.className = 'input-group mb-2 env-var-row';
     div.innerHTML = `
-        <input type="text" class="form-control env-key" placeholder="Key" value="${key}">
+        <input type="text" class="form-control env-key" placeholder="Key" value="${key}" list="envVarKeys">
         <input type="text" class="form-control env-value" placeholder="Value" value="${value}">
         <div class="input-group-text">
             <input class="form-check-input mt-0 env-editable" type="checkbox" ${editable ? 'checked' : ''} title="Editable in HA GUI (needs Quirks Mode)">

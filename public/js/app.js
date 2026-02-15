@@ -3,6 +3,7 @@ import {
     updateAppMetadata, 
     fetchBashioVersions, 
     fetchImageTags, 
+    fetchImageEnvVars,
     detectPM 
 } from './modules/api.js';
 import { 
@@ -34,6 +35,7 @@ window.startNew = () => startNew(easyMDE, startupScriptEditor, toggleEditableChe
 window.openSettings = openSettings;
 window.closeSettings = closeSettings;
 window.fetchImageTags = fetchImageTagsWrapper;
+window.fetchImageEnvVars = fetchImageEnvVars;
 window.detectPM = (force) => detectPM(force);
 window.addEnvVar = () => addEnvVar();
 window.addPort = () => addPortMapping();
@@ -122,7 +124,10 @@ function cancelConverterManual() {
 }
 
 async function fetchImageTagsWrapper() {
-    await fetchImageTags(() => detectPM());
+    await fetchImageTags(async () => {
+        await detectPM();
+        await fetchImageEnvVars();
+    });
 }
 
 async function deleteApp(slug) {

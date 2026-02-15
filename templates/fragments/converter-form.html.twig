@@ -43,7 +43,7 @@
                             <div class="col-12 col-md-5">
                                 <div class="mb-3">
                                     <label for="image" class="form-label">Docker Image Name</label>
-                                    <input type="text" class="form-control" id="image" required placeholder="e.g. nginx or alpine" onchange="detectPM()">
+                                    <input type="text" class="form-control" id="image" required placeholder="e.g. nginx or alpine" onchange="detectPM(); fetchImageEnvVars();">
                                     <div class="form-text">The image name (without tag).</div>
                                 </div>
                             </div>
@@ -51,7 +51,7 @@
                                 <div class="mb-3">
                                     <label for="image_tag" class="form-label">Tag</label>
                                     <div class="input-group">
-                                        <input type="text" class="form-control" id="image_tag" list="imageTagOptions" placeholder="latest" onchange="detectPM()">
+                                        <input type="text" class="form-control" id="image_tag" list="imageTagOptions" placeholder="latest" onchange="detectPM(); fetchImageEnvVars();">
                                         <button class="btn btn-outline-secondary" type="button" id="btnFetchTags" onclick="fetchImageTags()">
                                             <span id="tagLoader" class="spinner-border spinner-border-sm" role="status" style="display:none;"></span>
                                             <span class="mdi mdi-magnify"></span>
@@ -223,6 +223,7 @@
                                 </button>
                             </div>
                             <div id="envVarsContainer"></div>
+                            <datalist id="envVarKeys"></datalist>
                             <div id="envWarning" class="alert alert-warning mt-2" style="display:none;">
                                 <span class="mdi mdi-alert"></span> <strong>Note:</strong> Editable environment variables require the user to set them in the Configuration tab of the app in Home Assistant.
                             </div>

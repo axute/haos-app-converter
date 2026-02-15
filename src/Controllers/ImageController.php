@@ -46,6 +46,20 @@ class ImageController extends ControllerAbstract
         return self::success($response, array_values($tags));
     }
 
+    public static function getImageEnvVars(Request $request, Response $response, string $image = '', string $tag = ''): Response
+    {
+        if (empty($image)) {
+            return self::success($response, ['Image Empty']);
+        }
+        $fullImage = $image . ($tag ? ':' . $tag : '');
+        try {
+            $envVars = Crane::i($fullImage)->getEnvVars();
+            return self::success($response, $envVars);
+        } catch (\Exception $e) {
+            return self::errorMessage($response, $e);
+        }
+    }
+
     public static function detectPackageManager(Request $request, Response $response, string $image = '', string $tag = ''): Response
     {
 

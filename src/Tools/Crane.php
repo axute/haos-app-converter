@@ -58,6 +58,57 @@ class Crane implements Stringable
 
     }
 
+    public function getEnvVars(bool $force = false): array
+    {
+        try {
+
+            $config = $this->config($force);
+        } catch (RuntimeException $e) {
+            Logger::error($e->getMessage(), $e);
+            return [];
+        }
+        if (array_key_exists('config', $config) === false || array_key_exists('Env', $config['config']) === false) {
+            return [];
+        }
+        $envVars = [];
+        foreach ($config['config']['Env'] as $keyValue) {
+            [
+                $key,
+                $value
+            ] = explode('=', $keyValue, 2);
+            $envVars[$key] = $value;
+        }
+        ksort($envVars);
+        unset($envVars['PATH']);
+        return $envVars;
+    }
+
+    /**
+     * get all exposed ports (<port:protocol>)
+     * @param bool $force
+     * @return array<string,string>
+     */
+    public function getPorts(bool $force = false): array
+    {
+        try {
+            $config = $this->config($force);
+        } catch (RuntimeException $e) {
+            return [];
+        }
+        if (array_key_exists('config', $config) === false || array_key_exists('ExposedPorts', $config['config']) === false) {
+            return [];
+        }
+        $ports = [];
+        foreach ($config['config']['ExposedPorts'] as $portProtocol) {
+            [
+                $port,
+                $protocol
+            ] = explode('/', $portProtocol, 2);
+            $ports[$port] = $protocol;
+        }
+        return $ports;
+    }
+
     private function getCacheEntry(string $type, bool $force): null|string|array
     {
         if ($force === true) {

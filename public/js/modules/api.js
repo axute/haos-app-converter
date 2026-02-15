@@ -74,6 +74,32 @@ export async function fetchImageTags(detectPM) {
     }
 }
 
+export async function fetchImageEnvVars() {
+    const image = document.getElementById('image').value.trim();
+    const tag = document.getElementById('image_tag').value.trim() || 'latest';
+    if (!image) return;
+
+    const datalist = document.getElementById('envVarKeys');
+    if (!datalist) return;
+
+    try {
+        const response = await fetch(`${basePath}/image/${image}/env-vars/${tag}`);
+        const envVars = await response.json();
+        
+        datalist.innerHTML = '';
+        if (envVars && typeof envVars === 'object') {
+            Object.keys(envVars).forEach(key => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = envVars[key];
+                datalist.appendChild(option);
+            });
+        }
+    } catch (e) {
+        console.error('Error fetching env vars', e);
+    }
+}
+
 export async function detectPM(force = false) {
     const image = document.getElementById('image').value.trim();
     const tag = document.getElementById('image_tag').value.trim() || 'latest';
