@@ -60,6 +60,20 @@ class ImageController extends ControllerAbstract
         }
     }
 
+    public static function getImagePorts(Request $request, Response $response, string $image = '', string $tag = ''): Response
+    {
+        if (empty($image)) {
+            return self::success($response, ['Image Empty']);
+        }
+        $fullImage = $image . ($tag ? ':' . $tag : '');
+        try {
+            $ports = Crane::i($fullImage)->getPorts();
+            return self::success($response, $ports);
+        } catch (\Exception $e) {
+            return self::errorMessage($response, $e);
+        }
+    }
+
     public static function detectPackageManager(Request $request, Response $response, string $image = '', string $tag = ''): Response
     {
 

@@ -72,6 +72,7 @@ $app->group('/converter', function (RouteCollectorProxy $group) {
 $app->group('/image', function (RouteCollectorProxy $group) {
     $group->get('/{image:.+}/tags', ImageController::getImageTags(...));
     $group->get('/{image:.+}/env-vars/{tag}', ImageController::getImageEnvVars(...));
+    $group->get('/{image:.+}/ports/{tag}', ImageController::getImagePorts(...));
     $group->get('/{image:.+}/pm/{tag}', ImageController::detectPackageManager(...));
 });
 

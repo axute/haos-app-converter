@@ -4,6 +4,7 @@ import {
     fetchBashioVersions, 
     fetchImageTags, 
     fetchImageEnvVars,
+    fetchImagePorts,
     detectPM 
 } from './modules/api.js';
 import { 
@@ -36,7 +37,10 @@ window.openSettings = openSettings;
 window.closeSettings = closeSettings;
 window.fetchImageTags = fetchImageTagsWrapper;
 window.fetchImageEnvVars = fetchImageEnvVars;
+window.fetchImagePorts = fetchImagePorts;
 window.detectPM = (force) => detectPM(force);
+window.addPortMapping = () => addPortMapping();
+window.addMapMapping = () => addMapMapping();
 window.addEnvVar = () => addEnvVar();
 window.addPort = () => addPortMapping();
 window.addMap = () => addMapMapping();
@@ -127,6 +131,7 @@ async function fetchImageTagsWrapper() {
     await fetchImageTags(async () => {
         await detectPM();
         await fetchImageEnvVars();
+        await fetchImagePorts();
     });
 }
 

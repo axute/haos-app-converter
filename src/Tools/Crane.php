@@ -99,7 +99,7 @@ class Crane implements Stringable
             return [];
         }
         $ports = [];
-        foreach ($config['config']['ExposedPorts'] as $portProtocol) {
+        foreach (array_keys($config['config']['ExposedPorts']) as $portProtocol) {
             [
                 $port,
                 $protocol

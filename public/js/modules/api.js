@@ -100,6 +100,32 @@ export async function fetchImageEnvVars() {
     }
 }
 
+export async function fetchImagePorts() {
+    const image = document.getElementById('image').value.trim();
+    const tag = document.getElementById('image_tag').value.trim() || 'latest';
+    if (!image) return;
+
+    const datalist = document.getElementById('exposedPorts');
+    if (!datalist) return;
+
+    try {
+        const response = await fetch(`${basePath}/image/${image}/ports/${tag}`);
+        const ports = await response.json();
+
+        datalist.innerHTML = '';
+        if (ports && typeof ports === 'object') {
+            Object.keys(ports).forEach(port => {
+                const option = document.createElement('option');
+                option.value = port;
+                option.textContent = ports[port];
+                datalist.appendChild(option);
+            });
+        }
+    } catch (e) {
+        console.error('Error fetching image ports', e);
+    }
+}
+
 export async function detectPM(force = false) {
     const image = document.getElementById('image').value.trim();
     const tag = document.getElementById('image_tag').value.trim() || 'latest';

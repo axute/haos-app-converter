@@ -1,7 +1,7 @@
 // noinspection ES6UnusedImports
 import { haAlert, haConfirm, resetAccordion } from './ui.js';
 // noinspection ES6UnusedImports
-import { updateAppMetadata, fetchBashioVersions, fetchImageEnvVars } from './api.js';
+import { updateAppMetadata, fetchBashioVersions, fetchImageEnvVars, fetchImagePorts } from './api.js';
 
 export const featureFlags = [
     'host_network', 'host_ipc', 'host_dbus', 'host_pid', 'host_uts',
@@ -170,6 +170,9 @@ export async function editApp(slug, easyMDE, startupScriptEditor, toggleEditable
         imageInput.value = app.image;
         if (typeof fetchImageEnvVars !== 'undefined') {
              fetchImageEnvVars();
+        }
+        if (typeof fetchImagePorts !== 'undefined') {
+             fetchImagePorts();
         }
     }
 
@@ -399,7 +402,7 @@ export function addPortMapping(containerPort = '', hostPort = '', protocol = 'tc
     const div = document.createElement('div');
     div.className = 'input-group mb-2 port-mapping-row';
     div.innerHTML = `
-        <input type="number" class="form-control port-container" placeholder="Container Port" value="${containerPort}" style="max-width: 140px;">
+        <input type="number" class="form-control port-container" placeholder="Port" value="${containerPort}" style="max-width: 140px;" list="exposedPorts">
         <select class="form-select port-protocol" style="max-width: 90px;">
             <option value="tcp" ${protocol === 'tcp' ? 'selected' : ''}>TCP</option>
             <option value="udp" ${protocol === 'udp' ? 'selected' : ''}>UDP</option>
@@ -409,6 +412,25 @@ export function addPortMapping(containerPort = '', hostPort = '', protocol = 'tc
         <input type="text" class="form-control port-description" placeholder="Description (optional)" value="${description}">
         <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">×</button>
     `;
+    
+    // Auto-update protocol based on datalist selection if possible
+    const portInput = div.querySelector('.port-container');
+    const protoSelect = div.querySelector('.port-protocol');
+    portInput.addEventListener('input', () => {
+        const datalist = document.getElementById('exposedPorts');
+        if (datalist) {
+            for (const option of datalist.options) {
+                if (option.value === portInput.value) {
+                    const proto = option.textContent.toLowerCase();
+                    if (proto === 'tcp' || proto === 'udp') {
+                        protoSelect.value = proto;
+                    }
+                    break;
+                }
+            }
+        }
+    });
+
     container.appendChild(div);
 }
 
