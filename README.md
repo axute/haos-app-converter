@@ -17,6 +17,7 @@ This tool is a web-based converter that transforms any Docker image into a Home 
 - **Automated Updates**: One-click updates for base images with version detection.
 
 Detailed information about all supported Home Assistant configuration options and features can be found in our **[Supported Features Documentation](docs/SupportedFeatures.md)**.
+Detailed overview of the **[Frontend Features](docs/frontend-features.md)**.
 
 ## Prerequisites
 
