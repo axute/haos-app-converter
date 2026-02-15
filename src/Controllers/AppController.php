@@ -153,6 +153,9 @@ class AppController extends ControllerAbstract
 
             $destination = App::getDataDir() . '/' . $slug;
             Archiver::unzip($tempFile, $destination);
+            $var = App::get($slug);
+            $var->configYaml->slug = $slug;
+            $var->configYaml->saveFileContent();
 
             return self::success($response, ['status' => 'success', 'slug' => $slug]);
         } catch (Exception $e) {
