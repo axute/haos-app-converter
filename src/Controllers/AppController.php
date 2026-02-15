@@ -123,6 +123,47 @@ class AppController extends ControllerAbstract
         }
     }
 
+    public static function upload(Request $request, Response $response): Response
+    {
+        $uploadedFiles = $request->getUploadedFiles();
+        if (empty($uploadedFiles['app_zip'])) {
+            return self::errorMessage($response, 'No file uploaded');
+        }
+
+        $uploadedFile = $uploadedFiles['app_zip'];
+        if ($uploadedFile->getError() !== UPLOAD_ERR_OK) {
+            return self::errorMessage($response, 'Upload error: ' . $uploadedFile->getError());
+        }
+
+        $filename = $uploadedFile->getClientFilename();
+        $slug = pathinfo($filename, PATHINFO_FILENAME);
+
+        if (is_dir(App::getDataDir() . '/' . $slug)) {
+            return self::errorMessage($response, "App with slug '$slug' already exists");
+        }
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'app_zip');
+        $uploadedFile->moveTo($tempFile);
+
+        try {
+            $result = Archiver::checkFiles($tempFile);
+            if($result !== null) {
+                throw new RuntimeException($result);
+            }
+
+            $destination = App::getDataDir() . '/' . $slug;
+            Archiver::unzip($tempFile, $destination);
+
+            return self::success($response, ['status' => 'success', 'slug' => $slug]);
+        } catch (Exception $e) {
+            return self::errorMessage($response, $e);
+        } finally {
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
+    }
+
     public static function checkImageUpdate(Request $request, Response $response, string $slug): Response
     {
         $dataDir = App::getDataDir();

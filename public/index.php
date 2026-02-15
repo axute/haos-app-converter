@@ -59,6 +59,7 @@ $app->group('/apps', function (RouteCollectorProxy $group) {
     $group->get('/{slug}',  AppController::get(...));
     $group->delete('/{slug}',  AppController::delete(...));
     $group->post('/generate', AppController::generate(...));
+    $group->post('/upload', AppController::upload(...));
     $group->get('/{slug}/download', AppController::download(...));
     $group->get('/{slug}/convert/{tag}', AppController::convert(...));
     $group->post('/{slug}/metadata', AppController::updateMetadata(...));

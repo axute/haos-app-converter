@@ -50,6 +50,44 @@ window.showLogs = showLogs;
 window.checkEnvWarnings = checkEnvWarnings;
 window.loadTags = loadTags;
 window.toggleAppInfo = toggleAppInfo;
+window.uploadApp = uploadApp;
+
+async function uploadApp() {
+    const form = document.getElementById('uploadAppForm');
+    const fileInput = document.getElementById('appZip');
+    const progress = document.getElementById('uploadProgress');
+    const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
+
+    if (!fileInput.files.length) {
+        haAlert('Please select a file first.', 'Warning');
+        return;
+    }
+
+    const formData = new FormData(form);
+    progress.classList.remove('d-none');
+
+    try {
+        const response = await fetch(`${basePath}/apps/upload`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        progress.classList.add('d-none');
+
+        if (result.status === 'success') {
+            modal.hide();
+            form.reset();
+            document.body.dispatchEvent(new Event('reload'));
+            haAlert('App uploaded successfully!', 'Success');
+        } else {
+            haAlert('Upload failed: ' + result.message, 'Error');
+        }
+    } catch (error) {
+        progress.classList.add('d-none');
+        haAlert('An error occurred: ' + error.message, 'Error');
+    }
+}
 
 function downloadApp(slug = null) {
     if (!slug) {

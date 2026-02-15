@@ -5,9 +5,14 @@
     <div class="ha-card">
         <div class="ha-card-header">
             <span>Existing Apps</span>
-            <button type="button" class="btn btn-ha-primary btn-sm" onclick="startNew()">
-                <span class="mdi mdi-plus me-1"></span>Create New App
-            </button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-ha-outline btn-sm" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                    <span class="mdi mdi-upload me-1"></span>Upload App
+                </button>
+                <button type="button" class="btn btn-ha-primary btn-sm" onclick="startNew()">
+                    <span class="mdi mdi-plus me-1"></span>Create New App
+                </button>
+            </div>
         </div>
         <div id="appContainer" hx-get="{{ basePath }}/fragments/app-list" hx-trigger="load, reload from:body" hx-swap="innerHTML">
             <div class="list-group-item d-flex justify-content-center p-4">
@@ -40,4 +45,5 @@
 
 {% include 'fragments/converter-form.html.twig' %}
 {% include 'fragments/settings-view.html.twig' %}
+{% include 'fragments/upload-modal.html.twig' %}
 {% endblock %}

@@ -2,6 +2,8 @@
 
 namespace App\Tools;
 
+use App\File\App\Config;
+use App\File\App\ConfigJson;
 use App\File\App\ConfigYaml;
 use App\File\App\Dockerfile;
 use App\File\App\IconPng;
@@ -20,7 +22,7 @@ use Exception;
 class App
 {
     public readonly Dockerfile $dockerfile;
-    public readonly ConfigYaml $configYaml;
+    public readonly Config $configYaml;
     public readonly MetadataJson $metadataJson;
     public readonly RepositoryYaml $repositoryYaml;
     public readonly IconPng $iconPng;
@@ -33,7 +35,15 @@ class App
 
     private function __construct(public string $slug)
     {
-        $this->configYaml = new ConfigYaml($this);
+        $configJson = new ConfigJson($this);
+        $configYaml = new ConfigYaml($this);
+        if ($configYaml->isFile() === true && $configJson->isFile() === true) {
+            $configJson->clearFile();
+        } else if ($configJson->isFile() === true) {
+            $configYaml->setData($configJson->getData())->saveFileContent();
+            $configJson->clearFile();
+        }
+        $this->configYaml = $configYaml;
         $this->dockerfile = new Dockerfile($this);
         $this->iconPng = new IconPng($this);
         $this->logoPng = new LogoPng($this);
