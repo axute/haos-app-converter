@@ -2,7 +2,6 @@
 
 namespace App\File\Traits;
 
-use App\Tools\Converter;
 use Symfony\Component\Yaml\Yaml;
 
 trait TypeYamlTrait
@@ -15,23 +14,25 @@ trait TypeYamlTrait
 
     abstract public function jsonSerialize(): array;
 
+    abstract public function isFile(): bool;
+
+    abstract public function loadFile(): string|false;
+
+    abstract public function saveFile(): bool;
+
     public function loadFileContent(): static
     {
         if ($this->isFile()) {
-            $this->addData(Yaml::parseFile($this->getFilePath()));
+            $this->addData(Yaml::parse($this->loadFile()));
         }
         return $this;
     }
 
-    abstract public function isFile(): bool;
-
     abstract protected function addData(array $data): static;
-
-    abstract public function getFilePath(): string;
 
     public function saveFileContent(): static
     {
-        Converter::writeFileContent($this->getFilePath(), $this);
+        $this->saveFile();
         return $this;
     }
 }

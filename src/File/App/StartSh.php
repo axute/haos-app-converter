@@ -3,17 +3,15 @@
 namespace App\File\App;
 
 use App\File\FileAbstract;
-use App\Tools\Converter;
 use App\Tools\Webform;
 
 class StartSh extends FileAbstract
 {
-
     public ?string $startup_script = null;
 
     public function loadFileContent(): static
     {
-        $this->startup_script = $this->isFile() ? file_get_contents($this->getFilePath()) : '';
+        $this->startup_script = $this->isFile() ? $this->loadFile() : '';
         return $this;
     }
 
@@ -30,7 +28,7 @@ class StartSh extends FileAbstract
     public function saveFileContent(): static
     {
         if (!empty($this->startup_script)) {
-            Converter::writeFileContent($this->getFilePath(), $this->startup_script);
+            $this->saveFile();
             return $this;
         }
         return $this->clearFile();

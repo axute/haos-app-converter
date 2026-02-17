@@ -2,6 +2,7 @@
 
 namespace App\Tools;
 
+use App\App;
 use Exception;
 
 class Bashio

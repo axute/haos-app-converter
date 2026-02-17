@@ -3,18 +3,16 @@
 namespace App\File\App;
 
 use App\File\FileAbstract;
-use App\Tools\Converter;
 use App\Tools\Webform;
 
 class ReadmeMd extends FileAbstract
 {
-
     public ?string $long_description = null;
 
     public function loadFileContent(): static
     {
         if($this->isFile()) {
-            $this->long_description = file_get_contents($this->getFilePath());
+            $this->long_description = $this->loadFile();
         }
         return $this;
     }
@@ -27,7 +25,7 @@ class ReadmeMd extends FileAbstract
     public function saveFileContent(): static
     {
         if(!empty(trim($this->long_description ?? ''))) {
-            Converter::writeFileContent($this->getFilePath(), $this);
+            $this->saveFile();
             return $this;
         }
         return $this->clearFile();

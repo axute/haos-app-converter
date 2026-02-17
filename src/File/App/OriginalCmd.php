@@ -3,6 +3,7 @@
 namespace App\File\App;
 
 use App\File\FileAbstract;
+use App\File\Traits\AppFileTrait;
 use App\Tools\Converter;
 use App\Tools\Crane;
 use App\Tools\Webform;
@@ -13,7 +14,7 @@ class OriginalCmd extends FileAbstract
 
     public function loadFileContent(): static
     {
-        $this->original_cmd = $this->isFile() ? file_get_contents($this->getFilePath()) : '';
+        $this->original_cmd = $this->isFile() ? $this->loadFile() : '';
         return $this;
     }
 
@@ -46,7 +47,7 @@ class OriginalCmd extends FileAbstract
     public function saveFileContent(): static
     {
         if ($this->original_cmd !== null) {
-            Converter::writeFileContent($this->getFilePath(), $this->original_cmd);
+            $this->saveFile();
             return $this;
         }
         return $this->clearFile();

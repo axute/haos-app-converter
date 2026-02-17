@@ -141,8 +141,6 @@ abstract class Config extends FileAbstract
 
     public function updateFromWebui(Webform $webform): static
     {
-
-        $this->slug = $this->app->slug;
         $webform->setIfNotEmpty($this, 'arch', fn() => Crane::i($webform->extractFullDockerImageName())->getArchitectures());
         $webform->setIfDefined($this, 'name', '');
         $webform->setIfDefined($this, 'description', '');
@@ -321,24 +319,6 @@ abstract class Config extends FileAbstract
         $data['env_vars'] = $envVars;
         ksort($data);
         return $data;
-    }
-
-    public function increaseVersion(?bool $version_fixation = null): static
-    {
-        $currentVersion = $this->version;
-        if ($currentVersion === null || $version_fixation === true) {
-            return $this;
-        }
-        // Version hochzählen
-        $parts = explode('.', $currentVersion);
-        if (count($parts) === 3) {
-            $parts[2]++;
-            $this->version = implode('.', $parts);
-        } else {
-            $this->version = $currentVersion . '.1';
-        }
-
-        return $this->saveFileContent();
     }
 
     public function generateWebui(int|null $port, string $path = Defaults::WEBUI_PATH, string $protocol = Defaults::WEBUI_PROTOCOL): static

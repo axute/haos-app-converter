@@ -19,13 +19,13 @@ class Converter
     public static function selfConvert(string $tag): array
     {
         $slug = self::SLUG;
-        $configFile = App::get($slug)->dockerfile->getFilePath();
+//        $configFile = App::get($slug)->dockerfile->getFilePath();
         $currentVersion = '1.0.0';
 
-        if (file_exists($configFile)) {
-            $config = Yaml::parseFile($configFile);
-            $currentVersion = $config['version'] ?? '1.0.0';
-        }
+//        if (file_exists($configFile)) {
+//            $config = Yaml::parseFile($configFile);
+//            $currentVersion = $config['version'] ?? '1.0.0';
+//        }
 
         // Daten für die Generierung vorbereiten
         $data = [

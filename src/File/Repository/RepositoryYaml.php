@@ -2,36 +2,27 @@
 
 namespace App\File\Repository;
 
+use App\File\FileAbstract;
 use App\File\Traits\DataTrait;
 use App\File\Traits\TypeYamlTrait;
-use App\Tools\App;
-use App\Tools\Converter;
+use App\Repository;
 use App\Tools\Webform;
-use JsonSerializable;
-use Stringable;
 
 /**
  * @property string $name
  * @property string|null $maintainer
  * @property string|null $url
  */
-class RepositoryYaml implements JsonSerializable, Stringable
+class RepositoryYaml extends FileAbstract
 {
     use DataTrait;
     use TypeYamlTrait;
-
-    private function __construct(string $name = Converter::DEFAULT_REPOSITORY_NAME)
-    {
-        $this->name = $name;
-        $this->maintainer = '';
-        $this->loadFileContent();
-    }
 
     public static function instance(): static
     {
         static $instance = null;
         if ($instance === null) {
-            $instance = new self();
+            $instance = new self(new Repository());
         }
         return $instance;
     }
@@ -47,11 +38,6 @@ class RepositoryYaml implements JsonSerializable, Stringable
     public function __destruct()
     {
         $this->saveFileContent();
-    }
-
-    protected function getFilePath(): string
-    {
-        return App::getDataDir() . '/' . $this->getFilename();
     }
 
     public function getFilename(): string
@@ -78,10 +64,5 @@ class RepositoryYaml implements JsonSerializable, Stringable
         }
         $this->saveFileContent();
         return $this;
-    }
-
-    public function isFile(): bool
-    {
-        return is_file($this->getFilePath());
     }
 }

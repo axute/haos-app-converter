@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tools;
+namespace App;
 
 use App\File\App\Config;
 use App\File\App\ConfigJson;
@@ -16,13 +16,19 @@ use App\File\App\RunSh;
 use App\File\App\StartSh;
 use App\File\FileAbstract;
 use App\File\Repository\RepositoryYaml;
+use App\Interfaces\ArchiveAwareInterface;
+use App\Interfaces\ArchiveInterface;
+use App\Tools\Archive\ArchiveAwareTrait;
+use App\Tools\Archive\ZipFolder;
+use App\Tools\Webform;
 use Cocur\Slugify\Slugify;
 use Exception;
 
-class App
+class App implements ArchiveAwareInterface
 {
+    use ArchiveAwareTrait;
     public readonly Dockerfile $dockerfile;
-    public readonly Config $configYaml;
+    public readonly Config $config;
     public readonly MetadataJson $metadataJson;
     public readonly RepositoryYaml $repositoryYaml;
     public readonly IconPng $iconPng;
@@ -33,8 +39,12 @@ class App
     public readonly OriginalEntrypoint $originalEntrypoint;
     public readonly ReadmeMd $readmeMd;
 
-    private function __construct(public string $slug)
+    private function __construct(public string $slug, ?ArchiveInterface $archive = null)
     {
+        if ($archive === null) {
+            $archive = (new Repository())->getArchive();
+        }
+        $this->archive = $archive;
         $configJson = new ConfigJson($this);
         $configYaml = new ConfigYaml($this);
         if ($configYaml->isFile() === true && $configJson->isFile() === true) {
@@ -43,7 +53,8 @@ class App
             $configYaml->setData($configJson->getData())->saveFileContent();
             $configJson->clearFile();
         }
-        $this->configYaml = $configYaml;
+        $configYaml->slug = $this->slug;
+        $this->config = $configYaml;
         $this->dockerfile = new Dockerfile($this);
         $this->iconPng = new IconPng($this);
         $this->logoPng = new LogoPng($this);
@@ -53,9 +64,7 @@ class App
         $this->readmeMd = new ReadmeMd($this);
         $this->runSh = new RunSh($this);
         $this->startSh = new StartSh($this);
-        $this->repositoryYaml = RepositoryYaml::instance();
     }
-
     public static function list(): array
     {
         $apps = [];
@@ -83,7 +92,7 @@ class App
     {
         static $dir = null;
         if ($dir === null) {
-            $dir = str_replace('\\', '/', getenv('CONVERTER_DATA_DIR') ?: __DIR__ . '/../../data');
+            $dir = str_replace('\\', '/', getenv('CONVERTER_DATA_DIR') ?: __DIR__ . '/../data');
         }
         return $dir;
     }
@@ -125,13 +134,52 @@ class App
         return $instances[$slug];
     }
 
+    public static function getByZipFilePath(string $zipFilePath): ?App
+    {
+        $zipArchive = new ZipFolder();
+        if ($zipArchive->open($zipFilePath) !== true) {
+            $slug = pathinfo($zipFilePath, PATHINFO_FILENAME);
+            return App::getByZip($slug, $zipArchive);
+        }
+        return null;
+
+    }
+
+    public static function getByZip(string $slug, ArchiveInterface $zipArchiveWrapper): App
+    {
+        return new App($slug, $zipArchiveWrapper);
+    }
+
+
+    public function increaseVersion(): static
+    {
+        $currentVersion = $this->config->version;
+        if($this->metadataJson->version_fixation === true) {
+            return $this->mergeVersion();
+        }
+        if ($currentVersion === null) {
+            return $this;
+        }
+        // Version hochzählen
+        $parts = explode('.', $currentVersion);
+        if (count($parts) === 3) {
+            $parts[2]++;
+            $this->config->version = implode('.', $parts);
+        } else {
+            $this->config->version = $currentVersion . '.1';
+        }
+
+        return $this->save();
+    }
+
     public function mergeVersion(): static
     {
         $versionFixation = $this->metadataJson->version_fixation;
         if ($versionFixation !== true) {
             return $this;
         }
-        $this->configYaml->setVersionFromTag($this->dockerfile->image_tag);
+        $this->config->setVersionFromTag($this->dockerfile->image_tag);
+        $this->save();
         return $this;
     }
 
@@ -153,7 +201,7 @@ class App
     protected function getFiles(): array
     {
         return [
-            $this->configYaml,
+            $this->config,
             $this->dockerfile,
             $this->iconPng,
             $this->logoPng,
@@ -186,5 +234,18 @@ class App
         array_map(fn(FileAbstract $file) => $file->saveFileContent(), $this->getFiles());
         return $this;
     }
+
+    public function prepareFilename(string $filename): string
+    {
+        if ($this->getArchive()->isRepository()) {
+            return $this->slug . '/' . $filename;
+        }
+        return $filename;
+    }
+
+//    public function __destruct()
+//    {
+//        $this->archive->close();
+//    }
 
 }

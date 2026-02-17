@@ -2,6 +2,8 @@
 
 namespace App\Tools;
 
+use App\App;
+
 class Remover
 {
     public static function removeApp(string $slug): void

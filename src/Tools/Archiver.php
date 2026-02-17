@@ -2,6 +2,8 @@
 
 namespace App\Tools;
 
+use App\App;
+use App\Tools\Archive\ZipFolder;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
@@ -76,7 +78,7 @@ class Archiver
 
     public static function checkFiles(string $zipFilePath): ?string
     {
-        $zip = new ZipArchive();
+        $zip = new ZipFolder();
         if ($zip->open($zipFilePath) !== true) {
             return null;
         }
@@ -113,17 +115,5 @@ class Archiver
         $zip->close();
         return null;
 
-    }
-
-    public static function hasFile(string $zipFilePath, string $filename): bool
-    {
-        $zip = new ZipArchive();
-        if ($zip->open($zipFilePath) !== true) {
-            return false;
-        }
-
-        $hasFile = $zip->locateName($filename) !== false;
-        $zip->close();
-        return $hasFile;
     }
 }

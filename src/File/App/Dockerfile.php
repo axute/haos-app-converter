@@ -4,7 +4,6 @@ namespace App\File\App;
 
 use App\File\App\Defaults\Dockerfile as Defaults;
 use App\File\FileAbstract;
-use App\Tools\Converter;
 use App\Tools\Webform;
 
 class Dockerfile extends FileAbstract
@@ -14,11 +13,10 @@ class Dockerfile extends FileAbstract
     public bool $needRunSh = false;
     public string $image = Defaults::DEFAULT_IMAGE;
     public string $image_tag = Defaults::DEFAULT_TAG;
-
     public function loadFileContent(): static
     {
         if ($this->isFile()) {
-            $content = file_get_contents($this->getFilePath());
+            $content = $this->loadFile();
             if (stripos($content, Defaults::STARTUP_SCRIPT) !== false) {
                 $this->startupScript = true;
             }
@@ -97,7 +95,7 @@ class Dockerfile extends FileAbstract
 
     public function saveFileContent(): static
     {
-        Converter::writeFileContent($this->getFilePath(), $this);
+        $this->saveFile();
         return $this;
     }
 

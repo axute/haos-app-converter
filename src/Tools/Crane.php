@@ -2,6 +2,7 @@
 
 namespace App\Tools;
 
+use App\App;
 use App\File\App\Defaults\Dockerfile;
 use Exception;
 use RuntimeException;

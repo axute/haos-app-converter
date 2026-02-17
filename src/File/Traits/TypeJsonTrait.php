@@ -2,8 +2,6 @@
 
 namespace App\File\Traits;
 
-use App\Tools\Converter;
-
 trait TypeJsonTrait
 {
     public function __toString()
@@ -13,23 +11,25 @@ trait TypeJsonTrait
 
     abstract public function jsonSerialize(): array;
 
+    abstract public function isFile(): bool;
+
+    abstract public function loadFile(): string|false;
+
+    abstract public function saveFile(): bool;
+
     public function loadFileContent(): static
     {
         if ($this->isFile()) {
-            $this->addData(json_decode(file_get_contents($this->getFilePath()), true));
+            $this->addData(json_decode($this->loadFile(), true));
         }
         return $this;
     }
 
-    abstract public function isFile(): bool;
-
     abstract protected function addData(array $data): static;
-
-    abstract public function getFilePath(): string;
 
     public function saveFileContent(): static
     {
-        Converter::writeFileContent($this->getFilePath(), $this);
+        $this->saveFile();
         return $this;
     }
 }

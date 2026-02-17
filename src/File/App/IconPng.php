@@ -3,7 +3,6 @@
 namespace App\File\App;
 
 use App\File\FileAbstract;
-use App\Tools\Converter;
 use App\Tools\Webform;
 
 class IconPng extends FileAbstract
@@ -19,7 +18,7 @@ class IconPng extends FileAbstract
     public function loadFileContent(): static
     {
         if ($this->isFile()) {
-            $this->icon_file = 'data:image/png;base64,' . base64_encode(file_get_contents($this->getFilePath()));
+            $this->icon_file = 'data:image/png;base64,' . base64_encode($this->loadFile());
         }
         return $this;
     }
@@ -50,9 +49,9 @@ class IconPng extends FileAbstract
     public function saveFileContent(): static
     {
         if ($this->icon_file !== null) {
-            Converter::writeFileContent($this->getFilePath(), $this);
+            $this->saveFile();
         } else if ($this->isFile()) {
-            unlink($this->getFilePath());
+            $this->clearFile();
         }
         return $this;
     }

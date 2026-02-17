@@ -2,9 +2,10 @@
 
 namespace App\Controllers;
 
+use App\App;
 use App\File\App\Defaults\Dockerfile;
 use App\File\Repository\RepositoryYaml;
-use App\Tools\{App, Archiver, Bashio, Converter, Crane, Remover};
+use App\Tools\{Archiver, Bashio, Converter, Crane, Remover};
 use Exception;
 use Psr\Http\Message\{ResponseInterface as Response, ServerRequestInterface as Request};
 use RuntimeException;
@@ -25,7 +26,6 @@ class AppController extends ControllerAbstract
             return self::errorMessage($response, new RuntimeException('Slug should not be empty'));
         }
         try {
-            $app = null;
             if ($slug === Converter::SLUG) {
                 // haos-app-converter exists
                 $app = App::get($slug)->update(Converter::selfConvert($tag));
@@ -33,7 +33,8 @@ class AppController extends ControllerAbstract
                 // any other existing app
                 $app = App::get($slug);
             }
-            $app->configYaml->increaseVersion($app->metadataJson->version_fixation);
+            $app->dockerfile->image_tag = $tag;
+            $app->increaseVersion();
             return self::success($response, [
                 'status' => 'success',
                 'path'   => realpath($app->getAppDir())
@@ -154,15 +155,15 @@ class AppController extends ControllerAbstract
             $destination = App::getDataDir() . '/' . $slug;
             Archiver::unzip($tempFile, $destination);
             $var = App::get($slug);
-            $var->configYaml->slug = $slug;
-            if ($var->configYaml->{'image'} !== null) {
-                $crane = new Crane($var->configYaml->{'image'});
+            $var->config->slug = $slug;
+            if ($var->config->{'image'} !== null) {
+                $crane = new Crane($var->config->{'image'});
                 if ($crane->isValid()) {
                     $var->dockerfile->image = $crane->image;
                     $var->dockerfile->image_tag = $crane->image_tag;
                 }
             }
-            $var->configYaml->saveFileContent();
+            $var->config->saveFileContent();
 
             return self::success($response, [
                 'status' => 'success',

@@ -2,6 +2,8 @@
 
 namespace App\Tools;
 
+use App\App;
+
 class Scripts
 {
     const string CACHE_DIR = '.cache';

@@ -2,7 +2,7 @@
 
 namespace App\File;
 
-use App\Tools\App;
+use App\Interfaces\ArchiveAwareInterface;
 use App\Tools\Webform;
 use JsonSerializable;
 use Stringable;
@@ -10,29 +10,39 @@ use Stringable;
 abstract class FileAbstract implements JsonSerializable, Stringable
 {
 
-    public function __construct(protected App $app)
+    public function __construct(protected ArchiveAwareInterface $archive)
     {
         $this->loadFileContent();
+    }
+
+    public function getArchive(): ArchiveAwareInterface
+    {
+        return $this->archive;
     }
 
     abstract public function loadFileContent(): static;
 
     public function clearFile(): static
     {
-        if ($this->isFile()) {
-            unlink($this->getFilePath());
+        if ($this->getArchive()->isFile($this->getFilename())) {
+            $this->getArchive()->deleteFile($this->getFilename());
         }
         return $this;
     }
 
-    public function isFile(): bool
+    public function loadFile(): string|false
     {
-        return is_file($this->getFilePath());
+        return $this->getArchive()->loadFile($this->getFilename());
     }
 
-    public function getFilePath(): string
+    public function saveFile(): bool
     {
-        return $this->app->getAppDir() . '/' . $this->getFilename();
+        return $this->getArchive()->saveFile($this->getFilename(), $this);
+    }
+
+    public function isFile(): bool
+    {
+        return $this->getArchive()->isFile($this->getFilename());
     }
 
     abstract public function getFilename(): string;
@@ -42,6 +52,4 @@ abstract class FileAbstract implements JsonSerializable, Stringable
     abstract public function updateFromWebui(Webform $webform): static;
 
     abstract public function jsonSerialize(): array;
-
-
 }

@@ -3,7 +3,6 @@
 namespace App\File\App;
 
 use App\File\FileAbstract;
-use App\Tools\Converter;
 use App\Tools\Webform;
 
 class RunSh extends FileAbstract
@@ -40,7 +39,7 @@ class RunSh extends FileAbstract
     public function saveFileContent(): static
     {
         if ($this->active) {
-            Converter::writeFileContent($this->getFilePath(), $this);
+            $this->saveFile();
             return $this;
         }
         return $this->clearFile();
