@@ -10,7 +10,7 @@ namespace App\Interfaces;
 interface ArchiveInterface
 {
     public function isDir(string $directory): bool;
-    public function open(string $filename, int $flags = 0): bool|int;
+    public function open(string $filename, ?int $flags = 0): bool|int;
 
     public function isApp(): bool;
 
@@ -24,9 +24,9 @@ interface ArchiveInterface
 
     public function extractTo(string $pathto, array|string|null $files = null): bool;
 
-    public function getFromName(string $name, int $len = 0, int $flags = 0): string|false;
+    public function getFromName(string $name, int $len = 0, ?int $flags = 0): string|false;
 
-    public function locateName(string $name, int $flags = 0): int|false;
+    public function locateName(string $name, ?int $flags = 0): int|false;
 
     public function deleteName(string $name): bool;
 
@@ -40,7 +40,7 @@ interface ArchiveInterface
 
     public function getNameIndex(int $index, int $flags = 0): string|false;
 
-    public function statName(string $name, int $flags = 0): array|false;
+    public function statName(string $name, ?int $flags = 0): array|false;
 
     public function statIndex(int $index, int $flags = 0): array|false;
 

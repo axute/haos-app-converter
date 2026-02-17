@@ -17,7 +17,7 @@ class DataFolder implements ArchiveInterface
     protected array $files = [];
     public int $numFiles = 0;
 
-    public function open(string $filename, int $flags = 0): bool|int
+    public function open(string $filename, ?int $flags = 0): bool|int
     {
         if (is_dir($filename)) {
             $this->directory = $filename;
@@ -61,7 +61,7 @@ class DataFolder implements ArchiveInterface
         return false;
     }
 
-    public function getFromName(string $name, int $len = 0, int $flags = 0): string|false
+    public function getFromName(string $name, int $len = 0, ?int $flags = 0): string|false
     {
         $str = $this->directory . '/' . $name;
         if (is_file($str)) {
@@ -70,7 +70,7 @@ class DataFolder implements ArchiveInterface
         return false;
     }
 
-    public function locateName(string $name, int $flags = 0): int|false
+    public function locateName(string $name, ?int $flags = 0): int|false
     {
         return array_search($name, $this->files);
     }
@@ -129,7 +129,7 @@ class DataFolder implements ArchiveInterface
         return $this->files[$index];
     }
 
-    public function statName(string $name, int $flags = 0): array|false
+    public function statName(string $name, ?int $flags = 0): array|false
     {
         $targetFile = $this->directory . '/' . $name;
         if (is_file($targetFile)) {
