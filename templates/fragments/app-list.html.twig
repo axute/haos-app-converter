@@ -24,24 +24,26 @@
                                 {% endif %}
                             </div>
                             <div class="text-truncate">
-                                <div class="d-flex align-items-start flex-wrap">
-                                    <strong class="me-2 text-truncate" title="{{ app.name }}">{{ app.name }}</strong>
-                                    <div class="d-flex gap-1" style="padding-top: 2px;">
-                                        {% if app.detected_pm is not empty %}
-                                            <span class="badge bg-info text-dark rounded-pill" style="font-size: 0.7rem;">{{ app.detected_pm }}</span>
-                                        {% endif %}
-                                        {% if app.quirks %}
-                                            <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.7rem;">quirks</span>
-                                        {% endif %}
-                                        {% if app.apparmor is same as(true) %}
-                                            <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.7rem;" title="AppArmor aktiv (Standard)">apparmor</span>
-                                        {% elseif app.apparmor is not empty and app.apparmor is not same as(false) %}
-                                            <span class="badge bg-danger text-white rounded-pill" style="font-size: 0.7rem;" title="Custom AppArmor Profile (Experimental): {{ app.apparmor }}">apparmor</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
+                                <strong class="d-block text-truncate" title="{{ app.name }}">{{ app.name }}</strong>
                                 <small class="text-muted d-block text-truncate" title="{{ app.description }}">{{ app.description }}</small>
-                                <small class="text-muted">Version: {{ app.version }}</small>
+                                <small class="text-muted d-block">Version: {{ app.version }}</small>
+                                <div class="d-flex align-items-center flex-wrap gap-1 mt-1">
+                                    {% set rating = app.security_rating|default(4) %}
+                                    {% set rating_color = (rating <= 2) ? 'danger' : (rating == 3 ? 'warning' : 'success') %}
+                                    <span class="badge bg-{{ rating_color }} rounded-pill" style="font-size: 0.65rem;" title="Security Rating: {{ rating }}/6">🛡️ {{ rating }}</span>
+                                    
+                                    {% if app.detected_pm is not empty %}
+                                        <span class="badge bg-info text-dark rounded-pill" style="font-size: 0.65rem;">{{ app.detected_pm }}</span>
+                                    {% endif %}
+                                    {% if app.quirks %}
+                                        <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.65rem;">quirks</span>
+                                    {% endif %}
+                                    {% if app.apparmor is same as(true) %}
+                                        <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.65rem;" title="AppArmor aktiv (Standard)">apparmor</span>
+                                    {% elseif app.apparmor is not empty and app.apparmor is not same as(false) %}
+                                        <span class="badge bg-danger text-white rounded-pill" style="font-size: 0.65rem;" title="Custom AppArmor Profile (Experimental): {{ app.apparmor }}">apparmor</span>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>

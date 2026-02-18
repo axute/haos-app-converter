@@ -332,8 +332,40 @@ abstract class Config extends FileAbstract
         }
         $data = $this->getData();
         $data['env_vars'] = $envVars;
+        $data['security_rating'] = $this->getSecurityRating();
         ksort($data);
         return $data;
+    }
+
+    public function getSecurityRating(): int
+    {
+        // Rating 1: Privileged access
+        if (!empty($this->privileged) || !empty($this->full_access)) {
+            return 1;
+        }
+
+        // Rating 2: Access to host resources
+        if (!empty($this->host_network) || !empty($this->host_pid) || !empty($this->host_ipc) || !empty($this->host_dbus) || !empty($this->docker_api)) {
+            return 2;
+        }
+
+        // Rating 3: AppArmor disabled
+        if ($this->apparmor === false) {
+            return 3;
+        }
+
+        // Rating 4: Standard protection (implicit or explicit apparmor: true)
+        if ($this->apparmor === true || !isset($this->apparmor)) {
+            return 4;
+        }
+
+        // Rating 5: Custom AppArmor Profile
+        if (is_string($this->apparmor)) {
+            return 5;
+        }
+
+        // Rating 6: Highly secured (not applicable here, as it requires more manual work)
+        return 4;
     }
 
     public function generateWebui(int|null $port, string $path = Defaults::WEBUI_PATH, string $protocol = Defaults::WEBUI_PROTOCOL): static
