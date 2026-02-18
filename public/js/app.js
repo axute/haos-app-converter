@@ -423,6 +423,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Init Custom AppArmor UI (toggle name input visibility)
+    const apparmorCustom = document.getElementById('apparmor_custom');
+    const apparmorNameContainer = document.getElementById('apparmor_name_container');
+    if (apparmorCustom && apparmorNameContainer) {
+        const toggle = () => {
+            apparmorNameContainer.style.display = apparmorCustom.checked ? 'block' : 'none';
+        };
+        apparmorCustom.addEventListener('change', toggle);
+        toggle();
+    }
+
     const settingsForm = document.getElementById('settingsForm');
     if (settingsForm) {
         settingsForm.addEventListener('submit', handleSettingsSubmit);

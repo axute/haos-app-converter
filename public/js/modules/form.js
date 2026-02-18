@@ -366,6 +366,32 @@ export async function editApp(slug, easyMDE, startupScriptEditor, toggleEditable
         }
     });
 
+    // Initialize Custom AppArmor UI
+    const apparmorCustom = document.getElementById('apparmor_custom');
+    const apparmorNameContainer = document.getElementById('apparmor_name_container');
+    const apparmorNameInput = document.getElementById('apparmor_name');
+    if (apparmorCustom && apparmorNameContainer && apparmorNameInput) {
+        // If app.apparmor is a string, enable custom mode and set the name
+        if (typeof app.apparmor === 'string' && app.apparmor) {
+            apparmorCustom.checked = true;
+            apparmorNameContainer.style.display = 'block';
+            apparmorNameInput.value = app.apparmor;
+            // Also ensure the general apparmor toggle is true for clarity
+            const apparmorToggle = document.getElementById('apparmor');
+            if (apparmorToggle) apparmorToggle.checked = true;
+        } else {
+            apparmorCustom.checked = false;
+            apparmorNameContainer.style.display = 'none';
+            apparmorNameInput.value = '';
+        }
+        apparmorCustom.addEventListener('change', () => {
+            apparmorNameContainer.style.display = apparmorCustom.checked ? 'block' : 'none';
+            if (!apparmorCustom.checked) {
+                apparmorNameInput.value = '';
+            }
+        });
+    }
+
     if (app.privileged && Array.isArray(app.privileged)) {
         document.querySelectorAll('.privileged-checkbox').forEach(el => {
             el.checked = app.privileged.includes(el.value);
@@ -586,6 +612,8 @@ export async function handleConverterSubmit(easyMDE, startupScriptEditor) {
         realtime: document.getElementById('realtime').checked,
         journald: document.getElementById('journald').checked,
         apparmor: document.getElementById('apparmor').checked,
+        apparmor_custom: document.getElementById('apparmor_custom') ? document.getElementById('apparmor_custom').checked : false,
+        apparmor_name: document.getElementById('apparmor_name') ? document.getElementById('apparmor_name').value : null,
         discovery: document.getElementById('discovery').checked
     };
 

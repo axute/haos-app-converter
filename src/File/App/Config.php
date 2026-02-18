@@ -214,7 +214,22 @@ abstract class Config extends FileAbstract
                 $this->addOption('env_vars', [], ['str']);
             }
         }
+        // AppArmor: Custom profile name vs. boolean flag
+        if ($webform->isNotEmpty('apparmor_custom') && $webform->apparmor_custom === true) {
+            $profileName = ($webform->apparmor_name ?? null);
+            if (is_string($profileName) && $profileName !== '') {
+                $this->apparmor = $profileName;
+            } else {
+                // Fallback auf Slug, wenn kein Name angegeben wurde
+                $this->apparmor = $this->getArchive()->slug;
+            }
+        } else {
+            // Standard-Checkbox steuert booleschen Wert
+            $webform->setIfDefined($this, 'apparmor', false);
+        }
+
         foreach (Defaults::_POSSIBLE_FEATURE_FLAGS as $featureFlag) {
+            if ($featureFlag === 'apparmor') continue; // bereits oben behandelt
             $webform->setIfDefined($this, $featureFlag);
         }
         return $this->saveFileContent();

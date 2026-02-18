@@ -1,0 +1,173 @@
+<?php
+
+namespace App\File\App;
+
+use App\File\App\Defaults\ConfigYaml as Defaults;
+use App\File\FileAbstract;
+use App\Tools\Crane;
+use App\Tools\Webform;
+
+class AppArmorTxt extends FileAbstract
+{
+    private array $detectedRules = [];
+
+    public function getFilename(): string
+    {
+        return 'apparmor.txt';
+    }
+
+    public function loadFileContent(): static
+    {
+        // Dynamisch generiert, aber wir können beim Laden bereits die Erkennung starten
+        $this->detectRequirements();
+        return $this;
+    }
+
+    private function detectRequirements(): void
+    {
+        $app = $this->getArchive();
+        $image = $app->dockerfile->image . ':' . $app->dockerfile->image_tag;
+        
+        if (empty($app->dockerfile->image)) {
+            return;
+        }
+
+        try {
+            $crane = new Crane($image);
+            $env = $crane->getEnvVars();
+            
+            $this->detectedRules = [];
+
+            // Erkennung basierend auf Umgebungsvariablen
+            if (isset($env['USE_GPIO']) || isset($env['GPIO_ENABLED'])) {
+                $this->detectedRules['gpio'] = true;
+            }
+            
+            if (isset($env['USE_AUDIO']) || isset($env['PULSE_SERVER'])) {
+                $this->detectedRules['audio'] = true;
+            }
+
+            // Erkennung basierend auf Labels (falls Crane das unterstützt/wir es aus config() holen)
+            $config = $crane->getCmd(); // Triggers config() call and caching
+            // Wir könnten auch direkt auf $crane->config() zugreifen, wenn wir mehr brauchen
+        } catch (\Exception $e) {
+            // Ignorieren, wenn Crane fehlschlägt
+        }
+    }
+
+    public function saveFileContent(): static
+    {
+        $this->getArchive()->saveFile($this->getFilename(), (string)$this);
+        return $this;
+    }
+
+    public function __toString(): string
+    {
+        $app = $this->getArchive();
+        $config = $app->config;
+        
+        // Bestimme den Profilnamen aus der config.yaml (Fallback auf den Slug)
+        $profileName = is_string($config->apparmor) ? $config->apparmor : $app->slug;
+
+        $rules = [
+            "  #include <abstractions/base>",
+            "  #include <abstractions/bash>",
+            "  #include <abstractions/nameservice>",
+            "",
+            "  /bin/** rmix,",
+            "  /usr/bin/** rmix,",
+            "  /usr/local/bin/** rmix,",
+            "  /opt/** rmix,",
+            "  /tmp/** rwk,",
+            "  /run/** r,",
+            "  /start.sh r,",
+            "  /run.sh r,",
+            "  /dev/stdout rw,",
+            "  /dev/stderr rw,",
+            "  /dev/fd/* r,",
+            "",
+            "  network inet stream,",
+            "  network inet6 stream,",
+            "  network inet dgram,",
+            "  network inet6 dgram,",
+            "  network unix,",
+        ];
+
+        // Kombiniere manuelle Config mit erkannter Logik
+        $useGpio = !empty($config->gpio) || ($this->detectedRules['gpio'] ?? false);
+        $useAudio = !empty($config->audio) || ($this->detectedRules['audio'] ?? false);
+        $useKernelModules = !empty($config->kernel_modules);
+
+        if ($useGpio) {
+            $rules[] = "  /sys/class/gpio/** rwk,";
+            $rules[] = "  capability sys_rawio,";
+        }
+
+        if ($useAudio) {
+            $rules[] = "  /dev/snd/* rwk,";
+        }
+        
+        if ($useKernelModules) {
+            $rules[] = "  capability sys_module,";
+            $rules[] = "  /lib/modules/** r,";
+        }
+
+        // Mappings hinzufügen (homeassistant_config, ssl, share, etc.)
+        // Das /data Verzeichnis ist immer vorhanden und beschreibbar
+        $rules[] = "";
+        $rules[] = "  /data/ rwk,";
+        $rules[] = "  /data/** rwk,";
+
+        if (!empty($config->map)) {
+            foreach ($config->map as $map) {
+                $type = $map['type'] ?? '';
+                $readOnly = $map['read_only'] ?? true;
+                $customPath = $map['path'] ?? null;
+
+                // Zielverzeichnis im Container bestimmen
+                $targetPath = $customPath ?: match($type) {
+                    'homeassistant_config' => '/config',
+                    'addon_config' => '/config',
+                    'all_addon_configs' => '/config',
+                    default => '/' . $type,
+                };
+
+                $targetPath = rtrim($targetPath, '/');
+                $perms = $readOnly ? 'r' : 'rwk';
+
+                $rules[] = "  {$targetPath}/ {$perms},";
+                $rules[] = "  {$targetPath}/** {$perms},";
+            }
+        }
+
+        $content = "#include <tunables/global>\n\n";
+        $content .= "################################################################################\n";
+        $content .= "# EXPERIMENTAL: Custom AppArmor profile for Home Assistant Add-on\n";
+        $content .= "# Generated by HAOS Add-on Converter\n";
+        if ($this->getArchive()->metadataJson->quirks) {
+            $content .= "# Note: Quirks mode is enabled, providing broad filesystem and execution rights\n";
+        }
+        $content .= "################################################################################\n\n";
+        $content .= "profile {$profileName} flags=(attach_disconnected,mediate_deleted) {\n";
+        $content .= implode("\n", $rules) . "\n";
+        $content .= "}\n";
+
+        return $content;
+    }
+
+    public function updateFromWebui(Webform $webform): static
+    {
+        // Wenn apparmor in der config ein String ist (Profilname), dann speichern wir die Datei
+        if (is_string($this->getArchive()->config->apparmor)) {
+             $this->saveFileContent();
+        } else {
+            $this->clearFile();
+        }
+        return $this;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return ['filename' => $this->getFilename()];
+    }
+}

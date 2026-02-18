@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\File\App\AppArmorTxt;
 use App\File\App\Config;
 use App\File\App\ConfigJson;
 use App\File\App\ConfigYaml;
@@ -38,6 +39,7 @@ class App implements ArchiveAwareInterface
     public readonly OriginalCmd $originalCmd;
     public readonly OriginalEntrypoint $originalEntrypoint;
     public readonly ReadmeMd $readmeMd;
+    public readonly AppArmorTxt $appArmorTxt;
 
     private function __construct(public string $slug, ?ArchiveInterface $archive = null)
     {
@@ -62,6 +64,7 @@ class App implements ArchiveAwareInterface
         $this->originalCmd = new OriginalCmd($this);
         $this->originalEntrypoint = new OriginalEntrypoint($this);
         $this->readmeMd = new ReadmeMd($this);
+        $this->appArmorTxt = new AppArmorTxt($this);
         $this->runSh = new RunSh($this);
         $this->startSh = new StartSh($this);
     }
@@ -202,6 +205,7 @@ class App implements ArchiveAwareInterface
     {
         return [
             $this->config,
+            $this->appArmorTxt,
             $this->dockerfile,
             $this->iconPng,
             $this->logoPng,

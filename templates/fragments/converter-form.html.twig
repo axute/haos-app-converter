@@ -555,6 +555,17 @@
                                     <label class="form-check-label" for="discovery"><strong>discovery</strong></label>
                                     <div class="form-text">Allow the app to use the discovery service.</div>
                                 </div>
+                                <div class="mb-3 border rounded p-3 bg-light">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="apparmor_custom">
+                                        <label class="form-check-label" for="apparmor_custom"><strong>Custom AppArmor Profile</strong> <span class="badge bg-warning text-dark">Experimental</span></label>
+                                        <div class="form-text">Generate a custom AppArmor profile based on features and quirks.</div>
+                                    </div>
+                                    <div id="apparmor_name_container" style="display: none;">
+                                        <label for="apparmor_name" class="form-label">Profile Name</label>
+                                        <input type="text" class="form-control" id="apparmor_name" placeholder="Leave empty for default (slug)">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

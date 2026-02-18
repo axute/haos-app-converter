@@ -33,6 +33,11 @@
                                         {% if app.quirks %}
                                             <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.7rem;">quirks</span>
                                         {% endif %}
+                                        {% if app.apparmor is same as(true) %}
+                                            <span class="badge bg-warning text-dark rounded-pill" style="font-size: 0.7rem;" title="AppArmor aktiv (Standard)">apparmor</span>
+                                        {% elseif app.apparmor is not empty and app.apparmor is not same as(false) %}
+                                            <span class="badge bg-danger text-white rounded-pill" style="font-size: 0.7rem;" title="Custom AppArmor Profile (Experimental): {{ app.apparmor }}">apparmor</span>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <small class="text-muted d-block text-truncate" title="{{ app.description }}">{{ app.description }}</small>
