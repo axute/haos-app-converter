@@ -65,6 +65,15 @@ $app->group('/apps', function (RouteCollectorProxy $group) {
     $group->post('/{slug}/metadata', AppController::updateMetadata(...));
 });
 
+$app->get('/logo.png', function ($request, $response) {
+    $logoFile = __DIR__ . '/../icon.png';
+    if (file_exists($logoFile)) {
+        $response->getBody()->write(file_get_contents($logoFile));
+        return $response->withHeader('Content-Type', 'image/png');
+    }
+    return $response->withStatus(404);
+});
+
 $app->group('/converter', function (RouteCollectorProxy $group) {
     $group->get('/tags', ConverterController::getTags(...));
 });

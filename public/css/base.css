@@ -19,16 +19,22 @@ body {
 .header-bar {
     background-color: var(--ha-header-background);
     color: white;
-    padding: 16px 24px;
+    padding: 16px 0;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     margin-bottom: 24px;
+}
+
+.header-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 16px;
 }
 
 .converter-container { 
     max-width: 1000px; 
     margin: 0 auto 30px auto; 
     background: transparent; 
-    padding: 0;
+    padding: 0 16px;
 }
 
 .ha-card {
