@@ -1,7 +1,5 @@
 # HAOS App Converter
 
-<img src="icon.png" alt="Logo" width="100">
-
 [![Screenshot](docs/assets/Screenshot-1.png)](docs/assets/Screenshot-1.png)
 
 This tool is a web-based converter that transforms any Docker image into a Home Assistant app.
