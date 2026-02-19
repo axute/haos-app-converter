@@ -1,7 +1,27 @@
+.accordion-button {
+    background-color: var(--ha-card-background);
+    color: var(--ha-text-color);
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
 .accordion-button:not(.collapsed) {
-    background-color: rgba(3, 169, 244, 0.1);
+    background-color: var(--ha-info-background, rgba(3, 169, 244, 0.1));
     color: var(--ha-primary-color);
     box-shadow: none;
+}
+
+.accordion-body {
+    background-color: var(--ha-card-background);
+    color: var(--ha-text-color);
+}
+
+.accordion-button::after {
+    filter: invert(var(--ha-invert-value, 0));
+}
+
+[data-theme="dark"] {
+    --ha-invert-value: 1;
 }
 
 .accordion-button:focus {
@@ -10,16 +30,13 @@
 }
 
 .accordion-item {
+    background-color: var(--ha-card-background);
+    color: var(--ha-text-color);
     border-radius: var(--border-radius) !important;
     overflow: hidden;
     margin-bottom: 16px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--ha-border-color);
     box-shadow: 0 2px 2px rgba(0,0,0,0.05);
-}
-
-.accordion-button {
-    font-weight: 500;
-    font-size: 1.1rem;
 }
 
 .form-label {
@@ -28,20 +45,41 @@
     font-size: 0.9rem;
 }
 
+.form-control, .form-select {
+    background-color: var(--ha-card-background);
+    color: var(--ha-text-color);
+    border: 1px solid var(--ha-border-color);
+}
+
 .form-control:focus, .form-select:focus {
     border-color: var(--ha-primary-color);
     box-shadow: 0 0 0 0.25rem rgba(3, 169, 244, 0.25);
 }
 
+.form-text {
+    color: var(--ha-muted-text, #6c757d);
+}
+
 /* EasyMDE & CodeMirror consistency */
 .editor-toolbar {
-    background: #f8f9fa;
-    border-color: #dee2e6;
+    background: var(--ha-background-color);
+    border-color: var(--ha-border-color);
     border-radius: 4px 4px 0 0;
 }
 
+.editor-toolbar button {
+    color: var(--ha-text-color) !important;
+}
+
+.editor-toolbar button.active, .editor-toolbar button:hover {
+    background: var(--ha-card-background) !important;
+    border-color: var(--ha-border-color) !important;
+}
+
 .CodeMirror {
-    border-color: #dee2e6;
+    background: var(--ha-card-background) !important;
+    color: var(--ha-text-color) !important;
+    border-color: var(--ha-border-color);
     border-radius: 0 0 4px 4px;
 }
 

@@ -7,13 +7,26 @@
     --ha-header-background: #101e24;
     --ha-text-color: #212121;
     --ha-secondary-text-color: #727272;
+    --ha-border-color: #eeeeee;
     --border-radius: 12px;
+}
+
+[data-theme="dark"] {
+    --ha-card-background: #242e32;
+    --ha-background-color: #111b1f;
+    --ha-text-color: #e1e1e1;
+    --ha-secondary-text-color: #adb5bd;
+    --ha-border-color: #384347;
+    --ha-header-background: #0a1114;
+    --ha-info-background: #1a2529;
+    --ha-muted-text: #adb5bd;
 }
 
 body { 
     background-color: var(--ha-background-color); 
     font-family: 'Roboto', sans-serif;
     color: var(--ha-text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .header-bar {
@@ -43,7 +56,8 @@ body {
     box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 0 1px 5px 0 rgba(0,0,0,0.12), 0 3px 1px -2px rgba(0,0,0,0.2);
     padding: 24px;
     margin-bottom: 24px;
-    border: none;
+    border: 1px solid var(--ha-border-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .ha-card-header {
@@ -57,8 +71,16 @@ body {
 }
 
 .ha-card-footer {
-    border-top: 1px solid #eeeeee;
+    border-top: 1px solid var(--ha-border-color);
     padding-top: 24px;
+}
+
+.ha-info-box {
+    background-color: var(--ha-info-background, #fafafa);
+    border: 1px solid var(--ha-border-color);
+    border-radius: 8px;
+    padding: 16px;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .btn-ha-primary {
@@ -91,6 +113,11 @@ body {
     transition: all 0.2s ease-in-out;
 }
 
+[data-theme="dark"] .btn-ha-outline {
+    border-color: var(--ha-primary-color);
+    color: var(--ha-primary-color);
+}
+
 .btn-ha-outline:hover {
     background-color: var(--ha-primary-color);
     color: white;
@@ -110,10 +137,77 @@ body {
     color: white !important;
 }
 
+.modal-content {
+    background-color: var(--ha-card-background);
+    color: var(--ha-text-color);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--ha-border-color);
+}
+
+.text-muted {
+    color: var(--ha-muted-text, #6c757d) !important;
+}
+
+.bg-light {
+    background-color: var(--ha-info-background, #f8f9fa) !important;
+}
+
+.badge.bg-light {
+    color: var(--ha-text-color) !important;
+}
+
+.form-control, .form-select {
+    background-color: var(--ha-card-background);
+    color: var(--ha-text-color);
+    border: 1px solid var(--ha-border-color);
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: var(--ha-card-background);
+    color: var(--ha-text-color);
+    border-color: var(--ha-primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(3, 169, 244, 0.25);
+}
+
+.form-control::placeholder {
+    color: var(--ha-secondary-text-color);
+}
+
+.list-group-item {
+    background-color: var(--ha-card-background);
+    color: var(--ha-text-color);
+    border-color: var(--ha-border-color);
+}
+
 .text-truncate {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.dropdown-menu {
+    background-color: var(--ha-card-background);
+    color: var(--ha-text-color);
+    border-color: var(--ha-border-color);
+}
+
+.dropdown-item {
+    color: var(--ha-text-color);
+}
+
+.dropdown-item:hover {
+    background-color: var(--ha-background-color);
+    color: var(--ha-primary-color);
+}
+
+.dropdown-header {
+    color: var(--ha-secondary-text-color);
+}
+
+.dropdown-divider {
+    border-top: 1px solid var(--ha-border-color);
 }
 
 /* Mobile & Tablet Optimizations */

@@ -321,7 +321,7 @@ async function toggleAppInfo(slug) {
             });
 
             panel.innerHTML = `
-                <div class="p-3 border rounded" style="background:#fafafa">
+                <div class="ha-info-box">
                     <div class="row g-2">
                         <div class="col-12 col-md-6">
                             <div><strong>Image:</strong> <a href="${a.image_url}" target="_blank" class="text-decoration-none"><code>${a.image}${a.image_tag ? ':' + a.image_tag : ''}</code></a></div>

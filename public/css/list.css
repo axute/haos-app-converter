@@ -2,7 +2,9 @@
     border-left: none;
     border-right: none;
     padding: 16px;
-    border-color: #eeeeee;
+    border-color: var(--ha-border-color);
+    background-color: var(--ha-card-background);
+    color: var(--ha-text-color);
 }
 
 .list-group-item .row {
@@ -26,6 +28,15 @@
     display: inline-block !important;
 }
 
+.htmx-indicator-container {
+    color: var(--ha-muted-text, #6c757d);
+}
+
+.htmx-indicator-container:hover {
+    color: var(--ha-primary-color);
+}
+
 #app-info-panel .border {
-    background: #fafafa;
+    background: var(--ha-background-color) !important;
+    border-color: var(--ha-border-color) !important;
 }

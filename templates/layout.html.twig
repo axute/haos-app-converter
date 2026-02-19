@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +8,19 @@
     <style>
         body { font-family: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
     </style>
+    <script>
+        // Setze Theme so früh wie möglich, um FOUC zu vermeiden
+        (() => {
+            try {
+                const saved = localStorage.getItem('theme');
+                const mql = window.matchMedia('(prefers-color-scheme: dark)');
+                const initial = saved ?? (mql.matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', initial);
+            } catch (_) {
+                // Fallback: nichts tun, Standard bleibt erhalten
+            }
+        })();
+    </script>
     <link href="{{ basePath }}/css/vendor/materialdesignicons.min.css" rel="stylesheet">
     <link href="{{ basePath }}/css/vendor/font-awesome.min.css" rel="stylesheet">
     <link href="{{ basePath }}/css/vendor/bootstrap.min.css" rel="stylesheet">
@@ -32,6 +45,9 @@
             <h2 class="mb-0" style="font-weight: 400;">HAOS App Converter</h2>
         </div>
         <div class="d-flex align-items-center">
+            <button type="button" id="themeToggle" class="btn btn-outline-light btn-sm me-2">
+                <span class="mdi mdi-weather-night"></span>
+            </button>
             <button type="button" class="btn btn-outline-light btn-sm me-2" onclick="showLogs()">
                 <span class="mdi mdi-text-long me-1"></span>Logs
             </button>
@@ -50,6 +66,57 @@
 
 <script>
     const basePath = '{{ basePath }}';
+
+    // Theme switching logic (mit System-Präferenz als Default und Live-Update)
+    const themeToggle = document.getElementById('themeToggle');
+    const htmlElement = document.documentElement;
+    const themeIcon = themeToggle.querySelector('.mdi');
+
+    const applyTheme = (theme) => {
+        htmlElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') {
+            themeIcon.classList.remove('mdi-weather-night');
+            themeIcon.classList.add('mdi-weather-sunny');
+        } else {
+            themeIcon.classList.remove('mdi-weather-sunny');
+            themeIcon.classList.add('mdi-weather-night');
+        }
+    };
+
+    // Initialisierung: gespeichertes Theme bevorzugen, sonst System-Default
+    const savedTheme = localStorage.getItem('theme');
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const initialTheme = savedTheme ?? (mql.matches ? 'dark' : 'light');
+    applyTheme(initialTheme);
+
+    // Wenn kein gespeichertes Theme existiert, System-Änderungen live verfolgen
+    if (savedTheme === null) {
+        const mqlHandler = (e) => applyTheme(e.matches ? 'dark' : 'light');
+        if (mql.addEventListener) {
+            mql.addEventListener('change', mqlHandler);
+        } else if (mql.addListener) {
+            // älterer Browser Fallback
+            mql.addListener(mqlHandler);
+        }
+        window.__themeMql = mql;
+        window.__themeHandler = mqlHandler;
+    }
+
+    themeToggle.addEventListener('click', () => {
+        // Beim manuellen Umschalten: System-Listener entfernen und Präferenz speichern
+        if (window.__themeMql && window.__themeHandler) {
+            if (window.__themeMql.removeEventListener) {
+                window.__themeMql.removeEventListener('change', window.__themeHandler);
+            } else if (window.__themeMql.removeListener) {
+                window.__themeMql.removeListener(window.__themeHandler);
+            }
+            delete window.__themeMql;
+            delete window.__themeHandler;
+        }
+        const newTheme = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
+    });
 </script>
 <script type="module" src="{{ basePath }}/js/app.js?v={{ "now"|date("U") }}"></script>
 {% block scripts %}{% endblock %}
