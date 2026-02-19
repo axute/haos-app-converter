@@ -62,6 +62,7 @@ use InvalidArgumentException;
  * @property ?bool $advanced
  * @property ?bool $realtime
  * @property ?bool $journald
+ * @property string|bool|null $apparmor
  */
 abstract class Config extends FileAbstract
 {
@@ -332,7 +333,6 @@ abstract class Config extends FileAbstract
         }
         $data = $this->getData();
         $data['env_vars'] = $envVars;
-        $data['security_rating'] = $this->getSecurityRating();
         ksort($data);
         return $data;
     }

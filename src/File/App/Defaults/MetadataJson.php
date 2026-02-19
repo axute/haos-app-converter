@@ -13,5 +13,6 @@ class MetadataJson
         'original_cmd',
         'quirks',
         'version_fixation',
+        'security_rating',
     ];
 }

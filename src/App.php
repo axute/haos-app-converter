@@ -218,6 +218,15 @@ class App implements ArchiveAwareInterface
         ];
     }
 
+    public function save(): static
+    {
+        // Erst alles updaten, falls nötig (Metadaten hängen von config ab)
+        $this->metadataJson->security_rating = $this->config->getSecurityRating();
+
+        array_map(fn(FileAbstract $file) => $file->saveFileContent(), $this->getFiles());
+        return $this;
+    }
+
     public function getData(): array
     {
         return self::merge(...array_map(fn(FileAbstract $file) => $file->jsonSerialize(), $this->getFiles()));
@@ -231,12 +240,6 @@ class App implements ArchiveAwareInterface
             }
         }
         return $data;
-    }
-
-    public function save(): static
-    {
-        array_map(fn(FileAbstract $file) => $file->saveFileContent(), $this->getFiles());
-        return $this;
     }
 
     public function prepareFilename(string $filename): string

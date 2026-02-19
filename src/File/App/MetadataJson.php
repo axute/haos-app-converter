@@ -20,6 +20,7 @@ use App\Tools\Webform;
  * @property ?bool $quirks
  * @property ?bool $version_fixation
  * @property mixed $allow_user_env
+ * @property array $security_rating
  */
 class MetadataJson extends FileAbstract
 {

@@ -12,6 +12,8 @@
     {% else %}
         {% for app in apps %}
             {% set isSelf = (app.slug == 'haos_app_converter') %}
+            {% set rating = app.security_rating|default(4) %}
+            {% set rating_color = (rating <= 2) ? 'danger' : (rating == 3 ? 'warning' : 'success') %}
             <div class="list-group-item">
                 <div class="row align-items-start g-3">
                     <div class="col-12 col-lg-4">
@@ -22,15 +24,15 @@
                                 {% else %}
                                     📦
                                 {% endif %}
+                                <div class="mt-1">
+                                    <span class="badge bg-{{ rating_color }} rounded-pill" style="font-size: 0.65rem;" title="Security Rating: {{ rating }}/6">🛡️ {{ rating }}</span>
+                                </div>
                             </div>
                             <div class="text-truncate">
                                 <strong class="d-block text-truncate" title="{{ app.name }}">{{ app.name }}</strong>
                                 <small class="text-muted d-block text-truncate" title="{{ app.description }}">{{ app.description }}</small>
                                 <small class="text-muted d-block">Version: {{ app.version }}</small>
                                 <div class="d-flex align-items-center flex-wrap gap-1 mt-1">
-                                    {% set rating = app.security_rating|default(4) %}
-                                    {% set rating_color = (rating <= 2) ? 'danger' : (rating == 3 ? 'warning' : 'success') %}
-                                    <span class="badge bg-{{ rating_color }} rounded-pill" style="font-size: 0.65rem;" title="Security Rating: {{ rating }}/6">🛡️ {{ rating }}</span>
                                     
                                     {% if app.detected_pm is not empty %}
                                         <span class="badge bg-info text-dark rounded-pill" style="font-size: 0.65rem;">{{ app.detected_pm }}</span>
