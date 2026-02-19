@@ -76,20 +76,20 @@
                                            onchange="toggleVersionFixation('{{ app.slug }}', this.checked)">
                                     <label class="form-check-label small" for="vf_{{ app.slug }}" title="Version der App an das Docker-Image binden">Version fixieren</label>
                                 </div>
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-sm btn-ha-outline rounded-pill" title="Info" 
+                                <div class="btn-group shadow-sm">
+                                    <button type="button" class="btn btn-sm btn-ha-outline" title="Info" 
                                             hx-get="{{ basePath }}/fragments/app-details/{{ app.slug }}"
                                             hx-target="#app-info-{{ app.slug }}"
                                             onclick="bootstrap.Collapse.getOrCreateInstance(document.getElementById('app-info-{{ app.slug }}')).toggle()">
                                         <span class="mdi mdi-information-outline"></span>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-ha-outline rounded-pill" title="Download ZIP" onclick="downloadApp('{{ app.slug }}')">
+                                    <button type="button" class="btn btn-sm btn-ha-outline" title="Download ZIP" onclick="downloadApp('{{ app.slug }}')">
                                         <span class="mdi mdi-download"></span>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-ha-outline rounded-pill" onclick="editApp('{{ app.slug }}')">
+                                    <button type="button" class="btn btn-sm btn-ha-outline" onclick="editApp('{{ app.slug }}')">
                                         <span class="mdi mdi-pencil"></span>
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-ha-outline rounded-pill text-danger border-danger" onclick="deleteApp('{{ app.slug }}')">
+                                    <button type="button" class="btn btn-sm btn-ha-outline border-danger text-danger-hover" onclick="deleteApp('{{ app.slug }}')">
                                         <span class="mdi mdi-delete"></span>
                                     </button>
                                 </div>

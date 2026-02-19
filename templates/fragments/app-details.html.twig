@@ -68,14 +68,21 @@
         </div>
         <div class="col-12">
             <div><strong>Env:</strong> 
-                {% set envs = (app.env_vars ?: [])|slice(0, 5) %}
+                {% set filtered_envs = [] %}
+                {% for e in (app.env_vars ?: []) %}
+                    {% if not (e.key starts with 'HAOS_CONVERTER_') %}
+                        {% set filtered_envs = filtered_envs|merge([e]) %}
+                    {% endif %}
+                {% endfor %}
+
+                {% set envs = filtered_envs|slice(0, 5) %}
                 {% for e in envs %}
                     <code>{{ e.key }}</code>
                 {% endfor %}
-                {% if (app.env_vars ?: [])|length > 5 %}
-                    … (+{{ (app.env_vars|length) - 5 }} weitere)
+                {% if filtered_envs|length > 5 %}
+                    … (+{{ (filtered_envs|length) - 5 }} weitere)
                 {% endif %}
-                {% if app.env_vars is empty %}
+                {% if filtered_envs is empty %}
                     —
                 {% endif %}
             </div>

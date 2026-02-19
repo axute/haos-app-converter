@@ -76,17 +76,27 @@ body {
     color: var(--ha-primary-color);
     border: 1px solid var(--ha-primary-color);
     border-radius: 4px;
-    padding: 7px 15px;
+    padding: 6px 12px;
     font-weight: 500;
     text-transform: uppercase;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s ease-in-out;
 }
 
 .btn-ha-outline:hover {
-    background-color: rgba(3, 169, 244, 0.1);
-    color: var(--ha-primary-color);
+    background-color: var(--ha-primary-color);
+    color: white;
+}
+
+.btn-ha-outline.text-danger-hover {
+    color: #dc3545;
+}
+
+.btn-ha-outline.text-danger-hover:hover {
+    background-color: #dc3545;
+    color: white;
 }
 
 .badge.bg-info {
@@ -128,8 +138,11 @@ body {
     .btn-group {
         display: flex !important;
         width: 100%;
+        margin-top: 8px;
     }
     .btn-group .btn {
         flex: 1;
+        padding: 10px;
+        font-size: 1.1rem;
     }
 }
