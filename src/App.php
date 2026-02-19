@@ -220,9 +220,6 @@ class App implements ArchiveAwareInterface
 
     public function save(): static
     {
-        // Erst alles updaten, falls nötig (Metadaten hängen von config ab)
-        $this->metadataJson->security_rating = $this->config->getSecurityRating();
-
         array_map(fn(FileAbstract $file) => $file->saveFileContent(), $this->getFiles());
         return $this;
     }

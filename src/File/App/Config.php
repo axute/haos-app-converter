@@ -63,6 +63,7 @@ use InvalidArgumentException;
  * @property ?bool $realtime
  * @property ?bool $journald
  * @property string|bool|null $apparmor
+ * @property ?string $hassio_role
  */
 abstract class Config extends FileAbstract
 {
@@ -339,33 +340,98 @@ abstract class Config extends FileAbstract
 
     public function getSecurityRating(): int
     {
-        // Rating 1: Privileged access
-        if (!empty($this->privileged) || !empty($this->full_access)) {
+        /* Rule 0
+         * Each app starts with a base rating of 5, on a scale of 1 to 6.
+         */
+
+        $rating = 5;
+        /* Rule 1
+         * Use ingress: true in config.yaml	+2	overrides auth_api rating
+         */
+        if($this->ingress) {
+            $rating += 2;
+        } else if($this->auth_api) {
+            /* Rule 2
+             * Use auth_api: true in config.yaml	+1	overridden by ingress
+             */
+            $rating += 1;
+        }
+        /* Rule 3
+         * is signed with CodeNotary	+1
+         * > not Aware
+         */
+
+        /* Rule 4
+         * Use custom apparmor.txt	+1	Rating applied after installation
+         */
+        if(is_string($this->apparmor)) {
+            $rating += 1;
+        }
+        /* Rule 5
+         * Set apparmor: false in config.yaml	-1
+         * default/null => true
+         */
+        if($this->apparmor === false) {
+            $rating -= 1;
+        }
+        /* Rule 6
+         * Use privileged: NET_ADMIN, SYS_ADMIN, SYS_RAWIO, SYS_PTRACE, SYS_MODULE, or DAC_READ_SEARCH, or kernel_modules: used in config.yaml	-1	Rating applied only once if multiple are used.
+         */
+        if (!empty($this->privileged) &&
+            (
+                in_array('NET_ADMIN', $this->privileged) ||
+                in_array('SYS_ADMIN', $this->privileged) ||
+                in_array('SYS_RAWIO', $this->privileged) ||
+                in_array('SYS_PTRACE', $this->privileged) ||
+                in_array('SYS_MODULE', $this->privileged) ||
+                in_array('DAC_READ_SEARCH', $this->privileged)
+            )) {
+            $rating -= 1;
+        } else if($this->kernel_modules === true) {
+            $rating -= 1;
+        }
+        /* Rule 7
+         * Use hassio_role: manager in config.yaml	-1
+         */
+        if($this->hassio_role === 'manager') {
+            $rating -= 1;
+            /* Rule 9
+             * Use hassio_role: admin in config.yaml	-2
+             */
+        } else if($this->hassio_role === 'admin') {
+            $rating -= 2;
+        }
+        /* Rule 8
+         * Use host_network: true in config.yaml	-1
+         */
+        if($this->host_network === true) {
+            $rating -= 1;
+        }
+        /* Rule 10
+         * Use host_pid: true in config.yaml	-2
+         */
+        if($this->host_pid === true) {
+            $rating -= 2;
+        }
+        /* Rule 11
+         * Use host_uts: true and privileged: SYS_ADMIN in config.yaml	-1
+         */
+        if($this->host_uts === true && in_array('SYS_ADMIN',$this->privileged ?? [])) {
+            $rating -= 1;
+        }
+        /* Rule 12
+         * Use full_access: true in config.yaml	Security set to 1	Overrides all other adjustments
+         */
+        if($this->full_access === true) {
             return 1;
         }
-
-        // Rating 2: Access to host resources
-        if (!empty($this->host_network) || !empty($this->host_pid) || !empty($this->host_ipc) || !empty($this->host_dbus) || !empty($this->docker_api)) {
-            return 2;
+        /* Rule 13
+         * Use docker_api: true in config.yaml	Security set to 1	Overrides all other adjustments
+         */
+        if($this->docker_api === true) {
+            return 1;
         }
-
-        // Rating 3: AppArmor disabled
-        if ($this->apparmor === false) {
-            return 3;
-        }
-
-        // Rating 4: Standard protection (implicit or explicit apparmor: true)
-        if ($this->apparmor === true || !isset($this->apparmor)) {
-            return 4;
-        }
-
-        // Rating 5: Custom AppArmor Profile
-        if (is_string($this->apparmor)) {
-            return 5;
-        }
-
-        // Rating 6: Highly secured (not applicable here, as it requires more manual work)
-        return 4;
+        return $rating;
     }
 
     public function generateWebui(int|null $port, string $path = Defaults::WEBUI_PATH, string $protocol = Defaults::WEBUI_PROTOCOL): static

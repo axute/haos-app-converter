@@ -2,11 +2,16 @@
 
 namespace App\File;
 
+use App\App;
 use App\Interfaces\ArchiveAwareInterface;
+use App\Repository;
 use App\Tools\Webform;
 use JsonSerializable;
 use Stringable;
 
+/**
+ * @property ArchiveAwareInterface|App|Repository $archive
+ */
 abstract class FileAbstract implements JsonSerializable, Stringable
 {
 

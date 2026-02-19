@@ -114,7 +114,7 @@
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="ingress">
                             <label class="form-check-label" for="ingress">
-                                Enable Home Assistant Ingress
+                                <strong>Enable Home Assistant Ingress</strong> <span class="badge bg-success text-white ms-1" title="overrides auth_api">🛡️ #1 +2</span>
                             </label>
                         </div>
 
@@ -354,7 +354,7 @@
                             <div class="col-md-6">
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="host_network">
-                                    <label class="form-check-label" for="host_network"><strong>host_network</strong></label>
+                                    <label class="form-check-label" for="host_network"><strong>host_network</strong> <span class="badge bg-danger text-white ms-1" title="Lowers security rating">🛡️ #8 -1</span></label>
                                     <div class="form-text">If true, the app runs on the host network.</div>
                                 </div>
                                 <div class="form-check form-switch mb-3">
@@ -369,12 +369,12 @@
                                 </div>
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="host_pid">
-                                    <label class="form-check-label" for="host_pid"><strong>host_pid</strong></label>
+                                    <label class="form-check-label" for="host_pid"><strong>host_pid</strong> <span class="badge bg-danger text-white ms-1" title="Lowers security rating">🛡️ #10 -2</span></label>
                                     <div class="form-text">Allow the container to run on the host PID namespace.</div>
                                 </div>
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="host_uts">
-                                    <label class="form-check-label" for="host_uts"><strong>host_uts</strong></label>
+                                    <label class="form-check-label" for="host_uts"><strong>host_uts</strong> <span class="badge bg-warning text-white ms-1" title="Lowers security rating">🛡️ #11 -1 (2/2)</span></label>
                                     <div class="form-text">Use the hosts UTS namespace.</div>
                                 </div>
                                 <div class="form-check form-switch mb-3">
@@ -389,12 +389,12 @@
                                 </div>
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="docker_api">
-                                    <label class="form-check-label" for="docker_api"><strong>docker_api</strong></label>
+                                    <label class="form-check-label" for="docker_api"><strong>docker_api</strong> <span class="badge bg-danger text-white ms-1" title="Overrides all other adjustments">🛡️ #13 =1</span></label>
                                     <div class="form-text">Allow read-only access to the Docker API for the app.</div>
                                 </div>
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="full_access">
-                                    <label class="form-check-label" for="full_access"><strong>full_access</strong></label>
+                                    <label class="form-check-label" for="full_access"><strong>full_access</strong> <span class="badge bg-danger text-white ms-1" title="Overrides all other adjustments">🛡️ #12 =1</span></label>
                                     <div class="form-text">Give full access to hardware like the privileged mode in Docker.</div>
                                 </div>
                             </div>
@@ -436,7 +436,7 @@
                                 </div>
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="kernel_modules">
-                                    <label class="form-check-label" for="kernel_modules"><strong>kernel_modules</strong></label>
+                                    <label class="form-check-label" for="kernel_modules"><strong>kernel_modules</strong> <span class="badge bg-warning text-white ms-1" title="Rating applied only once if multiple are used.">🛡️ #6 -1</span></label>
                                     <div class="form-text">Map host kernel modules and config into the app.</div>
                                 </div>
                                 <div class="form-check form-switch mb-3">
@@ -467,7 +467,7 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input privileged-checkbox" type="checkbox" value="DAC_READ_SEARCH" id="priv_DAC_READ_SEARCH">
-                                            <label class="form-check-label" for="priv_DAC_READ_SEARCH">DAC_READ_SEARCH</label>
+                                            <label class="form-check-label" for="priv_DAC_READ_SEARCH">DAC_READ_SEARCH <span class="badge bg-warning text-white ms-1" title="Rating applied only once if multiple are used.">🛡️ #6 -1</span></label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input privileged-checkbox" type="checkbox" value="IPC_LOCK" id="priv_IPC_LOCK">
@@ -475,7 +475,7 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input privileged-checkbox" type="checkbox" value="NET_ADMIN" id="priv_NET_ADMIN">
-                                            <label class="form-check-label" for="priv_NET_ADMIN">NET_ADMIN</label>
+                                            <label class="form-check-label" for="priv_NET_ADMIN">NET_ADMIN <span class="badge bg-warning text-white ms-1" title="Rating applied only once if multiple are used.">🛡️ #6 -1</span></label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -489,11 +489,11 @@
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input privileged-checkbox" type="checkbox" value="SYS_ADMIN" id="priv_SYS_ADMIN">
-                                            <label class="form-check-label" for="priv_SYS_ADMIN">SYS_ADMIN</label>
+                                            <label class="form-check-label" for="priv_SYS_ADMIN">SYS_ADMIN <span class="badge bg-warning text-white ms-1" title="Rating applied only once if multiple are used.">🛡️ #6 -1</span> <span class="badge bg-warning text-white ms-1" title="In cobination with host-uts will lower the ranking">🛡️ #11 -1 (1/2)</span></label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input privileged-checkbox" type="checkbox" value="SYS_MODULE" id="priv_SYS_MODULE">
-                                            <label class="form-check-label" for="priv_SYS_MODULE">SYS_MODULE</label>
+                                            <label class="form-check-label" for="priv_SYS_MODULE">SYS_MODULE <span class="badge bg-warning text-white ms-1" title="Rating applied only once if multiple are used.">🛡️ #6 -1</span></label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input privileged-checkbox" type="checkbox" value="SYS_NICE" id="priv_SYS_NICE">
@@ -503,11 +503,11 @@
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input privileged-checkbox" type="checkbox" value="SYS_PTRACE" id="priv_SYS_PTRACE">
-                                            <label class="form-check-label" for="priv_SYS_PTRACE">SYS_PTRACE</label>
+                                            <label class="form-check-label" for="priv_SYS_PTRACE">SYS_PTRACE <span class="badge bg-warning text-white ms-1" title="Rating applied only once if multiple are used.">🛡️ #6 -1</span></label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input privileged-checkbox" type="checkbox" value="SYS_RAWIO" id="priv_SYS_RAWIO">
-                                            <label class="form-check-label" for="priv_SYS_RAWIO">SYS_RAWIO</label>
+                                            <label class="form-check-label" for="priv_SYS_RAWIO">SYS_RAWIO <span class="badge bg-warning text-white ms-1" title="Rating applied only once if multiple are used.">🛡️ #6 -1</span></label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input privileged-checkbox" type="checkbox" value="SYS_RESOURCE" id="priv_SYS_RESOURCE">
@@ -527,7 +527,7 @@
                             <div class="col-md-6">
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="auth_api">
-                                    <label class="form-check-label" for="auth_api"><strong>auth_api</strong></label>
+                                    <label class="form-check-label" for="auth_api"><strong>auth_api</strong> <span class="badge bg-success text-white ms-1" title="Increase rating if ingress is off">🛡️ #1 +1</span></label>
                                     <div class="form-text">Allow access to Home Assistant user backend.</div>
                                 </div>
                                 <div class="form-check form-switch mb-3">
@@ -558,7 +558,7 @@
                                 <div class="mb-3 border rounded p-3 bg-light">
                                     <div class="form-check form-switch mb-2">
                                         <input class="form-check-input" type="checkbox" id="apparmor_custom">
-                                        <label class="form-check-label" for="apparmor_custom"><strong>Custom AppArmor Profile</strong> <span class="badge bg-warning text-dark">Experimental</span></label>
+                                        <label class="form-check-label" for="apparmor_custom"><strong>Custom AppArmor Profile</strong> <span class="badge bg-success text-white ms-1" title="Custom profile increase the rating">🛡️ #4 +1</span> <span class="badge bg-warning text-dark">Experimental</span></label>
                                         <div class="form-text">Generate a custom AppArmor profile based on features and quirks.</div>
                                     </div>
                                     <div id="apparmor_name_container" style="display: none;">

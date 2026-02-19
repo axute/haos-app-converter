@@ -42,6 +42,7 @@ class MetadataJson extends FileAbstract
 
     public function jsonSerialize(): array
     {
+        $this->security_rating = $this->archive->config->getSecurityRating();
         $data = $this->getData();
         ksort($data);
         return $data;
