@@ -51,4 +51,9 @@ class OriginalEntrypoint extends FileAbstract
         $this->original_entrypoint = $webform->isQuirks() ? Crane::i($webform->extractFullDockerImageName())->getEntryPoint('') : null;
         return $this->saveFileContent();
     }
+
+    public function getForWebUi(): array
+    {
+        return $this->jsonSerialize();
+    }
 }

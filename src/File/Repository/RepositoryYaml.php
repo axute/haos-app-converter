@@ -65,4 +65,9 @@ class RepositoryYaml extends FileAbstract
         $this->saveFileContent();
         return $this;
     }
+
+    public function getForWebUi(): array
+    {
+        return $this->jsonSerialize();
+    }
 }

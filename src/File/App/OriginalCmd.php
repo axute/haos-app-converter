@@ -52,4 +52,9 @@ class OriginalCmd extends FileAbstract
         }
         return $this->clearFile();
     }
+
+    public function getForWebUi(): array
+    {
+        return $this->jsonSerialize();
+    }
 }

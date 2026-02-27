@@ -51,4 +51,9 @@ class ReadmeMd extends FileAbstract
         }
         return '';
     }
+
+    public function getForWebUi(): array
+    {
+        return $this->jsonSerialize();
+    }
 }

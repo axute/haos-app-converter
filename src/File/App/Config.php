@@ -266,22 +266,7 @@ abstract class Config extends FileAbstract
 
     public function jsonSerialize(): array
     {
-        $envVars = [];
-        foreach ($this->environment ?? [] as $key => $value) {
-            $envVars[] = [
-                'key'      => $key,
-                'value'    => $value,
-                'editable' => false
-            ];
-        }
-        foreach ($this->options ?? [] as $key => $value) {
-            if ($key === 'env_vars') continue;
-            $envVars[] = [
-                'key'      => $key,
-                'value'    => $value,
-                'editable' => true
-            ];
-        }
+
 
         if (empty($this->url)) {
             unset($this->url);
@@ -333,10 +318,33 @@ abstract class Config extends FileAbstract
             }
         }
         $data = $this->getData();
-        $data['env_vars'] = $envVars;
         ksort($data);
         return $data;
     }
+
+    public function getForWebUi(): array
+    {
+        $data = $this->jsonSerialize();
+        $envVars = [];
+        foreach ($this->environment ?? [] as $key => $value) {
+            $envVars[] = [
+                'key'      => $key,
+                'value'    => $value,
+                'editable' => false
+            ];
+        }
+        foreach ($this->options ?? [] as $key => $value) {
+            if ($key === 'env_vars') continue;
+            $envVars[] = [
+                'key'      => $key,
+                'value'    => $value,
+                'editable' => true
+            ];
+        }
+        $data['env_vars'] = $envVars;
+        return $data;
+    }
+
 
     public function getSecurityRating(): int
     {

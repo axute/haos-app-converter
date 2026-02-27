@@ -123,4 +123,9 @@ class Dockerfile extends FileAbstract
         // Official Docker Hub image
         return 'https://hub.docker.com/_/' . $image;
     }
+
+    public function getForWebUi(): array
+    {
+        return $this->jsonSerialize();
+    }
 }

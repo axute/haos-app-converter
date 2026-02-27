@@ -55,4 +55,9 @@ class IconPng extends FileAbstract
         }
         return $this;
     }
+
+    public function getForWebUi(): array
+    {
+        return $this->jsonSerialize();
+    }
 }

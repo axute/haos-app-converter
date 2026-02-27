@@ -170,4 +170,9 @@ class AppArmorTxt extends FileAbstract
     {
         return ['filename' => $this->getFilename()];
     }
+
+    public function getForWebUi(): array
+    {
+        return $this->jsonSerialize();
+    }
 }

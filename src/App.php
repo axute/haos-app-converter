@@ -226,7 +226,7 @@ class App implements ArchiveAwareInterface
 
     public function getData(): array
     {
-        return self::merge(...array_map(fn(FileAbstract $file) => $file->jsonSerialize(), $this->getFiles()));
+        return self::merge(...array_map(fn(FileAbstract $file) => $file->getForWebUi(), $this->getFiles()));
     }
 
     protected static function merge(array $data, array ...$datas): array

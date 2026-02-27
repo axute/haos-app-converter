@@ -46,4 +46,9 @@ class StartSh extends FileAbstract
         $webform->setIfNotEmpty($this, 'startup_script');
         return $this->saveFileContent();
     }
+
+    public function getForWebUi(): array
+    {
+        return $this->jsonSerialize();
+    }
 }

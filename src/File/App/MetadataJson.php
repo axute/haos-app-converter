@@ -73,4 +73,9 @@ class MetadataJson extends FileAbstract
         }
         return $this->saveFileContent();
     }
+
+    public function getForWebUi(): array
+    {
+        return $this->jsonSerialize();
+    }
 }

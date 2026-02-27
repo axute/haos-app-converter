@@ -57,4 +57,6 @@ abstract class FileAbstract implements JsonSerializable, Stringable
     abstract public function updateFromWebui(Webform $webform): static;
 
     abstract public function jsonSerialize(): array;
+
+    abstract public function getForWebUi(): array;
 }
