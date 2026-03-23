@@ -143,7 +143,7 @@ abstract class Config extends FileAbstract
 
     public function updateFromWebui(Webform $webform): static
     {
-        $webform->setIfNotEmpty($this, 'arch', fn() => Crane::i($webform->extractFullDockerImageName())->getArchitectures());
+        $this->arch = Crane::i($webform->extractFullDockerImageName())->getArchitectures();
         $webform->setIfDefined($this, 'name', '');
         $webform->setIfDefined($this, 'description', '');
         $webform->setIfDefined($this, 'version', Defaults::VERSION);
